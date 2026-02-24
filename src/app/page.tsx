@@ -1,65 +1,84 @@
-import Image from "next/image";
+import Link from 'next/link';
 
-export default function Home() {
+const features = [
+  {
+    href: '/upload',
+    emoji: '📚',
+    title: 'Upload Word List',
+    description: 'Teachers: add your vocabulary words here. The site will score their difficulty automatically!',
+    gradient: 'from-purple-400 to-purple-600',
+    hoverGradient: 'hover:from-purple-500 hover:to-purple-700',
+  },
+  {
+    href: '/practice',
+    emoji: '✏️',
+    title: 'Practice Words',
+    description: 'Students: answer multiple choice, fill-in-the-blank, and reading questions!',
+    gradient: 'from-pink-400 to-pink-600',
+    hoverGradient: 'hover:from-pink-500 hover:to-pink-700',
+  },
+  {
+    href: '/wrong-bank',
+    emoji: '🌟',
+    title: 'My Tricky Words',
+    description: 'Words you got wrong are saved here. Practice them again until you ace them all!',
+    gradient: 'from-yellow-400 to-orange-500',
+    hoverGradient: 'hover:from-yellow-500 hover:to-orange-600',
+  },
+];
+
+export default function HomePage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="space-y-10">
+      {/* Hero */}
+      <div className="text-center space-y-4 pt-4">
+        <div className="text-7xl">🔤</div>
+        <h1 className="text-5xl font-black text-gray-800 leading-tight">
+          Welcome to{' '}
+          <span className="bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
+            Vocab Star!
+          </span>
+        </h1>
+        <p className="text-xl text-gray-600 font-semibold max-w-xl mx-auto">
+          Learn new words, practice every day, and become a vocabulary superstar! ⭐
+        </p>
+      </div>
+
+      {/* Feature cards */}
+      <div className="grid gap-6 sm:grid-cols-3">
+        {features.map(({ href, emoji, title, description, gradient, hoverGradient }) => (
+          <Link
+            key={href}
+            href={href}
+            className={`block bg-gradient-to-br ${gradient} ${hoverGradient} text-white rounded-3xl p-6 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200`}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+            <div className="text-5xl mb-3">{emoji}</div>
+            <h2 className="text-xl font-black mb-2">{title}</h2>
+            <p className="text-white/85 font-medium text-sm leading-relaxed">{description}</p>
+          </Link>
+        ))}
+      </div>
+
+      {/* How it works */}
+      <div className="bg-white rounded-3xl p-6 shadow-md border-2 border-purple-100">
+        <h2 className="text-2xl font-black text-gray-800 mb-4">How it works 🎓</h2>
+        <ol className="space-y-3">
+          {[
+            { n: '1', text: 'Teacher uploads a word list (one word per line)', color: 'bg-purple-500' },
+            { n: '2', text: 'Each word is scored Easy, Medium, or Hard automatically', color: 'bg-pink-500' },
+            { n: '3', text: 'Student picks a difficulty level and starts practising', color: 'bg-yellow-500' },
+            { n: '4', text: 'Three question types are generated for each word using AI', color: 'bg-green-500' },
+            { n: '5', text: 'Wrong answers go into the Tricky Words list for extra practice', color: 'bg-orange-500' },
+          ].map(({ n, text, color }) => (
+            <li key={n} className="flex items-start gap-3">
+              <span className={`flex-shrink-0 w-7 h-7 rounded-full ${color} text-white font-black text-sm flex items-center justify-center`}>
+                {n}
+              </span>
+              <span className="text-gray-700 font-medium text-base">{text}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
     </div>
   );
 }
