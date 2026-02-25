@@ -1,136 +1,125 @@
 import Anthropic from '@anthropic-ai/sdk';
 import sql from './db';
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export interface MCQQuestion {
   question: string;
-  options: string[];
-  answer: string;
+  options: string[]; // exactly 4
+  answer: string;    // one of the options
   explanation: string;
 }
 
-export interface FillBlankQuestion {
-  sentence: string;
-  answer: string;
-  explanation: string;
+export interface WordQuestions {
+  word: string;
+  meaning: MCQQuestion;
+  synonym: MCQQuestion;
+  antonym: MCQQuestion;
 }
 
-export interface ComprehensionQuestion {
+export interface WordSetQuestions {
+  words: string[];
+  wordQuestions: WordQuestions[]; // one per word
   paragraph: string;
-  question: string;
-  answer: string;
-  explanation: string;
+  comprehension: MCQQuestion[];   // exactly 3
 }
 
-export interface GeneratedQuestions {
-  mcq: MCQQuestion;
-  fill: FillBlankQuestion;
-  comprehension: ComprehensionQuestion;
-}
+const SYSTEM_PROMPT = `You are a friendly English teacher creating vocabulary exercises for primary school children (ages 7-12).
 
-const SYSTEM_PROMPT = `You are a friendly English teacher for primary school students (ages 6–12).
-Your job is to create fun vocabulary questions.
-IMPORTANT RULES:
-- Always respond with ONLY valid JSON, no other text
-- Use simple, child-friendly language
-- Keep comprehension paragraphs under 100 words
-- Make MCQ options realistic but clearly distinguishable
-- Provide helpful, encouraging explanations`;
+Rules:
+- Use simple, child-friendly language (ages 7-12)
+- Make questions educational and engaging
+- Wrong options must be plausible but clearly incorrect
+- The paragraph should be an interesting story (80-120 words) that uses ALL given words naturally
+- For synonyms: words with the SAME or similar meaning
+- For antonyms: words with the OPPOSITE meaning
+- Return ONLY valid JSON — no markdown fences, no extra text`;
 
-function buildPrompt(word: string): string {
-  return `Create vocabulary practice questions for the word: "${word}"
+function buildPrompt(words: string[]): string {
+  return `Create a vocabulary exercise for these ${words.length} words: ${words.join(', ')}
 
-Return a JSON object with exactly this structure:
+Return ONLY this exact JSON structure:
 {
-  "mcq": {
-    "question": "What does '${word}' mean?",
-    "options": ["option A", "option B", "option C", "option D"],
-    "answer": "the correct option text",
-    "explanation": "friendly explanation of the word"
-  },
-  "fill": {
-    "sentence": "A sentence with _____ where the answer is '${word}'",
-    "answer": "${word}",
-    "explanation": "why this word fits here"
-  },
-  "comprehension": {
-    "paragraph": "A short paragraph (under 100 words) that uses the word '${word}' in context",
-    "question": "A comprehension question about the paragraph",
-    "answer": "the correct answer",
-    "explanation": "explanation of the answer"
-  }
-}`;
+  "words": ${JSON.stringify(words)},
+  "wordQuestions": [
+    {
+      "word": "example",
+      "meaning": {
+        "question": "What does 'example' mean?",
+        "options": ["Option A", "Option B", "Option C", "Option D"],
+        "answer": "Option A",
+        "explanation": "Short child-friendly explanation"
+      },
+      "synonym": {
+        "question": "Which word means the SAME as 'example'?",
+        "options": ["Option A", "Option B", "Option C", "Option D"],
+        "answer": "Option A",
+        "explanation": "Short explanation"
+      },
+      "antonym": {
+        "question": "Which word means the OPPOSITE of 'example'?",
+        "options": ["Option A", "Option B", "Option C", "Option D"],
+        "answer": "Option A",
+        "explanation": "Short explanation"
+      }
+    }
+  ],
+  "paragraph": "An 80-120 word story using all ${words.length} words naturally...",
+  "comprehension": [
+    {
+      "question": "Question about the paragraph?",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "answer": "Option A",
+      "explanation": "Short explanation"
+    },
+    { "question": "...", "options": ["...","...","...","..."], "answer": "...", "explanation": "..." },
+    { "question": "...", "options": ["...","...","...","..."], "answer": "...", "explanation": "..." }
+  ]
 }
 
-export async function generateQuestions(
-  wordId: number,
-  word: string
-): Promise<GeneratedQuestions> {
-  // Check cache first
+IMPORTANT: Provide EXACTLY ${words.length} items in wordQuestions and EXACTLY 3 items in comprehension.`;
+}
+
+export async function getOrGenerateWordSet(
+  wordIds: number[],
+  words: string[]
+): Promise<{ wordSetId: number; questions: WordSetQuestions }> {
+  const sortedIds = [...wordIds].sort((a, b) => a - b);
+  const wordIdsKey = sortedIds.join(',');
+
+  // Check cache
   const cached = await sql`
-    SELECT mcq_json, fill_json, comprehension_json
-    FROM generated_questions
-    WHERE word_id = ${wordId}
-    LIMIT 1
+    SELECT id, questions_json FROM word_sets WHERE word_ids_key = ${wordIdsKey} LIMIT 1
   `;
 
   if (cached.length > 0) {
     return {
-      mcq: JSON.parse(cached[0].mcq_json as string),
-      fill: JSON.parse(cached[0].fill_json as string),
-      comprehension: JSON.parse(cached[0].comprehension_json as string),
+      wordSetId: Number(cached[0].id),
+      questions: JSON.parse(cached[0].questions_json as string),
     };
   }
 
   // Call Claude API
   const message = await client.messages.create({
     model: 'claude-haiku-4-5',
-    max_tokens: 1024,
+    max_tokens: 3000,
     system: SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: buildPrompt(word) }],
+    messages: [{ role: 'user', content: buildPrompt(words) }],
   });
 
   const content = message.content[0];
-  if (content.type !== 'text') {
-    throw new Error('Unexpected response type from Claude');
-  }
+  if (content.type !== 'text') throw new Error('Unexpected response type from Claude');
 
-  let parsed: GeneratedQuestions;
-  try {
-    // Strip markdown code fences if present
-    const text = content.text.replace(/^```json\n?|\n?```$/g, '').trim();
-    parsed = JSON.parse(text);
-  } catch {
-    throw new Error(`Failed to parse Claude response: ${content.text}`);
-  }
+  const text = content.text.replace(/^```json\n?|\n?```$/g, '').trim();
+  const questions = JSON.parse(text) as WordSetQuestions;
 
   // Cache in DB
-  await sql`
-    INSERT INTO generated_questions (word_id, mcq_json, fill_json, comprehension_json)
-    VALUES (
-      ${wordId},
-      ${JSON.stringify(parsed.mcq)},
-      ${JSON.stringify(parsed.fill)},
-      ${JSON.stringify(parsed.comprehension)}
-    )
-    ON CONFLICT DO NOTHING
+  const rows = await sql`
+    INSERT INTO word_sets (word_ids_key, words_json, questions_json)
+    VALUES (${wordIdsKey}, ${JSON.stringify(words)}, ${JSON.stringify(questions)})
+    ON CONFLICT (word_ids_key) DO UPDATE SET questions_json = EXCLUDED.questions_json
+    RETURNING id
   `;
 
-  return parsed;
-}
-
-export async function getOrGenerateQuestions(
-  wordId: number,
-  word: string
-): Promise<{ questionId: number; questions: GeneratedQuestions }> {
-  const questions = await generateQuestions(wordId, word);
-
-  const row = await sql`
-    SELECT id FROM generated_questions WHERE word_id = ${wordId} LIMIT 1
-  `;
-
-  return { questionId: Number(row[0].id), questions };
+  return { wordSetId: Number(rows[0].id), questions };
 }

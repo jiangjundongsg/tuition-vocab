@@ -7,45 +7,25 @@ import { weightedRandom, WeightedItem } from '@/lib/weighted-random';
 export async function GET() {
   try {
     const user = await getCurrentUser();
-
     let rows;
+
     if (user) {
       rows = await sql`
-        SELECT
-          wb.id,
-          wb.question_id,
-          wb.question_type,
-          wb.wrong_count,
-          gq.mcq_json,
-          gq.fill_json,
-          gq.comprehension_json,
-          w.word,
-          w.difficulty
+        SELECT wb.id, wb.word_set_id, wb.question_key, wb.wrong_count,
+               ws.words_json, ws.questions_json
         FROM wrong_bank wb
-        JOIN generated_questions gq ON wb.question_id = gq.id
-        JOIN words w ON gq.word_id = w.id
-        WHERE wb.user_id = ${user.id}
-          AND wb.wrong_count > 0
+        JOIN word_sets ws ON wb.word_set_id = ws.id
+        WHERE wb.user_id = ${user.id} AND wb.word_set_id IS NOT NULL AND wb.wrong_count > 0
         ORDER BY wb.wrong_count DESC
       `;
     } else {
       const sessionId = await getOrCreateSession();
       rows = await sql`
-        SELECT
-          wb.id,
-          wb.question_id,
-          wb.question_type,
-          wb.wrong_count,
-          gq.mcq_json,
-          gq.fill_json,
-          gq.comprehension_json,
-          w.word,
-          w.difficulty
+        SELECT wb.id, wb.word_set_id, wb.question_key, wb.wrong_count,
+               ws.words_json, ws.questions_json
         FROM wrong_bank wb
-        JOIN generated_questions gq ON wb.question_id = gq.id
-        JOIN words w ON gq.word_id = w.id
-        WHERE wb.session_id = ${sessionId}
-          AND wb.wrong_count > 0
+        JOIN word_sets ws ON wb.word_set_id = ws.id
+        WHERE wb.session_id = ${sessionId} AND wb.word_set_id IS NOT NULL AND wb.wrong_count > 0
         ORDER BY wb.wrong_count DESC
       `;
     }
@@ -54,37 +34,23 @@ export async function GET() {
       return NextResponse.json({ item: null, message: 'Wrong bank is empty!' });
     }
 
+    // Weighted random by wrong_count — pick a word_set to re-practice
     const selected = weightedRandom(
       rows.map((r) => ({ ...r, wrong_count: Number(r.wrong_count) })) as WeightedItem[]
     );
 
-    if (!selected) {
-      return NextResponse.json({ item: null });
-    }
+    if (!selected) return NextResponse.json({ item: null });
 
-    const questions = {
-      mcq: JSON.parse(selected.mcq_json as string),
-      fill: JSON.parse(selected.fill_json as string),
-      comprehension: JSON.parse(selected.comprehension_json as string),
-    };
-
-    const question =
-      selected.question_type === 'mcq'
-        ? questions.mcq
-        : selected.question_type === 'fill'
-        ? questions.fill
-        : questions.comprehension;
+    const words = JSON.parse(selected.words_json as string) as string[];
+    const questions = JSON.parse(selected.questions_json as string);
 
     return NextResponse.json({
       item: {
-        id: selected.id,
-        questionId: selected.question_id,
-        questionType: selected.question_type,
-        wrongCount: selected.wrong_count,
-        word: selected.word,
-        difficulty: selected.difficulty,
-        question,
-        allQuestions: questions,
+        wordSetId: Number(selected.word_set_id),
+        questionKey: selected.question_key,
+        wrongCount: Number(selected.wrong_count),
+        words,
+        questions,
       },
     });
   } catch (err) {

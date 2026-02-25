@@ -1,143 +1,116 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import WrongBankList from '@/components/WrongBankList';
-import QuestionCard from '@/components/QuestionCard';
-import { GeneratedQuestions } from '@/lib/claude';
+import PracticeSession from '@/components/PracticeSession';
+import { WordSetQuestions } from '@/lib/claude';
 
-interface WrongBankItem {
+interface WrongItem {
   id: number;
-  question_id: number;
-  question_type: string;
-  wrong_count: number;
-  last_wrong_at: string;
   word: string;
-  difficulty: string;
+  typeLabel: string;
+  wrongCount: number;
+  lastWrongAt: string;
 }
 
-interface PracticeItem {
-  questionId: number;
-  questionType: string;
-  wrongCount: number;
-  word: string;
-  difficulty: string;
-  question: unknown;
-  allQuestions: GeneratedQuestions;
+interface PracticeData {
+  wordSetId: number;
+  words: string[];
+  questions: WordSetQuestions;
 }
 
 export default function WrongBankPage() {
-  const [items, setItems] = useState<WrongBankItem[]>([]);
+  const [items, setItems] = useState<WrongItem[]>([]);
   const [loadingList, setLoadingList] = useState(true);
   const [loadingPractice, setLoadingPractice] = useState(false);
-  const [practiceItem, setPracticeItem] = useState<PracticeItem | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [practiceData, setPracticeData] = useState<PracticeData | null>(null);
+  const [error, setError] = useState('');
 
   const fetchList = useCallback(async () => {
-    setLoadingList(true);
     try {
       const res = await fetch('/api/wrong-bank');
       const data = await res.json();
-      setItems(data.items || []);
+      setItems(data.items ?? []);
     } catch {
-      setError('Failed to load your tricky words');
+      // silent
     } finally {
       setLoadingList(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchList();
-  }, [fetchList]);
+  useEffect(() => { fetchList(); }, [fetchList]);
 
-  const handlePractice = async () => {
+  async function startPractice() {
     setLoadingPractice(true);
-    setError(null);
-    setPracticeItem(null);
+    setError('');
+    setPracticeData(null);
 
     try {
       const res = await fetch('/api/wrong-bank/practice');
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.error);
-      if (!data.item) {
-        await fetchList();
+      if (!res.ok || !data.item) {
+        setError(data.message ?? 'No questions to practise.');
         return;
       }
 
-      setPracticeItem(data.item);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load practice question');
+      setPracticeData({
+        wordSetId: data.item.wordSetId,
+        words: data.item.words,
+        questions: data.item.questions,
+      });
+    } catch {
+      setError('Could not load practice questions.');
     } finally {
       setLoadingPractice(false);
     }
-  };
+  }
 
-  const handleAnswerSubmitted = async () => {
-    // Refresh list after answering
-    setTimeout(() => fetchList(), 500);
-  };
+  function handleSessionDone() {
+    setTimeout(() => {
+      fetchList();
+      setPracticeData(null);
+    }, 1500);
+  }
 
   return (
-    <div className="space-y-8">
-      <div className="text-center space-y-2">
-        <div className="text-5xl">🌟</div>
-        <h1 className="text-4xl font-black text-gray-800">My Tricky Words</h1>
-        <p className="text-lg text-gray-600 font-medium">
-          Words you got wrong are here — keep practising until you master them all!
-        </p>
+    <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-black text-purple-700 mb-2">🌟 My Tricky Words</h1>
+        <p className="text-gray-500">Questions you&apos;ve answered incorrectly — keep practising!</p>
       </div>
 
       {error && (
-        <div className="bg-red-50 border-2 border-red-300 rounded-2xl p-4">
-          <p className="text-red-700 font-bold">❌ {error}</p>
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm">
+          {error}
         </div>
       )}
 
-      {/* Current practice question */}
-      {practiceItem && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <p className="font-black text-gray-700 text-lg">
-              🎯 Practice Question — wrong {practiceItem.wrongCount}x
-            </p>
-            <button
-              onClick={() => setPracticeItem(null)}
-              className="text-sm text-gray-500 hover:text-gray-700 font-bold"
-            >
-              ✕ Close
-            </button>
-          </div>
-          <QuestionCard
-            word={practiceItem.word}
-            questionId={practiceItem.questionId}
-            questions={practiceItem.allQuestions}
-            onAnswerSubmitted={handleAnswerSubmitted}
+      {practiceData ? (
+        <div>
+          <button
+            onClick={() => { setPracticeData(null); fetchList(); }}
+            className="mb-4 text-purple-600 font-bold text-sm hover:underline"
+          >
+            ← Back to Tricky Words list
+          </button>
+          <PracticeSession
+            wordSetId={practiceData.wordSetId}
+            questions={practiceData.questions}
           />
-          <div className="text-center">
-            <button
-              onClick={handlePractice}
-              className="px-6 py-3 bg-white border-2 border-orange-400 text-orange-600 rounded-2xl font-black text-base hover:bg-orange-50 transition-colors"
-            >
-              🔀 Next Practice Question
-            </button>
-          </div>
+          <button
+            onClick={handleSessionDone}
+            className="mt-6 w-full text-purple-600 font-bold text-sm py-2 rounded-xl hover:bg-purple-50 transition-all"
+          >
+            ✅ Done — refresh my list
+          </button>
         </div>
-      )}
-
-      {/* Wrong bank list */}
-      {loadingList ? (
-        <div className="text-center py-12">
-          <span className="text-4xl animate-spin inline-block">⏳</span>
-          <p className="text-gray-500 font-medium mt-2">Loading your tricky words...</p>
+      ) : loadingList ? (
+        <div className="animate-pulse space-y-3">
+          {[1, 2, 3].map((i) => <div key={i} className="h-12 bg-gray-100 rounded-xl" />)}
         </div>
       ) : (
-        <div className="bg-white rounded-3xl shadow-lg p-6 border-2 border-purple-100">
-          <WrongBankList
-            items={items}
-            onPractice={handlePractice}
-            loading={loadingPractice}
-          />
-        </div>
+        <WrongBankList items={items} onPractice={startPractice} loading={loadingPractice} />
       )}
     </div>
   );

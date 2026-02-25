@@ -1,123 +1,101 @@
 'use client';
 
 import { useState } from 'react';
-import DifficultyFilter, { DifficultyLevel } from '@/components/DifficultyFilter';
-import QuestionCard from '@/components/QuestionCard';
-import { GeneratedQuestions } from '@/lib/claude';
+import DifficultyFilter from '@/components/DifficultyFilter';
+import PracticeSession from '@/components/PracticeSession';
+import { WordSetQuestions } from '@/lib/claude';
 
-interface PracticeData {
-  word: string;
-  wordId: number;
-  questionId: number;
-  questions: GeneratedQuestions;
+type DifficultyLevel = 'all' | 'easy' | 'medium' | 'hard';
+
+interface SessionData {
+  wordSetId: number;
+  words: string[];
+  questions: WordSetQuestions;
 }
 
 export default function PracticePage() {
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('all');
+  const [session, setSession] = useState<SessionData | null>(null);
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<PracticeData | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState('');
 
-  const pickWord = async () => {
+  async function pickWords() {
     setLoading(true);
-    setError(null);
-    setData(null);
+    setError('');
+    setSession(null);
 
     try {
       const res = await fetch('/api/questions/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(difficulty !== 'all' ? { difficulty } : {}),
+        body: JSON.stringify({ difficulty: difficulty === 'all' ? undefined : difficulty }),
       });
-      const json = await res.json();
 
-      if (!res.ok) throw new Error(json.error || 'Failed to generate questions');
+      const data = await res.json();
 
-      setData({
-        word: json.word,
-        wordId: json.wordId,
-        questionId: json.questionId,
-        questions: json.questions,
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      if (!res.ok) {
+        setError(data.error ?? 'Something went wrong');
+        return;
+      }
+
+      setSession({ wordSetId: data.wordSetId, words: data.words, questions: data.questions });
+    } catch {
+      setError('Could not connect. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="space-y-8">
-      <div className="text-center space-y-2">
-        <div className="text-5xl">✏️</div>
-        <h1 className="text-4xl font-black text-gray-800">Practice Words</h1>
-        <p className="text-lg text-gray-600 font-medium">
-          Choose a difficulty level, then pick a word to practise!
-        </p>
+    <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-black text-purple-700 mb-2">✏️ Practice Words</h1>
+        <p className="text-gray-500">Pick 5 words and answer all questions in one go!</p>
       </div>
 
-      {/* Difficulty filter */}
-      <div className="bg-white rounded-3xl shadow-md p-5 border-2 border-purple-100 space-y-4">
-        <p className="text-center font-black text-gray-700 text-lg">Choose Difficulty</p>
-        <DifficultyFilter value={difficulty} onChange={setDifficulty} />
+      {/* Controls */}
+      <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6">
+        <p className="text-sm font-bold text-gray-600 mb-3">Choose difficulty:</p>
+        <DifficultyFilter value={difficulty} onChange={(v) => setDifficulty(v as DifficultyLevel)} />
         <button
-          onClick={pickWord}
+          onClick={pickWords}
           disabled={loading}
-          className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl font-black text-xl hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center justify-center gap-3"
+          className="mt-4 w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-black text-lg py-3 rounded-xl shadow-md hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {loading ? (
-            <>
-              <span className="animate-spin text-2xl">⏳</span>
-              <span>Generating questions... (this takes a few seconds)</span>
-            </>
-          ) : (
-            <>
-              <span>🎲</span>
-              <span>Pick a Word!</span>
-            </>
-          )}
+          {loading ? '✨ Generating questions...' : '🎯 Pick 5 Words!'}
         </button>
+        {session && !loading && (
+          <button
+            onClick={pickWords}
+            className="mt-2 w-full text-purple-600 font-bold text-sm py-2 rounded-xl hover:bg-purple-50 transition-all"
+          >
+            🔄 Try a different set
+          </button>
+        )}
       </div>
 
+      {/* Error */}
       {error && (
-        <div className="bg-red-50 border-2 border-red-300 rounded-2xl p-4 text-center">
-          <p className="text-red-700 font-bold">❌ {error}</p>
-          {error.includes('upload') && (
-            <a href="/upload" className="text-purple-600 underline font-bold mt-1 block">
-              Go upload a word list →
-            </a>
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm">
+          {error}
+          {error.includes('No words') && (
+            <a href="/upload" className="ml-2 underline font-bold">Upload words →</a>
           )}
         </div>
       )}
 
       {/* Loading skeleton */}
       {loading && (
-        <div className="bg-white rounded-3xl shadow-xl p-8 border-2 border-purple-100 space-y-4 animate-pulse">
-          <div className="h-8 bg-purple-100 rounded-xl w-1/3" />
-          <div className="h-4 bg-gray-100 rounded-xl w-full" />
-          <div className="h-4 bg-gray-100 rounded-xl w-3/4" />
-          <div className="h-4 bg-gray-100 rounded-xl w-5/6" />
-          <div className="h-4 bg-gray-100 rounded-xl w-2/3" />
+        <div className="space-y-4 animate-pulse">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white rounded-2xl p-5 h-40 border border-gray-100" />
+          ))}
         </div>
       )}
 
-      {data && !loading && (
-        <QuestionCard
-          word={data.word}
-          questionId={data.questionId}
-          questions={data.questions}
-        />
-      )}
-
-      {data && !loading && (
-        <div className="text-center">
-          <button
-            onClick={pickWord}
-            className="px-8 py-3 bg-white border-2 border-purple-400 text-purple-600 rounded-2xl font-black text-base hover:bg-purple-50 transition-colors"
-          >
-            🔀 Try Another Word
-          </button>
-        </div>
+      {/* Session */}
+      {session && !loading && (
+        <PracticeSession wordSetId={session.wordSetId} questions={session.questions} />
       )}
     </div>
   );
