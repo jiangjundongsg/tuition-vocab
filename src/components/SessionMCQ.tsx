@@ -1,23 +1,26 @@
 'use client';
 
-import { MCQQuestion } from '@/lib/claude';
+import { MCQData, TrueFalseData } from '@/lib/claude';
 
 interface Props {
   questionKey: string;
-  data: MCQQuestion;
+  data: MCQData | TrueFalseData;
   submitted: boolean;
   selectedAnswer: string;
   onAnswer: (questionKey: string, answer: string, isCorrect: boolean) => void;
 }
 
 export default function SessionMCQ({ questionKey, data, submitted, selectedAnswer, onAnswer }: Props) {
+  // True/False uses ["True", "False"] as options
+  const options = data.type === 'true_false' ? ['True', 'False'] : data.options;
   const labels = ['A', 'B', 'C', 'D'];
+  const isTF = data.type === 'true_false';
 
   return (
     <div className="space-y-2">
       <p className="font-semibold text-gray-800 text-sm">{data.question}</p>
-      <div className="grid grid-cols-1 gap-1.5">
-        {data.options.map((option, i) => {
+      <div className={`grid gap-1.5 ${isTF ? 'grid-cols-2' : 'grid-cols-1'}`}>
+        {options.map((option, i) => {
           const isSelected = selectedAnswer === option;
           const isCorrect = option === data.answer;
 
@@ -40,7 +43,7 @@ export default function SessionMCQ({ questionKey, data, submitted, selectedAnswe
               onClick={() => onAnswer(questionKey, option, option === data.answer)}
             >
               <span className="font-bold text-xs w-5 h-5 rounded-full bg-current/10 flex items-center justify-center shrink-0">
-                {labels[i]}
+                {isTF ? option[0] : labels[i]}
               </span>
               <span>{option}</span>
               {submitted && isCorrect && <span className="ml-auto">✅</span>}

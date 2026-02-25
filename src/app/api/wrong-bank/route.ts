@@ -5,6 +5,29 @@ import { getCurrentUser } from '@/lib/auth';
 
 function decodeKey(key: string, wordsJson: string) {
   const words = JSON.parse(wordsJson) as string[];
+
+  // New v2 format: wq_{wordIdx}_{qIdx}
+  if (key.startsWith('wq_')) {
+    const parts = key.split('_');
+    const wordIdx = parseInt(parts[1] ?? '0');
+    const qIdx = parseInt(parts[2] ?? '0');
+    const word = words[wordIdx] ?? key;
+    return { word, typeLabel: `Question ${qIdx + 1}` };
+  }
+
+  // Comprehension: comp_{qIdx}
+  if (key.startsWith('comp_')) {
+    const qIdx = parseInt(key.split('_')[1] ?? '0');
+    return { word: '(Comprehension)', typeLabel: `Q${qIdx + 1}` };
+  }
+
+  // Dictation: dictation_{idx}
+  if (key.startsWith('dictation_')) {
+    const idx = parseInt(key.split('_')[1] ?? '0');
+    return { word: words[idx] ?? key, typeLabel: 'Dictation' };
+  }
+
+  // Legacy v1 format: meaning_0, synonym_0, antonym_0, comp_0
   const [type, idxStr] = key.split('_');
   const idx = parseInt(idxStr ?? '0');
   const word = type === 'comp' ? '(Comprehension)' : (words[idx] ?? key);

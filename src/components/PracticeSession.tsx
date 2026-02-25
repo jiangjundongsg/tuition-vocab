@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { WordSetQuestions } from '@/lib/claude';
-import SessionMCQ from './SessionMCQ';
+import QuestionRenderer from './QuestionRenderer';
 import DictationItem from './DictationItem';
 
 interface Props {
@@ -15,9 +15,15 @@ export default function PracticeSession({ wordSetId, questions }: Props) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [correct, setCorrect] = useState<Record<string, boolean>>({});
 
+  // Question key format:
+  //   wq_{wordIdx}_{qIdx}  — word questions
+  //   comp_{qIdx}          — comprehension
+  //   dictation_{idx}      — dictation
+
+  const compCount = questions.comprehension.questions.length;
   const totalQuestions =
-    questions.wordQuestions.length * 3 + // meaning + synonym + antonym per word
-    questions.comprehension.length +
+    questions.wordQuestions.length * 3 + // 3 per word
+    compCount +
     questions.words.length; // dictation
 
   const answeredCount = Object.keys(submitted).length;
@@ -51,9 +57,12 @@ export default function PracticeSession({ wordSetId, questions }: Props) {
       <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
         <div className="flex justify-between text-sm font-semibold text-gray-600 mb-2">
           <span>Progress</span>
-          <span>{answeredCount} / {totalQuestions} answered {allDone && `• ${correctCount} correct 🎉`}</span>
+          <span>
+            {answeredCount} / {totalQuestions} answered
+            {allDone && ` · ${correctCount} correct 🎉`}
+          </span>
         </div>
-        <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+        <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-purple-400 to-pink-400 rounded-full transition-all duration-500"
             style={{ width: `${totalQuestions ? (answeredCount / totalQuestions) * 100 : 0}%` }}
@@ -65,51 +74,39 @@ export default function PracticeSession({ wordSetId, questions }: Props) {
       <section>
         <h2 className="text-xl font-black text-purple-700 mb-4 flex items-center gap-2">
           📚 Word Questions
-          <span className="text-sm font-normal text-gray-400">({questions.words.length} words × 3 questions each)</span>
+          <span className="text-sm font-normal text-gray-400">
+            ({questions.words.length} words × 3 questions each)
+          </span>
         </h2>
         <div className="space-y-6">
-          {questions.wordQuestions.map((wq, i) => (
-            <div key={wq.word} className="bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden">
+          {questions.wordQuestions.map((wq, wordIdx) => (
+            <div
+              key={wq.word}
+              className="bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden"
+            >
               {/* Word header */}
               <div className="bg-gradient-to-r from-purple-500 to-pink-500 px-5 py-3">
-                <span className="text-white font-black text-lg">Word {i + 1}: &ldquo;{wq.word}&rdquo;</span>
+                <span className="text-white font-black text-lg">
+                  Word {wordIdx + 1}: &ldquo;{wq.word}&rdquo;
+                </span>
               </div>
               <div className="p-5 space-y-5">
-                {/* Meaning */}
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-purple-500 mb-2">💡 Meaning</p>
-                  <SessionMCQ
-                    questionKey={`meaning_${i}`}
-                    data={wq.meaning}
-                    submitted={!!submitted[`meaning_${i}`]}
-                    selectedAnswer={answers[`meaning_${i}`] ?? ''}
-                    onAnswer={recordAnswer}
-                  />
-                </div>
-                <hr className="border-gray-100" />
-                {/* Synonym */}
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-blue-500 mb-2">🔗 Synonym</p>
-                  <SessionMCQ
-                    questionKey={`synonym_${i}`}
-                    data={wq.synonym}
-                    submitted={!!submitted[`synonym_${i}`]}
-                    selectedAnswer={answers[`synonym_${i}`] ?? ''}
-                    onAnswer={recordAnswer}
-                  />
-                </div>
-                <hr className="border-gray-100" />
-                {/* Antonym */}
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-orange-500 mb-2">🔄 Antonym</p>
-                  <SessionMCQ
-                    questionKey={`antonym_${i}`}
-                    data={wq.antonym}
-                    submitted={!!submitted[`antonym_${i}`]}
-                    selectedAnswer={answers[`antonym_${i}`] ?? ''}
-                    onAnswer={recordAnswer}
-                  />
-                </div>
+                {wq.questions.map((q, qIdx) => {
+                  const qKey = `wq_${wordIdx}_${qIdx}`;
+                  return (
+                    <div key={qKey}>
+                      {qIdx > 0 && <hr className="border-gray-100 mb-5" />}
+                      <QuestionRenderer
+                        questionKey={qKey}
+                        data={q}
+                        submitted={!!submitted[qKey]}
+                        selectedAnswer={answers[qKey] ?? ''}
+                        isCorrect={!!correct[qKey]}
+                        onAnswer={recordAnswer}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -120,32 +117,41 @@ export default function PracticeSession({ wordSetId, questions }: Props) {
       <section>
         <h2 className="text-xl font-black text-blue-700 mb-4 flex items-center gap-2">
           📖 Reading Comprehension
-          <span className="text-sm font-normal text-gray-400">(3 questions)</span>
+          <span className="text-sm font-normal text-gray-400">({compCount} questions)</span>
         </h2>
         <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
           <div className="bg-gradient-to-r from-blue-500 to-cyan-500 px-5 py-3">
-            <span className="text-white font-bold text-sm">Read the paragraph carefully</span>
+            <span className="text-white font-bold text-sm">Read the passage carefully</span>
           </div>
           <div className="p-5 space-y-6">
-            {/* Paragraph */}
-            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-              <p className="text-gray-700 leading-relaxed">{questions.paragraph}</p>
-            </div>
-            {/* Comprehension MCQs */}
-            {questions.comprehension.map((q, i) => (
-              <div key={i}>
-                <p className="text-xs font-bold uppercase tracking-wide text-blue-500 mb-2">
-                  Question {i + 1}
+            {/* Passage */}
+            {questions.comprehension.passage && (
+              <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                <p className="text-gray-700 leading-relaxed text-sm">
+                  {questions.comprehension.passage}
                 </p>
-                <SessionMCQ
-                  questionKey={`comp_${i}`}
-                  data={q}
-                  submitted={!!submitted[`comp_${i}`]}
-                  selectedAnswer={answers[`comp_${i}`] ?? ''}
-                  onAnswer={recordAnswer}
-                />
               </div>
-            ))}
+            )}
+            {/* Comprehension questions */}
+            {questions.comprehension.questions.map((q, qIdx) => {
+              const qKey = `comp_${qIdx}`;
+              return (
+                <div key={qKey}>
+                  {qIdx > 0 && <hr className="border-gray-100 mb-6" />}
+                  <p className="text-xs font-bold uppercase tracking-wide text-blue-500 mb-2">
+                    Question {qIdx + 1}
+                  </p>
+                  <QuestionRenderer
+                    questionKey={qKey}
+                    data={q}
+                    submitted={!!submitted[qKey]}
+                    selectedAnswer={answers[qKey] ?? ''}
+                    isCorrect={!!correct[qKey]}
+                    onAnswer={recordAnswer}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -185,7 +191,7 @@ export default function PracticeSession({ wordSetId, questions }: Props) {
               ? ' Perfect score! Amazing! 🌟'
               : correctCount >= totalQuestions * 0.8
               ? ' Great job! Keep it up! 💪'
-              : ' Keep practising — you\'ll get better! 📚'}
+              : " Keep practising — you'll get better! 📚"}
           </p>
         </div>
       )}

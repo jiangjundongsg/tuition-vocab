@@ -3,89 +3,145 @@ import sql from './db';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-export interface MCQQuestion {
+// ── Question data types ──────────────────────────────────────────────────────
+
+export interface MCQData {
+  type: 'mcq';
   question: string;
   options: string[]; // exactly 4
   answer: string;    // one of the options
   explanation: string;
 }
 
+export interface FillBlankData {
+  type: 'fill_blank';
+  question: string;  // must contain exactly one "___"
+  answer: string;    // the word/phrase that fills the blank
+  explanation: string;
+}
+
+export interface TrueFalseData {
+  type: 'true_false';
+  question: string;
+  answer: 'True' | 'False';
+  explanation: string;
+}
+
+export type QuestionData = MCQData | FillBlankData | TrueFalseData;
+
+// ── Session structure ────────────────────────────────────────────────────────
+
 export interface WordQuestions {
   word: string;
-  meaning: MCQQuestion;
-  synonym: MCQQuestion;
-  antonym: MCQQuestion;
+  questions: QuestionData[]; // exactly 3, varied types chosen by Claude
+}
+
+export interface ComprehensionSection {
+  passage?: string;      // optional reading passage
+  questions: QuestionData[]; // 1–3 questions, Claude picks best types
 }
 
 export interface WordSetQuestions {
   words: string[];
-  wordQuestions: WordQuestions[]; // one per word
-  paragraph: string;
-  comprehension: MCQQuestion[];   // exactly 3
+  wordQuestions: WordQuestions[]; // one per word (5 items)
+  comprehension: ComprehensionSection;
 }
 
-const SYSTEM_PROMPT = `You are a friendly English teacher creating vocabulary exercises for primary school children (ages 7-12).
+// ── Prompt ───────────────────────────────────────────────────────────────────
+
+const SYSTEM_PROMPT = `You are the best primary school English teacher for students aged 7–12.
+Your mission: help children master vocabulary through VARIED, engaging questions.
+
+Question types you can use:
+- "mcq": Multiple choice with EXACTLY 4 options. Best for meaning, usage in context.
+- "fill_blank": Complete the sentence. The "question" field MUST contain EXACTLY one "___". The "answer" is the word/phrase for the blank.
+- "true_false": True or False. The "answer" must be exactly "True" or "False".
 
 Rules:
-- Use simple, child-friendly language (ages 7-12)
-- Make questions educational and engaging
-- Wrong options must be plausible but clearly incorrect
-- The paragraph should be an interesting story (80-120 words) that uses ALL given words naturally
-- For synonyms: words with the SAME or similar meaning
-- For antonyms: words with the OPPOSITE meaning
+- Use simple, child-friendly language (ages 7–12)
+- Make questions fun and educational
+- For each word, use a MIX of question types — do not repeat the same type 3 times
+- Wrong MCQ options should be plausible but clearly incorrect to a young learner
 - Return ONLY valid JSON — no markdown fences, no extra text`;
 
 function buildPrompt(words: string[]): string {
   return `Create a vocabulary exercise for these ${words.length} words: ${words.join(', ')}
 
-Return ONLY this exact JSON structure:
+For EACH word, create EXACTLY 3 questions using a VARIETY of types (mcq, fill_blank, true_false). Choose the best types for each word — think like the best teacher.
+
+Then create a comprehension section:
+- Write a short passage (60–100 words) using all ${words.length} words naturally
+- Create EXACTLY 3 comprehension questions. Mix question types as you see fit.
+
+Return ONLY this exact JSON (replace all placeholder values):
 {
   "words": ${JSON.stringify(words)},
   "wordQuestions": [
     {
-      "word": "example",
-      "meaning": {
-        "question": "What does 'example' mean?",
-        "options": ["Option A", "Option B", "Option C", "Option D"],
-        "answer": "Option A",
-        "explanation": "Short child-friendly explanation"
-      },
-      "synonym": {
-        "question": "Which word means the SAME as 'example'?",
-        "options": ["Option A", "Option B", "Option C", "Option D"],
-        "answer": "Option A",
-        "explanation": "Short explanation"
-      },
-      "antonym": {
-        "question": "Which word means the OPPOSITE of 'example'?",
-        "options": ["Option A", "Option B", "Option C", "Option D"],
-        "answer": "Option A",
-        "explanation": "Short explanation"
-      }
+      "word": "WORD",
+      "questions": [
+        {
+          "type": "mcq",
+          "question": "What does 'WORD' mean?",
+          "options": ["correct meaning", "wrong option", "wrong option", "wrong option"],
+          "answer": "correct meaning",
+          "explanation": "Short child-friendly explanation"
+        },
+        {
+          "type": "fill_blank",
+          "question": "She felt ___ when she heard the good news.",
+          "answer": "WORD",
+          "explanation": "Short explanation"
+        },
+        {
+          "type": "true_false",
+          "question": "A statement about WORD that is true or false.",
+          "answer": "True",
+          "explanation": "Short explanation"
+        }
+      ]
     }
   ],
-  "paragraph": "An 80-120 word story using all ${words.length} words naturally...",
-  "comprehension": [
-    {
-      "question": "Question about the paragraph?",
-      "options": ["Option A", "Option B", "Option C", "Option D"],
-      "answer": "Option A",
-      "explanation": "Short explanation"
-    },
-    { "question": "...", "options": ["...","...","...","..."], "answer": "...", "explanation": "..." },
-    { "question": "...", "options": ["...","...","...","..."], "answer": "...", "explanation": "..." }
-  ]
+  "comprehension": {
+    "passage": "A 60–100 word story using all ${words.length} words naturally...",
+    "questions": [
+      {
+        "type": "mcq",
+        "question": "Question about the passage?",
+        "options": ["correct", "wrong", "wrong", "wrong"],
+        "answer": "correct",
+        "explanation": "Short explanation"
+      },
+      {
+        "type": "fill_blank",
+        "question": "In the story, the character felt ___ when ...",
+        "answer": "WORD",
+        "explanation": "Short explanation"
+      },
+      {
+        "type": "true_false",
+        "question": "A statement about the passage.",
+        "answer": "False",
+        "explanation": "Short explanation"
+      }
+    ]
+  }
 }
 
-IMPORTANT: Provide EXACTLY ${words.length} items in wordQuestions and EXACTLY 3 items in comprehension.`;
+IMPORTANT: Provide EXACTLY ${words.length} items in wordQuestions (one per word). Each wordQuestions item has EXACTLY 3 questions. Provide EXACTLY 3 questions in comprehension.questions.`;
 }
+
+// ── Cache + generate ─────────────────────────────────────────────────────────
+
+// v2 prefix ensures old cached entries (v1 format) are not reused
+const CACHE_VERSION = 'v2';
 
 export async function getOrGenerateWordSet(
   wordIds: number[],
   words: string[]
 ): Promise<{ wordSetId: number; questions: WordSetQuestions }> {
   const sortedIds = [...wordIds].sort((a, b) => a - b);
-  const wordIdsKey = sortedIds.join(',');
+  const wordIdsKey = `${CACHE_VERSION}:${sortedIds.join(',')}`;
 
   // Check cache
   const cached = await sql`
@@ -102,7 +158,7 @@ export async function getOrGenerateWordSet(
   // Call Claude API
   const message = await client.messages.create({
     model: 'claude-haiku-4-5',
-    max_tokens: 3000,
+    max_tokens: 3500,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: buildPrompt(words) }],
   });
