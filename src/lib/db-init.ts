@@ -18,11 +18,12 @@ export async function initDb() {
     `,
     sql`
       CREATE TABLE IF NOT EXISTS words (
-        id          SERIAL PRIMARY KEY,
-        word        TEXT NOT NULL UNIQUE,
-        zipf_score  REAL,
-        difficulty  TEXT NOT NULL CHECK (difficulty IN ('easy', 'medium', 'hard')),
-        created_at  TIMESTAMPTZ DEFAULT NOW()
+        id             SERIAL PRIMARY KEY,
+        word           TEXT NOT NULL UNIQUE,
+        zipf_score     REAL,
+        difficulty     TEXT NOT NULL CHECK (difficulty IN ('easy', 'medium', 'hard')),
+        lesson_number  INTEGER,
+        created_at     TIMESTAMPTZ DEFAULT NOW()
       )
     `,
     sql`
@@ -31,6 +32,7 @@ export async function initDb() {
         email         TEXT NOT NULL UNIQUE,
         password_hash TEXT NOT NULL,
         display_name  TEXT,
+        role          TEXT NOT NULL DEFAULT 'student',
         created_at    TIMESTAMPTZ DEFAULT NOW()
       )
     `,
@@ -60,10 +62,12 @@ export async function initDb() {
     )
   `;
 
-  // Migration: add new columns to wrong_bank for existing databases
+  // Migrations: add new columns to existing tables
   await Promise.all([
     sql`ALTER TABLE wrong_bank ADD COLUMN IF NOT EXISTS word_set_id INTEGER`,
     sql`ALTER TABLE wrong_bank ADD COLUMN IF NOT EXISTS question_key TEXT`,
+    sql`ALTER TABLE words ADD COLUMN IF NOT EXISTS lesson_number INTEGER`,
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'student'`,
   ]);
 
   // Make question_key non-null only for new rows (existing rows may have null)

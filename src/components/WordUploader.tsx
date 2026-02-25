@@ -5,7 +5,7 @@ import { useState, useCallback } from 'react';
 interface UploadResult {
   inserted: number;
   skipped: number;
-  words: Array<{ word: string; zipf: number | null; difficulty: string }>;
+  words: Array<{ word: string; zipf: number | null; difficulty: string; lessonNumber: number | null }>;
 }
 
 export default function WordUploader() {
@@ -49,73 +49,71 @@ export default function WordUploader() {
     }
   }, []);
 
-  const difficultyColor = (d: string) => {
-    if (d === 'easy') return 'bg-green-100 text-green-700';
-    if (d === 'medium') return 'bg-yellow-100 text-yellow-700';
-    return 'bg-red-100 text-red-700';
+  const difficultyBadge = (d: string) => {
+    if (d === 'easy') return 'bg-emerald-100 text-emerald-700';
+    if (d === 'medium') return 'bg-amber-100 text-amber-700';
+    return 'bg-rose-100 text-rose-700';
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Drop zone */}
       <div
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
-        className={`border-4 border-dashed rounded-3xl p-6 transition-colors duration-150 ${
-          dragging ? 'border-purple-500 bg-purple-50' : 'border-gray-300 bg-gray-50'
+        className={`border-2 border-dashed rounded-xl p-4 transition-colors ${
+          dragging ? 'border-purple-400 bg-purple-50' : 'border-gray-200 bg-gray-50'
         }`}
       >
-        <p className="text-center text-gray-500 font-medium mb-3">
-          Drag & drop a .txt file here, or type/paste words below
+        <p className="text-center text-sm text-gray-400 font-medium mb-3">
+          Drag & drop a .txt file, or type / paste below
         </p>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="cat&#10;dog&#10;happy&#10;curious&#10;magnificent&#10;...one word per line (or comma-separated)"
+          placeholder={"1 cat\n1 dog\n2 happy\n2 curious magnificent\n(format: lesson_number word)"}
           rows={8}
-          className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-base font-medium focus:outline-none focus:border-purple-500 resize-none bg-white"
+          className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:border-purple-400 resize-none bg-white"
         />
       </div>
 
       <button
         onClick={handleUpload}
         disabled={loading || !text.trim()}
-        className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl font-black text-xl hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center justify-center gap-2"
+        className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold text-base hover:shadow-md hover:scale-[1.01] transition-all disabled:opacity-50 disabled:scale-100 flex items-center justify-center gap-2"
       >
         {loading ? (
           <>
-            <span className="animate-spin text-2xl">⏳</span>
-            <span>Processing words...</span>
+            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            Processing...
           </>
         ) : (
-          <>
-            <span>📤</span>
-            <span>Upload Word List</span>
-          </>
+          <>📤 Upload Word List</>
         )}
       </button>
 
       {error && (
-        <div className="bg-red-50 border-2 border-red-300 rounded-2xl p-4">
-          <p className="text-red-700 font-bold">❌ {error}</p>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 font-medium">
+          ❌ {error}
         </div>
       )}
 
       {result && (
-        <div className="bg-green-50 border-2 border-green-300 rounded-2xl p-5 space-y-4">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🎉</span>
-            <p className="font-black text-green-700 text-lg">
-              {result.inserted} words uploaded!{result.skipped > 0 && ` (${result.skipped} skipped)`}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
-            {result.words.map(({ word, difficulty }) => (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 space-y-3">
+          <p className="font-bold text-emerald-700">
+            🎉 {result.inserted} word{result.inserted !== 1 ? 's' : ''} uploaded
+            {result.skipped > 0 && <span className="text-emerald-500 font-normal"> · {result.skipped} skipped</span>}
+          </p>
+          <div className="flex flex-wrap gap-2 max-h-52 overflow-y-auto">
+            {result.words.map(({ word, difficulty, lessonNumber }) => (
               <span
                 key={word}
-                className={`px-3 py-1 rounded-full text-sm font-bold ${difficultyColor(difficulty)}`}
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${difficultyBadge(difficulty)}`}
               >
+                {lessonNumber !== null && (
+                  <span className="opacity-60">L{lessonNumber}</span>
+                )}
                 {word}
               </span>
             ))}

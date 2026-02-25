@@ -7,6 +7,7 @@ export interface AuthUser {
   id: number;
   email: string;
   displayName: string | null;
+  role: string; // 'student' | 'teacher' | 'admin'
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
@@ -19,7 +20,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     if (isNaN(userId)) return null;
 
     const rows = await sql`
-      SELECT id, email, display_name FROM users WHERE id = ${userId}
+      SELECT id, email, display_name, role FROM users WHERE id = ${userId}
     `;
 
     if (rows.length === 0) return null;
@@ -28,6 +29,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       id: Number(rows[0].id),
       email: rows[0].email as string,
       displayName: rows[0].display_name as string | null,
+      role: (rows[0].role as string) ?? 'student',
     };
   } catch {
     return null;

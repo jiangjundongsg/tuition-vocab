@@ -9,14 +9,34 @@ export async function POST(req: NextRequest) {
     await initDb();
     const sessionId = await getOrCreateSession();
     const body = await req.json().catch(() => ({}));
-    const difficulty = (body as { difficulty?: string }).difficulty;
+    const { difficulty, lessonNumber } = body as {
+      difficulty?: string;
+      lessonNumber?: number;
+    };
 
-    // Pick up to 5 random words by difficulty
+    // Build filter conditions
+    const hasDifficulty = difficulty && ['easy', 'medium', 'hard'].includes(difficulty);
+    const hasLesson = lessonNumber && !isNaN(Number(lessonNumber));
+
     let rows;
-    if (difficulty && ['easy', 'medium', 'hard'].includes(difficulty)) {
+    if (hasDifficulty && hasLesson) {
+      rows = await sql`
+        SELECT id, word FROM words
+        WHERE difficulty = ${difficulty} AND lesson_number = ${Number(lessonNumber)}
+        ORDER BY RANDOM()
+        LIMIT 5
+      `;
+    } else if (hasDifficulty) {
       rows = await sql`
         SELECT id, word FROM words
         WHERE difficulty = ${difficulty}
+        ORDER BY RANDOM()
+        LIMIT 5
+      `;
+    } else if (hasLesson) {
+      rows = await sql`
+        SELECT id, word FROM words
+        WHERE lesson_number = ${Number(lessonNumber)}
         ORDER BY RANDOM()
         LIMIT 5
       `;
