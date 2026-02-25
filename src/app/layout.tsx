@@ -1,20 +1,12 @@
 import type { Metadata } from 'next';
-import { Nunito, Nunito_Sans } from 'next/font/google';
+import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import ChildHeader from '@/components/ChildHeader';
 
-// Nunito for headings — rounded, friendly, clear
-const nunito = Nunito({
+const font = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  weight: ['400', '600', '700', '800', '900'],
-  variable: '--font-nunito',
-});
-
-// Nunito Sans for body text — cleaner reading
-const nunitoSans = Nunito_Sans({
-  subsets: ['latin'],
-  weight: ['400', '600', '700'],
-  variable: '--font-nunito-sans',
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-jakarta',
 });
 
 export const metadata: Metadata = {
@@ -22,16 +14,12 @@ export const metadata: Metadata = {
   description: 'AI-powered English vocabulary practice for primary school students',
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${nunito.variable} ${nunitoSans.variable}`}>
-      <body className="min-h-screen bg-slate-50 font-[family-name:var(--font-nunito-sans)] text-gray-800 antialiased">
+    <html lang="en" className={font.variable}>
+      <body className="min-h-screen bg-slate-50 font-[family-name:var(--font-jakarta)] text-slate-800 antialiased">
         <ChildHeader />
-        <main className="max-w-4xl mx-auto px-4 py-8">
+        <main className="max-w-3xl mx-auto px-4 py-10">
           {children}
         </main>
       </body>

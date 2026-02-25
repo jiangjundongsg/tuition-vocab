@@ -14,17 +14,17 @@ interface Props {
 }
 
 const TYPE_LABEL: Record<QuestionData['type'], string> = {
-  mcq: '🔤 Multiple Choice',
-  fill_blank: '✏️ Fill in the Blank',
-  true_false: '✔️ True or False',
+  mcq:        'Multiple Choice',
+  fill_blank: 'Fill in the Blank',
+  true_false: 'True or False',
 };
 
 export default function QuestionRenderer({ questionKey, data, submitted, selectedAnswer, isCorrect, onAnswer }: Props) {
   return (
-    <div>
-      <p className="text-xs font-bold uppercase tracking-wide text-purple-400 mb-2">
+    <div className="space-y-3">
+      <span className="inline-block text-xs font-semibold uppercase tracking-wider text-indigo-500 bg-indigo-50 px-2.5 py-1 rounded-md">
         {TYPE_LABEL[data.type]}
-      </p>
+      </span>
       {data.type === 'fill_blank' ? (
         <FillBlankQuestion
           questionKey={questionKey}

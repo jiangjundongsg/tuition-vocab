@@ -70,8 +70,8 @@ function buildPrompt(words: string[]): string {
 For EACH word, create EXACTLY 3 questions using a VARIETY of types (mcq, fill_blank, true_false). Choose the best types for each word — think like the best teacher.
 
 Then create a comprehension section:
-- Write a short passage (60–100 words) using all ${words.length} words naturally
-- Create EXACTLY 3 comprehension questions. Mix question types as you see fit.
+- Write a substantial passage (120–160 words) using all ${words.length} words naturally. The passage should tell a proper story or explain a topic with enough detail for children to engage with — do NOT write a short paragraph.
+- Create EXACTLY 3 comprehension questions. Each question must require the student to think carefully about the passage — ask about characters' feelings, reasons for events, or what words mean in context. Mix question types as you see fit.
 
 Return ONLY this exact JSON (replace all placeholder values):
 {
@@ -103,7 +103,7 @@ Return ONLY this exact JSON (replace all placeholder values):
     }
   ],
   "comprehension": {
-    "passage": "A 60–100 word story using all ${words.length} words naturally...",
+    "passage": "A 120–160 word story using all ${words.length} words naturally...",
     "questions": [
       {
         "type": "mcq",
@@ -133,8 +133,8 @@ IMPORTANT: Provide EXACTLY ${words.length} items in wordQuestions (one per word)
 
 // ── Cache + generate ─────────────────────────────────────────────────────────
 
-// v2 prefix ensures old cached entries (v1 format) are not reused
-const CACHE_VERSION = 'v2';
+// v3 prefix ensures old cached entries (shorter comprehension) are not reused
+const CACHE_VERSION = 'v3';
 
 export async function getOrGenerateWordSet(
   wordIds: number[],

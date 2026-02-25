@@ -43,7 +43,6 @@ export default function WordsPage() {
   }, []);
 
   useEffect(() => {
-    // Auth check
     fetch('/api/auth/me')
       .then((r) => r.json())
       .then((d) => {
@@ -110,34 +109,36 @@ export default function WordsPage() {
     : words;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black text-gray-800">Word List</h1>
-          <p className="text-gray-500 text-sm mt-1">{words.length} words total</p>
+          <h1 className="text-2xl font-bold text-slate-900">Word List</h1>
+          <p className="text-slate-500 text-sm mt-1">{words.length} words total</p>
         </div>
         <Link
           href="/upload"
-          className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold px-5 py-2.5 rounded-xl shadow-sm hover:shadow-md hover:scale-105 transition-all text-sm"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
         >
           + Upload Words
         </Link>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-5 text-sm">
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
           {error}
         </div>
       )}
 
       {/* Lesson filter */}
       {lessonNumbers.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-5">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setFilterLesson(null)}
-            className={`px-3 py-1.5 rounded-full border text-sm font-semibold transition-all ${
-              filterLesson === null ? 'bg-purple-500 text-white border-purple-500' : 'bg-white text-gray-600 border-gray-300 hover:border-purple-300'
+            className={`px-3 py-1.5 rounded-lg border text-sm font-semibold transition-colors ${
+              filterLesson === null
+                ? 'bg-indigo-600 text-white border-indigo-600'
+                : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-300'
             }`}
           >
             All
@@ -146,8 +147,10 @@ export default function WordsPage() {
             <button
               key={n}
               onClick={() => setFilterLesson(n)}
-              className={`px-3 py-1.5 rounded-full border text-sm font-semibold transition-all ${
-                filterLesson === n ? 'bg-purple-500 text-white border-purple-500' : 'bg-white text-gray-600 border-gray-300 hover:border-purple-300'
+              className={`px-3 py-1.5 rounded-lg border text-sm font-semibold transition-colors ${
+                filterLesson === n
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-300'
               }`}
             >
               Lesson {n}
@@ -159,45 +162,49 @@ export default function WordsPage() {
       {/* Table */}
       {loading ? (
         <div className="animate-pulse space-y-2">
-          {[1,2,3,4,5].map(i => <div key={i} className="h-12 bg-gray-100 rounded-xl" />)}
+          {[1, 2, 3, 4, 5].map((i) => <div key={i} className="h-12 bg-slate-100 rounded-xl" />)}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
-          <p className="text-4xl mb-3">📭</p>
-          <p className="font-semibold">No words yet.</p>
-          <Link href="/upload" className="text-purple-600 font-bold text-sm hover:underline mt-2 inline-block">Upload a word list →</Link>
+        <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
+          <svg className="w-12 h-12 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <p className="font-semibold text-slate-700 mb-1">No words yet.</p>
+          <Link href="/upload" className="text-indigo-600 font-semibold text-sm hover:underline mt-1 inline-block">
+            Upload a word list →
+          </Link>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-gray-500 font-semibold text-xs uppercase tracking-wide border-b border-gray-100">
-                <th className="text-left px-5 py-3">Word</th>
-                <th className="text-center px-4 py-3">Lesson</th>
-                <th className="text-center px-4 py-3">Difficulty</th>
-                <th className="text-right px-5 py-3">Actions</th>
+              <tr className="border-b border-slate-100 bg-slate-50">
+                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Word</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Lesson</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Difficulty</th>
+                <th className="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              {filtered.map((word, i) => (
-                <tr key={word.id} className={`border-b border-gray-50 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+            <tbody className="divide-y divide-slate-50">
+              {filtered.map((word) => (
+                <tr key={word.id} className="hover:bg-slate-50 transition-colors">
                   {editingId === word.id ? (
                     <>
-                      <td className="px-5 py-2.5 font-bold text-gray-800">{word.word}</td>
+                      <td className="px-5 py-2.5 font-semibold text-slate-800">{word.word}</td>
                       <td className="px-4 py-2.5 text-center">
                         <input
                           type="number"
                           value={editLesson}
                           onChange={(e) => setEditLesson(e.target.value)}
                           placeholder="—"
-                          className="w-16 border border-gray-300 rounded-lg px-2 py-1 text-center text-sm focus:outline-none focus:border-purple-400"
+                          className="w-16 border border-slate-300 rounded-lg px-2 py-1 text-center text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400"
                         />
                       </td>
                       <td className="px-4 py-2.5 text-center">
                         <select
                           value={editDifficulty}
                           onChange={(e) => setEditDifficulty(e.target.value)}
-                          className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-purple-400"
+                          className="border border-slate-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400"
                         >
                           {DIFFICULTY_OPTIONS.map((d) => (
                             <option key={d} value={d}>{d}</option>
@@ -208,13 +215,13 @@ export default function WordsPage() {
                         <button
                           onClick={() => saveEdit(word.id)}
                           disabled={saving}
-                          className="text-xs font-bold text-white bg-purple-500 hover:bg-purple-600 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
+                          className="text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
                         >
                           {saving ? '...' : 'Save'}
                         </button>
                         <button
                           onClick={() => setEditingId(null)}
-                          className="text-xs font-bold text-gray-500 hover:text-gray-700 px-2 py-1.5"
+                          className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-2 py-1.5 transition-colors"
                         >
                           Cancel
                         </button>
@@ -222,19 +229,19 @@ export default function WordsPage() {
                     </>
                   ) : (
                     <>
-                      <td className="px-5 py-2.5 font-semibold text-gray-800">{word.word}</td>
-                      <td className="px-4 py-2.5 text-center text-gray-400 text-xs">
+                      <td className="px-5 py-2.5 font-semibold text-slate-800">{word.word}</td>
+                      <td className="px-4 py-2.5 text-center text-slate-400 text-xs">
                         {word.lesson_number !== null ? `Lesson ${word.lesson_number}` : '—'}
                       </td>
                       <td className="px-4 py-2.5 text-center">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${difficultyColor(word.difficulty)}`}>
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${difficultyColor(word.difficulty)}`}>
                           {word.difficulty}
                         </span>
                       </td>
-                      <td className="px-5 py-2.5 text-right space-x-2">
+                      <td className="px-5 py-2.5 text-right space-x-3">
                         <button
                           onClick={() => startEdit(word)}
-                          className="text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors"
+                          className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
                         >
                           Edit
                         </button>

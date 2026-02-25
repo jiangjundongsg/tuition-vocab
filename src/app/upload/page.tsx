@@ -27,7 +27,7 @@ export default function UploadPage() {
   if (checking) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
-        <div className="w-8 h-8 border-4 border-purple-400 border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -35,28 +35,37 @@ export default function UploadPage() {
   if (!allowed) return null;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
-      <div className="text-center space-y-2">
-        <div className="text-5xl">📚</div>
-        <h1 className="text-4xl font-black text-gray-800">Upload Word List</h1>
-        <p className="text-base text-gray-500 max-w-lg mx-auto">
+    <div className="max-w-2xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Upload Word List</h1>
+        <p className="text-slate-500 mt-1 text-sm">
           Add vocabulary words for students to practise. Each word is automatically scored for difficulty.
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
         <WordUploader />
       </div>
 
-      {/* Tips box */}
-      <div className="bg-indigo-50 rounded-2xl p-5 border border-indigo-100">
-        <h3 className="font-bold text-indigo-700 text-base mb-3">💡 Format guide</h3>
-        <ul className="space-y-2 text-indigo-800 text-sm">
-          <li className="flex gap-2"><span className="font-mono bg-indigo-100 px-1.5 rounded">1 cat</span><span>Lesson 1, word "cat"</span></li>
-          <li className="flex gap-2"><span className="font-mono bg-indigo-100 px-1.5 rounded">2 happy curious</span><span>Lesson 2, two words per line</span></li>
-          <li className="flex gap-2"><span className="font-mono bg-indigo-100 px-1.5 rounded">magnificent</span><span>No lesson number — word only</span></li>
-          <li className="mt-1 text-indigo-600">You can also drag and drop a .txt file. Words auto-score as 🌱 Easy · 🔥 Medium · 🚀 Hard</li>
-        </ul>
+      <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
+        <h3 className="font-semibold text-slate-700 text-sm mb-3">Format guide</h3>
+        <div className="space-y-2 text-sm text-slate-500">
+          <div className="flex gap-3 items-baseline">
+            <code className="bg-white border border-slate-200 rounded px-2 py-0.5 text-xs font-mono text-slate-700 shrink-0">1 cat</code>
+            <span>Lesson 1, word &ldquo;cat&rdquo;</span>
+          </div>
+          <div className="flex gap-3 items-baseline">
+            <code className="bg-white border border-slate-200 rounded px-2 py-0.5 text-xs font-mono text-slate-700 shrink-0">2 happy curious</code>
+            <span>Lesson 2, two words on one line</span>
+          </div>
+          <div className="flex gap-3 items-baseline">
+            <code className="bg-white border border-slate-200 rounded px-2 py-0.5 text-xs font-mono text-slate-700 shrink-0">magnificent</code>
+            <span>No lesson number — word only</span>
+          </div>
+          <p className="pt-1 text-xs text-slate-400">
+            Drag and drop a .txt file is also supported. Difficulty is scored automatically as Easy, Medium, or Hard.
+          </p>
+        </div>
       </div>
     </div>
   );

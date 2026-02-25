@@ -11,18 +11,18 @@ interface User {
   role: string;
 }
 
-const studentNavItems = [
-  { href: '/', label: 'Home', emoji: '🏠' },
-  { href: '/practice', label: 'Practice', emoji: '✏️' },
-  { href: '/wrong-bank', label: 'My Tricky Words', emoji: '🌟' },
+const studentNav = [
+  { href: '/',            label: 'Home' },
+  { href: '/practice',   label: 'Practice' },
+  { href: '/wrong-bank', label: 'Tricky Words' },
 ];
 
-const teacherNavItems = [
-  { href: '/', label: 'Home', emoji: '🏠' },
-  { href: '/practice', label: 'Practice', emoji: '✏️' },
-  { href: '/wrong-bank', label: 'My Tricky Words', emoji: '🌟' },
-  { href: '/words', label: 'Manage Words', emoji: '📋' },
-  { href: '/upload', label: 'Upload', emoji: '📤' },
+const teacherNav = [
+  { href: '/',            label: 'Home' },
+  { href: '/practice',   label: 'Practice' },
+  { href: '/wrong-bank', label: 'Tricky Words' },
+  { href: '/words',      label: 'Word List' },
+  { href: '/upload',     label: 'Upload' },
 ];
 
 export default function ChildHeader() {
@@ -30,14 +30,15 @@ export default function ChildHeader() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/me')
       .then((r) => r.json())
-      .then((data) => setUser(data.user ?? null))
+      .then((d) => setUser(d.user ?? null))
       .catch(() => setUser(null))
       .finally(() => setLoadingUser(false));
-  // Intentionally only runs once on mount
+  // runs once on mount only
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -49,79 +50,122 @@ export default function ChildHeader() {
   }
 
   const isTeacher = user?.role === 'teacher' || user?.role === 'admin';
-  const navItems = isTeacher ? teacherNavItems : studentNavItems;
+  const navItems = isTeacher ? teacherNav : studentNav;
 
   return (
-    <header className="bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500 shadow-lg">
-      <div className="max-w-5xl mx-auto px-4 py-3">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-          <Link href="/" className="text-white text-2xl font-black tracking-tight drop-shadow">
-            🔤 Vocab Star
-          </Link>
+    <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
 
-          <nav className="flex flex-wrap gap-1.5 justify-center">
-            {navItems.map(({ href, label, emoji }) => {
-              const active = pathname === href;
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all duration-150 ${
-                    active
-                      ? 'bg-white text-purple-600 shadow-md'
-                      : 'bg-white/20 text-white hover:bg-white/35'
-                  }`}
+        {/* Logo */}
+        <Link href="/" className="text-lg font-extrabold text-indigo-600 tracking-tight shrink-0">
+          Vocab Star
+        </Link>
+
+        {/* Desktop nav */}
+        <nav className="hidden sm:flex items-center gap-0.5 flex-1">
+          {navItems.map(({ href, label }) => {
+            const active = pathname === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  active
+                    ? 'bg-indigo-50 text-indigo-700'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Auth section */}
+        <div className="hidden sm:flex items-center gap-2 shrink-0">
+          {!loadingUser && (
+            user ? (
+              <>
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                  isTeacher
+                    ? 'bg-amber-100 text-amber-700'
+                    : 'bg-slate-100 text-slate-600'
+                }`}>
+                  {isTeacher ? '👩‍🏫 ' : ''}{user.displayName ?? user.email.split('@')[0]}
+                  {isTeacher && ' · Teacher'}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="text-xs font-semibold text-slate-500 hover:text-slate-800 px-3 py-1.5 rounded-md hover:bg-slate-100 transition-colors"
                 >
-                  <span>{emoji}</span>
-                  <span>{label}</span>
+                  Log out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="text-sm font-medium text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-md hover:bg-slate-100 transition-colors"
+                >
+                  Log in
                 </Link>
-              );
-            })}
-          </nav>
+                <Link
+                  href="/register"
+                  className="text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-1.5 rounded-md transition-colors"
+                >
+                  Sign up
+                </Link>
+              </>
+            )
+          )}
+        </div>
 
-          <div className="flex items-center gap-2">
-            {!loadingUser && (
-              user ? (
-                <>
-                  <span className={`text-white text-xs font-bold px-3 py-1.5 rounded-full ${isTeacher ? 'bg-yellow-400/80' : 'bg-white/20'}`}>
-                    {isTeacher ? '👩‍🏫' : '👋'} {user.displayName ?? user.email.split('@')[0]}
-                    {isTeacher && <span className="ml-1 opacity-80">(Teacher)</span>}
-                  </span>
-                  <button
-                    onClick={handleLogout}
-                    className="bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-white/40 transition-all"
-                  >
-                    Log Out
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    href="/login"
-                    className={`px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all ${
-                      pathname === '/login'
-                        ? 'bg-white text-purple-600 shadow-md'
-                        : 'bg-white/20 text-white hover:bg-white/35'
-                    }`}
-                  >
-                    Log In
-                  </Link>
-                  <Link
-                    href="/register"
-                    className={`px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all ${
-                      pathname === '/register'
-                        ? 'bg-white text-purple-600 shadow-md'
-                        : 'bg-white text-purple-600 hover:scale-105 shadow-sm'
-                    }`}
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              )
-            )}
+        {/* Mobile menu button */}
+        <button
+          className="sm:hidden p-2 rounded-md text-slate-500 hover:bg-slate-100"
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Toggle menu"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {menuOpen
+              ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            }
+          </svg>
+        </button>
+      </div>
+
+      {/* Mobile menu */}
+      {menuOpen && (
+        <div className="sm:hidden bg-white border-t border-slate-100 px-4 py-3 space-y-1">
+          {navItems.map(({ href, label }) => (
+            <Link
+              key={href}
+              href={href}
+              onClick={() => setMenuOpen(false)}
+              className={`block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                pathname === href
+                  ? 'bg-indigo-50 text-indigo-700'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              {label}
+            </Link>
+          ))}
+          <div className="pt-2 border-t border-slate-100">
+            {!loadingUser && (user ? (
+              <button onClick={handleLogout} className="w-full text-left px-3 py-2 text-sm text-slate-500 hover:bg-slate-100 rounded-md">
+                Log out ({user.displayName ?? user.email.split('@')[0]})
+              </button>
+            ) : (
+              <div className="flex gap-2">
+                <Link href="/login" onClick={() => setMenuOpen(false)} className="flex-1 text-center py-2 text-sm font-medium border border-slate-200 rounded-md text-slate-600">Log in</Link>
+                <Link href="/register" onClick={() => setMenuOpen(false)} className="flex-1 text-center py-2 text-sm font-semibold bg-indigo-600 text-white rounded-md">Sign up</Link>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
+      )}
     </header>
   );
 }

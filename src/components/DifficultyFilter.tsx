@@ -2,31 +2,50 @@
 
 export type DifficultyLevel = 'all' | 'easy' | 'medium' | 'hard';
 
-interface DifficultyFilterProps {
+interface Props {
   value: DifficultyLevel;
   onChange: (value: DifficultyLevel) => void;
 }
 
-const options: { value: DifficultyLevel; label: string; emoji: string; color: string }[] = [
-  { value: 'all', label: 'All', emoji: '🌈', color: 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200' },
-  { value: 'easy', label: 'Easy', emoji: '🌱', color: 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200' },
-  { value: 'medium', label: 'Medium', emoji: '🔥', color: 'bg-yellow-100 text-yellow-700 border-yellow-300 hover:bg-yellow-200' },
-  { value: 'hard', label: 'Hard', emoji: '🚀', color: 'bg-red-100 text-red-700 border-red-300 hover:bg-red-200' },
+const OPTIONS: { value: DifficultyLevel; label: string; active: string; inactive: string }[] = [
+  {
+    value: 'all',
+    label: 'All levels',
+    active: 'bg-indigo-600 text-white border-indigo-600',
+    inactive: 'bg-white text-slate-600 border-slate-300 hover:border-indigo-300',
+  },
+  {
+    value: 'easy',
+    label: 'Easy',
+    active: 'bg-emerald-600 text-white border-emerald-600',
+    inactive: 'bg-white text-slate-600 border-slate-300 hover:border-emerald-300',
+  },
+  {
+    value: 'medium',
+    label: 'Medium',
+    active: 'bg-amber-500 text-white border-amber-500',
+    inactive: 'bg-white text-slate-600 border-slate-300 hover:border-amber-300',
+  },
+  {
+    value: 'hard',
+    label: 'Hard',
+    active: 'bg-red-600 text-white border-red-600',
+    inactive: 'bg-white text-slate-600 border-slate-300 hover:border-red-300',
+  },
 ];
 
-export default function DifficultyFilter({ value, onChange }: DifficultyFilterProps) {
+export default function DifficultyFilter({ value, onChange }: Props) {
   return (
-    <div className="flex flex-wrap gap-2 justify-center">
-      {options.map((opt) => (
+    <div className="flex flex-wrap gap-2">
+      {OPTIONS.map((opt) => (
         <button
           key={opt.value}
           onClick={() => onChange(opt.value)}
-          className={`flex items-center gap-1.5 px-5 py-2.5 rounded-full border-2 font-bold text-base transition-all duration-150 ${opt.color} ${
-            value === opt.value ? 'ring-4 ring-offset-1 ring-purple-400 scale-105 shadow-md' : ''
+          className={`px-4 py-2 rounded-lg border text-sm font-semibold transition-colors ${
+            value === opt.value ? opt.active : opt.inactive
           }`}
         >
-          <span>{opt.emoji}</span>
-          <span>{opt.label}</span>
+          {opt.label}
         </button>
       ))}
     </div>

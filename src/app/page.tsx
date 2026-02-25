@@ -2,90 +2,103 @@ import Link from 'next/link';
 
 export default function HomePage() {
   return (
-    <div className="space-y-12">
+    <div className="space-y-10">
+
       {/* Hero */}
-      <div className="text-center space-y-4 pt-6">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-purple-100 rounded-3xl text-5xl mb-2">🔤</div>
-        <h1 className="text-5xl font-black text-gray-800 leading-tight">
-          Welcome to{' '}
-          <span className="bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
-            Vocab Star
-          </span>
+      <div className="text-center py-10 space-y-5">
+        <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 text-xs font-semibold px-3 py-1.5 rounded-full uppercase tracking-wide">
+          AI-Powered Vocabulary Learning
+        </div>
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 leading-tight">
+          Build your vocabulary<br />
+          <span className="text-indigo-600">one lesson at a time</span>
         </h1>
-        <p className="text-lg text-gray-500 max-w-lg mx-auto leading-relaxed">
-          Build your vocabulary every day — practise words, track progress, and become a superstar reader! ⭐
+        <p className="text-lg text-slate-500 max-w-lg mx-auto leading-relaxed">
+          Practise English words with AI-generated questions — multiple choice, fill-in-the-blank, comprehension, and dictation, all in one session.
         </p>
         <div className="flex gap-3 justify-center pt-2">
           <Link
             href="/practice"
-            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold px-6 py-3 rounded-xl shadow-md hover:shadow-lg hover:scale-105 transition-all text-sm"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors shadow-sm"
           >
-            Start Practising →
+            Start Practising
           </Link>
           <Link
             href="/register"
-            className="bg-white text-purple-600 font-bold px-6 py-3 rounded-xl border border-purple-200 shadow-sm hover:shadow-md hover:scale-105 transition-all text-sm"
+            className="border border-slate-300 hover:border-slate-400 text-slate-700 font-semibold px-6 py-3 rounded-lg transition-colors"
           >
             Create Account
           </Link>
         </div>
       </div>
 
-      {/* Feature cards */}
-      <div className="grid gap-5 sm:grid-cols-3">
+      {/* Feature grid */}
+      <div className="grid sm:grid-cols-3 gap-4">
         {[
           {
             href: '/practice',
-            emoji: '✏️',
-            title: 'Practice',
-            description: '5 words per session — meaning, synonym, antonym, comprehension, and dictation all in one go.',
-            bg: 'bg-purple-500',
+            icon: (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            ),
+            title: 'Practice Sessions',
+            desc: '5 words per session — AI generates varied questions to help you master each word.',
+            color: 'text-indigo-600 bg-indigo-50',
           },
           {
             href: '/wrong-bank',
-            emoji: '🌟',
-            title: 'My Tricky Words',
-            description: 'Words you got wrong are saved here. Practise them again until you ace them all!',
-            bg: 'bg-pink-500',
+            icon: (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+            ),
+            title: 'Tricky Words',
+            desc: 'Questions you answered incorrectly are saved for focused re-practice.',
+            color: 'text-amber-600 bg-amber-50',
           },
           {
             href: '/upload',
-            emoji: '📋',
-            title: 'Word Management',
-            description: 'Teachers: upload word lists by lesson, and edit or delete words anytime.',
-            bg: 'bg-indigo-500',
+            icon: (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            ),
+            title: 'Teacher Tools',
+            desc: 'Upload word lists by lesson number, then edit or delete anytime.',
+            color: 'text-emerald-600 bg-emerald-50',
           },
-        ].map(({ href, emoji, title, description, bg }) => (
+        ].map(({ href, icon, title, desc, color }) => (
           <Link
             key={href}
             href={href}
-            className="group bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+            className="group bg-white rounded-xl p-5 border border-slate-200 hover:border-indigo-200 hover:shadow-sm transition-all"
           >
-            <div className={`inline-flex items-center justify-center w-12 h-12 ${bg} rounded-xl text-2xl mb-4`}>
-              {emoji}
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${color}`}>
+              {icon}
             </div>
-            <h2 className="text-base font-bold text-gray-800 mb-2">{title}</h2>
-            <p className="text-gray-500 text-sm leading-relaxed">{description}</p>
+            <h3 className="font-bold text-slate-800 mb-1">{title}</h3>
+            <p className="text-sm text-slate-500 leading-relaxed">{desc}</p>
           </Link>
         ))}
       </div>
 
       {/* How it works */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-        <h2 className="text-lg font-bold text-gray-800 mb-5">How it works</h2>
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h2 className="font-bold text-slate-900 mb-5">How it works</h2>
         <ol className="space-y-4">
           {[
-            { n: '1', text: 'Teacher uploads a word list with lesson numbers (e.g. "1 cat")', accent: 'bg-purple-500' },
-            { n: '2', text: 'Words are automatically scored Easy, Medium, or Hard', accent: 'bg-blue-500' },
-            { n: '3', text: 'Student picks a difficulty or lesson, then clicks Pick 5 Words', accent: 'bg-pink-500' },
-            { n: '4', text: 'AI generates MCQ, comprehension, and dictation questions instantly', accent: 'bg-amber-500' },
-            { n: '5', text: 'Wrong answers are saved to Tricky Words for focused re-practice', accent: 'bg-emerald-500' },
-          ].map(({ n, text, accent }) => (
-            <li key={n} className="flex items-start gap-3">
-              <span className={`flex-shrink-0 w-6 h-6 rounded-full ${accent} text-white font-bold text-xs flex items-center justify-center mt-0.5`}>
+            { n: '1', text: 'Teacher uploads a word list — format: "1 cat" for Lesson 1, word "cat"' },
+            { n: '2', text: 'Each word is automatically scored Easy, Medium, or Hard based on frequency data' },
+            { n: '3', text: 'Student selects a difficulty level or lesson, then starts a 5-word session' },
+            { n: '4', text: 'Claude AI generates 3 varied questions per word, a comprehension passage, and a dictation exercise' },
+            { n: '5', text: 'Incorrect answers are saved to Tricky Words for smart, weighted re-practice' },
+          ].map(({ n, text }) => (
+            <li key={n} className="flex gap-3">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center mt-0.5">
                 {n}
               </span>
-              <span className="text-gray-600 text-sm leading-relaxed">{text}</span>
+              <span className="text-sm text-slate-600 leading-relaxed">{text}</span>
             </li>
           ))}
         </ol>

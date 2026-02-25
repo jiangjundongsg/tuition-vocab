@@ -21,7 +21,6 @@ export default function PracticePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Fetch available lesson numbers
   useEffect(() => {
     fetch('/api/words')
       .then((r) => r.json())
@@ -45,7 +44,6 @@ export default function PracticePage() {
       });
 
       const data = await res.json();
-
       if (!res.ok) {
         setError(data.error ?? 'Something went wrong');
         return;
@@ -60,43 +58,50 @@ export default function PracticePage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-black text-purple-700 mb-2">✏️ Practice Words</h1>
-        <p className="text-gray-500">Pick 5 words and answer all questions in one go!</p>
+    <div className="space-y-6">
+
+      {/* Page header */}
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Practice Words</h1>
+        <p className="text-slate-500 mt-1 text-sm">
+          Select a difficulty and lesson, then start a 5-word session with AI-generated questions.
+        </p>
       </div>
 
-      {/* Controls */}
-      <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6 space-y-4">
-        {/* Difficulty filter */}
+      {/* Filter card */}
+      <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
+
+        {/* Difficulty */}
         <div>
-          <p className="text-sm font-bold text-gray-600 mb-3">Choose difficulty:</p>
+          <p className="text-sm font-semibold text-slate-700 mb-2">Difficulty</p>
           <DifficultyFilter value={difficulty} onChange={(v) => setDifficulty(v as DifficultyLevel)} />
         </div>
 
-        {/* Lesson number filter */}
+        {/* Lesson filter */}
         {availableLessons.length > 0 && (
           <div>
-            <p className="text-sm font-bold text-gray-600 mb-2">Choose lesson <span className="font-normal text-gray-400">(optional)</span>:</p>
+            <p className="text-sm font-semibold text-slate-700 mb-2">
+              Lesson <span className="text-slate-400 font-normal">(optional)</span>
+            </p>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setLessonNumber(null)}
-                className={`px-4 py-2 rounded-full border-2 font-bold text-sm transition-all ${
+                className={`px-4 py-2 rounded-lg border text-sm font-semibold transition-colors ${
                   lessonNumber === null
-                    ? 'bg-purple-500 text-white border-purple-500 shadow-md scale-105'
-                    : 'bg-white text-gray-600 border-gray-300 hover:border-purple-300'
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-300'
                 }`}
               >
-                All Lessons
+                All
               </button>
               {availableLessons.map((n) => (
                 <button
                   key={n}
                   onClick={() => setLessonNumber(n)}
-                  className={`px-4 py-2 rounded-full border-2 font-bold text-sm transition-all ${
+                  className={`px-4 py-2 rounded-lg border text-sm font-semibold transition-colors ${
                     lessonNumber === n
-                      ? 'bg-purple-500 text-white border-purple-500 shadow-md scale-105'
-                      : 'bg-white text-gray-600 border-gray-300 hover:border-purple-300'
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-300'
                   }`}
                 >
                   Lesson {n}
@@ -106,29 +111,31 @@ export default function PracticePage() {
           </div>
         )}
 
-        <button
-          onClick={pickWords}
-          disabled={loading}
-          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-black text-lg py-3 rounded-xl shadow-md hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {loading ? '✨ Generating questions...' : '🎯 Pick 5 Words!'}
-        </button>
-        {session && !loading && (
+        <div className="flex gap-3">
           <button
             onClick={pickWords}
-            className="w-full text-purple-600 font-bold text-sm py-2 rounded-xl hover:bg-purple-50 transition-all"
+            disabled={loading}
+            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
-            🔄 Try a different set
+            {loading ? 'Generating questions…' : 'Start Session — 5 Words'}
           </button>
-        )}
+          {session && !loading && (
+            <button
+              onClick={pickWords}
+              className="px-4 py-2.5 border border-slate-300 text-slate-600 hover:bg-slate-50 font-semibold rounded-lg text-sm transition-colors"
+            >
+              New set
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Error */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm">
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
           {error}
           {error.includes('No words') && (
-            <a href="/upload" className="ml-2 underline font-bold">Upload words →</a>
+            <a href="/upload" className="ml-2 underline font-semibold">Upload a word list →</a>
           )}
         </div>
       )}
@@ -137,7 +144,7 @@ export default function PracticePage() {
       {loading && (
         <div className="space-y-4 animate-pulse">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-2xl p-5 h-40 border border-gray-100" />
+            <div key={i} className="bg-white rounded-xl h-40 border border-slate-200" />
           ))}
         </div>
       )}
