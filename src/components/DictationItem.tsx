@@ -74,7 +74,7 @@ export default function DictationItem({ wordIndex, word, meaning, questionKey, s
           onKeyDown={(e) => e.key === 'Enter' && submit()}
           placeholder="Type the word you heard…"
           disabled={submitted}
-          className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-blue-400 disabled:bg-slate-50 transition-colors"
+          className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 disabled:bg-slate-50 transition-colors"
         />
         {!submitted && (
           <button

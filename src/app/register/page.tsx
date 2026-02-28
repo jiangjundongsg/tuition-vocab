@@ -138,7 +138,7 @@ export default function RegisterPage() {
             <button
               type="button"
               onClick={() => setShowTeacherField(!showTeacherField)}
-              className="text-xs text-slate-400 hover:text-blue-600 font-medium transition-colors"
+              className="text-xs text-slate-400 hover:text-indigo-600 font-medium transition-colors"
             >
               {showTeacherField ? '▲ Hide teacher options' : '▼ I am a teacher'}
             </button>

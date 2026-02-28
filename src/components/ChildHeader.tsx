@@ -178,7 +178,7 @@ export default function ChildHeader() {
                 <Link
                   href="/register"
                   onClick={() => setMenuOpen(false)}
-                  className="flex-1 text-center py-2 text-sm font-semibold bg-blue-600 text-white rounded-lg"
+                  className="flex-1 text-center py-2 text-sm font-semibold bg-indigo-600 text-white rounded-lg"
                 >
                   Sign up
                 </Link>

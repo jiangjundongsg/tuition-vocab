@@ -177,7 +177,7 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
         <div className="bg-indigo-600 rounded-xl p-8 text-center text-white">
           <p className="text-5xl mb-4">🎉</p>
           <h2 className="text-2xl font-bold mb-2">Session Complete!</h2>
-          <div className="text-blue-100 text-sm mb-4 space-y-1">
+          <div className="text-indigo-100 text-sm mb-4 space-y-1">
             <p>Dictation: {correctDictation} / {words.length} correct</p>
             {wrongItems.length > 0 && (
               <p>Tricky Words Review: {correctRepractice} / {wrongItems.length} corrected</p>
@@ -186,7 +186,7 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
           {onDone && (
             <button
               onClick={onDone}
-              className="bg-white text-blue-700 font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-blue-50 transition-colors"
+              className="bg-white text-indigo-700 font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-indigo-50 transition-colors"
             >
               Practice Another Lesson
             </button>
@@ -382,7 +382,7 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
       {/* Word practice card */}
       {!currentWordSet || currentWordSet === 'loading' ? (
         <div className="animate-pulse space-y-4">
-          <div className="h-24 bg-blue-100 rounded-xl" />
+          <div className="h-24 bg-indigo-100 rounded-xl" />
           <div className="h-32 bg-slate-100 rounded-xl" />
           <div className="h-20 bg-slate-100 rounded-xl" />
         </div>

@@ -74,7 +74,7 @@ export default function TeacherSQLPortal() {
           onChange={(e) => setQuery(e.target.value)}
           rows={5}
           spellCheck={false}
-          className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-y"
+          className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 resize-y"
           placeholder="SELECT * FROM words LIMIT 10;"
         />
         <p className="text-xs text-slate-400 mt-1">
@@ -86,14 +86,14 @@ export default function TeacherSQLPortal() {
         <button
           onClick={runQuery}
           disabled={loading || !query.trim()}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg text-sm transition-colors disabled:opacity-50"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2 rounded-lg text-sm transition-colors disabled:opacity-50"
         >
           {loading ? 'Running…' : 'Run Query'}
         </button>
         {result && result.rows.length > 0 && (
           <button
             onClick={downloadCsv}
-            className="border border-slate-300 text-slate-600 hover:bg-slate-50 font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
+            className="border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
           >
             Download CSV
           </button>

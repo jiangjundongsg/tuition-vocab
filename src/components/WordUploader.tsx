@@ -62,7 +62,7 @@ export default function WordUploader() {
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
         className={`border-2 border-dashed rounded-xl p-4 transition-colors ${
-          dragging ? 'border-blue-400 bg-blue-50' : 'border-slate-300 bg-slate-50'
+          dragging ? 'border-indigo-400 bg-indigo-50' : 'border-slate-300 bg-slate-50'
         }`}
       >
         <p className="text-center text-xs text-slate-400 mb-3">
@@ -73,14 +73,14 @@ export default function WordUploader() {
           onChange={(e) => setText(e.target.value)}
           placeholder={"1A,curious\n1A,ambitious\n1A,magnificent\n2B,eloquent\n\n(Format: lesson_number,word)"}
           rows={8}
-          className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 resize-none bg-white"
+          className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 resize-none bg-white"
         />
       </div>
 
       <button
         onClick={handleUpload}
         disabled={loading || !text.trim()}
-        className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+        className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
       >
         {loading ? (
           <>
