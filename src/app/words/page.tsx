@@ -104,6 +104,13 @@ export default function WordsPage() {
     return 'bg-rose-100 text-rose-700';
   };
 
+  const freqLabel = (zipf: number | null) => {
+    if (zipf === null) return { label: 'Unknown', color: 'text-slate-400' };
+    if (zipf >= 5.5) return { label: 'High', color: 'text-emerald-600' };
+    if (zipf >= 4.0) return { label: 'Medium', color: 'text-amber-600' };
+    return { label: 'Low', color: 'text-rose-600' };
+  };
+
   const filtered = filterLesson !== null
     ? words.filter((w) => w.lesson_number === filterLesson)
     : words;
@@ -182,6 +189,7 @@ export default function WordsPage() {
                 <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Word</th>
                 <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Lesson</th>
                 <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Difficulty</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Zipf Score</th>
                 <th className="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
               </tr>
             </thead>
@@ -211,6 +219,14 @@ export default function WordsPage() {
                           ))}
                         </select>
                       </td>
+                      <td className="px-4 py-2.5 text-center hidden sm:table-cell">
+                        {(() => { const f = freqLabel(word.zipf_score); return (
+                          <span className={`text-xs font-semibold ${f.color}`}>
+                            {word.zipf_score !== null ? word.zipf_score.toFixed(1) : '—'}
+                            <span className="font-normal text-slate-400 ml-1">({f.label})</span>
+                          </span>
+                        ); })()}
+                      </td>
                       <td className="px-5 py-2.5 text-right space-x-2">
                         <button
                           onClick={() => saveEdit(word.id)}
@@ -237,6 +253,14 @@ export default function WordsPage() {
                         <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${difficultyColor(word.difficulty)}`}>
                           {word.difficulty}
                         </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-center hidden sm:table-cell">
+                        {(() => { const f = freqLabel(word.zipf_score); return (
+                          <span className={`text-xs font-semibold ${f.color}`}>
+                            {word.zipf_score !== null ? word.zipf_score.toFixed(1) : '—'}
+                            <span className="font-normal text-slate-400 ml-1">({f.label})</span>
+                          </span>
+                        ); })()}
                       </td>
                       <td className="px-5 py-2.5 text-right space-x-3">
                         <button
