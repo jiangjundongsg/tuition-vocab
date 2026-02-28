@@ -27,7 +27,7 @@ export default function UploadPage() {
   if (checking) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
-        <div className="w-6 h-6 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -48,22 +48,22 @@ export default function UploadPage() {
       </div>
 
       <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
-        <h3 className="font-semibold text-slate-700 text-sm mb-3">Format guide</h3>
+        <h3 className="font-semibold text-slate-700 text-sm mb-3">Format guide (CSV)</h3>
         <div className="space-y-2 text-sm text-slate-500">
           <div className="flex gap-3 items-baseline">
-            <code className="bg-white border border-slate-200 rounded px-2 py-0.5 text-xs font-mono text-slate-700 shrink-0">1 cat</code>
-            <span>Lesson 1, word &ldquo;cat&rdquo;</span>
+            <code className="bg-white border border-slate-200 rounded px-2 py-0.5 text-xs font-mono text-slate-700 shrink-0">1A,curious</code>
+            <span>Lesson 1A, word &ldquo;curious&rdquo;</span>
           </div>
           <div className="flex gap-3 items-baseline">
-            <code className="bg-white border border-slate-200 rounded px-2 py-0.5 text-xs font-mono text-slate-700 shrink-0">2 happy curious</code>
-            <span>Lesson 2, two words on one line</span>
+            <code className="bg-white border border-slate-200 rounded px-2 py-0.5 text-xs font-mono text-slate-700 shrink-0">2B,magnificent</code>
+            <span>Lesson 2B, word &ldquo;magnificent&rdquo;</span>
           </div>
           <div className="flex gap-3 items-baseline">
-            <code className="bg-white border border-slate-200 rounded px-2 py-0.5 text-xs font-mono text-slate-700 shrink-0">magnificent</code>
+            <code className="bg-white border border-slate-200 rounded px-2 py-0.5 text-xs font-mono text-slate-700 shrink-0">ambitious</code>
             <span>No lesson number — word only</span>
           </div>
           <p className="pt-1 text-xs text-slate-400">
-            Drag and drop a .txt file is also supported. Difficulty is scored automatically as Easy, Medium, or Hard.
+            Lesson number can be any text (e.g. 1A, 2B, Unit3). Difficulty is scored automatically as High, Medium, Low, or Unknown.
           </p>
         </div>
       </div>

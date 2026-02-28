@@ -7,31 +7,14 @@ export async function GET(req: NextRequest) {
   try {
     await initDb();
     const { searchParams } = new URL(req.url);
-    const difficulty = searchParams.get('difficulty');
-    const lessonParam = searchParams.get('lesson');
-    const lessonNumber = lessonParam ? parseInt(lessonParam) : null;
+    const lesson = searchParams.get('lesson');
 
-    // Build query with optional filters
     let rows;
-    if (difficulty && ['easy', 'medium', 'hard'].includes(difficulty) && lessonNumber) {
+    if (lesson) {
       rows = await sql`
         SELECT id, word, zipf_score, difficulty, lesson_number, created_at
         FROM words
-        WHERE difficulty = ${difficulty} AND lesson_number = ${lessonNumber}
-        ORDER BY lesson_number ASC NULLS LAST, word ASC
-      `;
-    } else if (difficulty && ['easy', 'medium', 'hard'].includes(difficulty)) {
-      rows = await sql`
-        SELECT id, word, zipf_score, difficulty, lesson_number, created_at
-        FROM words
-        WHERE difficulty = ${difficulty}
-        ORDER BY lesson_number ASC NULLS LAST, word ASC
-      `;
-    } else if (lessonNumber) {
-      rows = await sql`
-        SELECT id, word, zipf_score, difficulty, lesson_number, created_at
-        FROM words
-        WHERE lesson_number = ${lessonNumber}
+        WHERE lesson_number = ${lesson}
         ORDER BY word ASC
       `;
     } else {
@@ -42,14 +25,14 @@ export async function GET(req: NextRequest) {
       `;
     }
 
-    // Also return distinct lesson numbers for the filter UI
+    // Distinct lesson numbers for filter UI
     const lessonRows = await sql`
       SELECT DISTINCT lesson_number
       FROM words
       WHERE lesson_number IS NOT NULL
       ORDER BY lesson_number ASC
     `;
-    const lessonNumbers = lessonRows.map((r) => Number(r.lesson_number));
+    const lessonNumbers = lessonRows.map((r) => r.lesson_number as string);
 
     return NextResponse.json({ words: rows, lessonNumbers });
   } catch (err) {
@@ -67,7 +50,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Teacher access required' }, { status: 403 });
     }
 
-    const { ids } = await req.json() as { ids: number[] };
+    const { ids } = (await req.json()) as { ids: number[] };
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return NextResponse.json({ error: 'ids array is required' }, { status: 400 });
     }

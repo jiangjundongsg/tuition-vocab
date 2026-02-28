@@ -11,7 +11,7 @@ const font = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: 'Vocab Star — English Vocabulary Practice',
-  description: 'AI-powered English vocabulary practice for primary school students',
+  description: 'Vocabulary practice for primary school students',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -19,7 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={font.variable}>
       <body className="min-h-screen bg-slate-50 font-[family-name:var(--font-jakarta)] text-slate-800 antialiased">
         <ChildHeader />
-        <main className="max-w-3xl mx-auto px-4 py-10">
+        <main className="max-w-3xl mx-auto px-4 py-8">
           {children}
         </main>
       </body>

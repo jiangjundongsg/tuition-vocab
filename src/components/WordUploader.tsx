@@ -5,8 +5,15 @@ import { useState, useCallback } from 'react';
 interface UploadResult {
   inserted: number;
   skipped: number;
-  words: Array<{ word: string; zipf: number | null; difficulty: string; lessonNumber: number | null }>;
+  words: Array<{ word: string; zipf: number | null; difficulty: string; lessonNumber: string | null }>;
 }
+
+const DIFFICULTY_COLORS: Record<string, string> = {
+  high:    'bg-emerald-50 text-emerald-700 border-emerald-200',
+  medium:  'bg-amber-50 text-amber-700 border-amber-200',
+  low:     'bg-red-50 text-red-700 border-red-200',
+  unknown: 'bg-slate-50 text-slate-500 border-slate-200',
+};
 
 export default function WordUploader() {
   const [text, setText] = useState('');
@@ -28,7 +35,7 @@ export default function WordUploader() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Upload failed');
-      setResult(data);
+      setResult(data as UploadResult);
       setText('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
@@ -41,18 +48,12 @@ export default function WordUploader() {
     e.preventDefault();
     setDragging(false);
     const file = e.dataTransfer.files[0];
-    if (file && file.type === 'text/plain') {
+    if (file && (file.type === 'text/plain' || file.name.endsWith('.csv') || file.name.endsWith('.txt'))) {
       const reader = new FileReader();
       reader.onload = (ev) => setText(ev.target?.result as string);
       reader.readAsText(file);
     }
   }, []);
-
-  const difficultyStyle = (d: string) => {
-    if (d === 'easy') return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-    if (d === 'medium') return 'bg-amber-50 text-amber-700 border-amber-200';
-    return 'bg-red-50 text-red-700 border-red-200';
-  };
 
   return (
     <div className="space-y-5">
@@ -61,28 +62,31 @@ export default function WordUploader() {
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
         className={`border-2 border-dashed rounded-xl p-4 transition-colors ${
-          dragging ? 'border-indigo-400 bg-indigo-50' : 'border-slate-300 bg-slate-50'
+          dragging ? 'border-blue-400 bg-blue-50' : 'border-slate-300 bg-slate-50'
         }`}
       >
         <p className="text-center text-xs text-slate-400 mb-3">
-          Drag & drop a .txt file here, or type below
+          Drag & drop a .csv or .txt file here, or type/paste below
         </p>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={"1 cat\n1 dog\n2 happy\n2 curious magnificent\n\n(Format: lesson_number word)"}
+          placeholder={"1A,curious\n1A,ambitious\n1A,magnificent\n2B,eloquent\n\n(Format: lesson_number,word)"}
           rows={8}
-          className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 resize-none bg-white"
+          className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 resize-none bg-white"
         />
       </div>
 
       <button
         onClick={handleUpload}
         disabled={loading || !text.trim()}
-        className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+        className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
       >
         {loading ? (
-          <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Processing…</>
+          <>
+            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            Processing…
+          </>
         ) : 'Upload Word List'}
       </button>
 
@@ -96,12 +100,21 @@ export default function WordUploader() {
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-3">
           <p className="font-semibold text-emerald-800 text-sm">
             {result.inserted} word{result.inserted !== 1 ? 's' : ''} uploaded successfully
-            {result.skipped > 0 && <span className="text-emerald-600 font-normal"> · {result.skipped} skipped</span>}
+            {result.skipped > 0 && (
+              <span className="text-emerald-600 font-normal"> · {result.skipped} skipped</span>
+            )}
           </p>
           <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
             {result.words.map(({ word, difficulty, lessonNumber }) => (
-              <span key={word} className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border ${difficultyStyle(difficulty)}`}>
-                {lessonNumber !== null && <span className="opacity-50">L{lessonNumber}</span>}
+              <span
+                key={word}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                  DIFFICULTY_COLORS[difficulty] ?? DIFFICULTY_COLORS.unknown
+                }`}
+              >
+                {lessonNumber !== null && (
+                  <span className="opacity-50">L{lessonNumber}</span>
+                )}
                 {word}
               </span>
             ))}

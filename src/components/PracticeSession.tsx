@@ -1,208 +1,211 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { WordSetQuestions } from '@/lib/claude';
-import QuestionRenderer from './QuestionRenderer';
+import { useState, useCallback, useEffect } from 'react';
+import WordPracticeCard, { WordSetData } from './WordPracticeCard';
 import DictationItem from './DictationItem';
 
-interface Props {
-  wordSetId: number;
-  questions: WordSetQuestions;
+interface WordInfo {
+  id: number;
+  word: string;
 }
 
-export default function PracticeSession({ wordSetId, questions }: Props) {
-  const [submitted, setSubmitted] = useState<Record<string, boolean>>({});
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [correct, setCorrect] = useState<Record<string, boolean>>({});
+interface Props {
+  words: WordInfo[];
+  onDone?: () => void;
+}
 
-  const compCount = questions.comprehension.questions.length;
-  const totalQuestions =
-    questions.wordQuestions.length * 3 +
-    compCount +
-    questions.words.length;
+type Phase = 'words' | 'dictation' | 'done';
 
-  const answeredCount = Object.keys(submitted).length;
-  const correctCount = Object.values(correct).filter(Boolean).length;
-  const allDone = answeredCount === totalQuestions;
+export default function PracticeSession({ words, onDone }: Props) {
+  const [phase, setPhase] = useState<Phase>('words');
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [wordSets, setWordSets] = useState<Record<number, WordSetData | 'loading' | 'error'>>({});
+  const [dictationSubmitted, setDictationSubmitted] = useState<Record<string, boolean>>({});
+  const [dictationCorrect, setDictationCorrect] = useState<Record<string, boolean>>({});
+  const [dictationAnswers, setDictationAnswers] = useState<Record<string, string>>({});
 
-  const recordAnswer = useCallback(
-    async (questionKey: string, answer: string, isCorrect: boolean) => {
-      if (submitted[questionKey]) return;
-      setSubmitted((s) => ({ ...s, [questionKey]: true }));
-      setAnswers((a) => ({ ...a, [questionKey]: answer }));
-      setCorrect((c) => ({ ...c, [questionKey]: isCorrect }));
+  const currentWord = words[currentWordIndex];
+
+  // Load word set for current word
+  useEffect(() => {
+    if (!currentWord) return;
+    const id = currentWord.id;
+    if (wordSets[id]) return; // already loaded or loading
+
+    setWordSets((prev) => ({ ...prev, [id]: 'loading' }));
+
+    fetch(`/api/practice/${id}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) throw new Error(data.error);
+        setWordSets((prev) => ({
+          ...prev,
+          [id]: {
+            wordSetId: data.wordSetId,
+            word: currentWord.word,
+            paragraph: data.paragraph,
+            questions: data.questions,
+            fillBlank: data.fillBlank,
+          } as WordSetData,
+        }));
+      })
+      .catch(() => {
+        setWordSets((prev) => ({ ...prev, [id]: 'error' }));
+      });
+  }, [currentWord, wordSets]);
+
+  function handleWordComplete() {
+    if (currentWordIndex < words.length - 1) {
+      setCurrentWordIndex((i) => i + 1);
+    } else {
+      setPhase('dictation');
+    }
+  }
+
+  const recordDictation = useCallback(
+    async (questionKey: string, typed: string, isCorrect: boolean) => {
+      if (dictationSubmitted[questionKey]) return;
+      setDictationSubmitted((s) => ({ ...s, [questionKey]: true }));
+      setDictationAnswers((a) => ({ ...a, [questionKey]: typed }));
+      setDictationCorrect((c) => ({ ...c, [questionKey]: isCorrect }));
+
+      // Find the word_set_id for this word (dictation key = "dictation_N")
+      const idx = parseInt(questionKey.split('_')[1] ?? '0');
+      const wordInfo = words[idx];
+      if (!wordInfo) return;
+      const ws = wordSets[wordInfo.id];
+      if (!ws || ws === 'loading' || ws === 'error') return;
+
       try {
         await fetch('/api/questions/answer', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ wordSetId, questionKey, isCorrect }),
+          body: JSON.stringify({
+            wordSetId: ws.wordSetId,
+            questionKey: 'dictation',
+            isCorrect,
+          }),
         });
       } catch { /* silent */ }
     },
-    [wordSetId, submitted]
+    [dictationSubmitted, wordSets, words]
   );
 
-  const pct = totalQuestions ? Math.round((answeredCount / totalQuestions) * 100) : 0;
+  const allDictationDone = words.every((_, i) => dictationSubmitted[`dictation_${i}`]);
 
-  return (
-    <div className="space-y-6">
-
-      {/* Progress */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
-        <div className="flex justify-between text-sm font-semibold text-slate-600 mb-2">
-          <span>Session progress</span>
-          <span>{answeredCount} / {totalQuestions}{allDone && ` · ${correctCount} correct`}</span>
-        </div>
-        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        {allDone && (
-          <p className="text-xs text-slate-400 mt-1 text-right">
-            {pct === 100 && correctCount === totalQuestions
-              ? 'Perfect score!'
-              : correctCount >= totalQuestions * 0.8
-              ? 'Great job!'
-              : 'Keep practising!'}
+  if (phase === 'done') {
+    const totalDictation = words.length;
+    const correctDictation = Object.values(dictationCorrect).filter(Boolean).length;
+    return (
+      <div className="space-y-6">
+        <div className="bg-blue-700 rounded-xl p-8 text-center text-white">
+          <p className="text-5xl mb-4">🎉</p>
+          <h2 className="text-2xl font-bold mb-2">Session Complete!</h2>
+          <p className="text-blue-100 text-sm mb-4">
+            Dictation: {correctDictation} / {totalDictation} correct
           </p>
-        )}
-      </div>
-
-      {/* ── Section 1: Word Questions ─────────────────────────── */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="h-px flex-1 bg-slate-200" />
-          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">
-            Word Questions · {questions.words.length} words × 3 each
-          </h2>
-          <div className="h-px flex-1 bg-slate-200" />
-        </div>
-
-        {questions.wordQuestions.map((wq, wordIdx) => (
-          <div key={wq.word} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            {/* Word header */}
-            <div className="flex items-center gap-3 px-5 py-3 border-b border-slate-100 bg-slate-50">
-              <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center">
-                {wordIdx + 1}
-              </span>
-              <span className="font-bold text-slate-800">{wq.word}</span>
-            </div>
-
-            <div className="p-5 divide-y divide-slate-100">
-              {wq.questions.map((q, qIdx) => {
-                const qKey = `wq_${wordIdx}_${qIdx}`;
-                return (
-                  <div key={qKey} className={qIdx > 0 ? 'pt-5 mt-1' : ''}>
-                    <QuestionRenderer
-                      questionKey={qKey}
-                      data={q}
-                      submitted={!!submitted[qKey]}
-                      selectedAnswer={answers[qKey] ?? ''}
-                      isCorrect={!!correct[qKey]}
-                      onAnswer={recordAnswer}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </section>
-
-      {/* ── Section 2: Comprehension ──────────────────────────── */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="h-px flex-1 bg-slate-200" />
-          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">
-            Reading Comprehension · {compCount} questions
-          </h2>
-          <div className="h-px flex-1 bg-slate-200" />
-        </div>
-
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50">
-            <span className="text-sm font-semibold text-slate-700">Read the passage carefully</span>
-          </div>
-
-          <div className="p-5 space-y-6">
-            {questions.comprehension.passage && (
-              <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                <p className="text-sm text-slate-700 leading-relaxed">
-                  {questions.comprehension.passage}
-                </p>
-              </div>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
+            <a
+              href="/wrong-bank"
+              className="bg-white text-blue-700 font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-blue-50 transition-colors"
+            >
+              Review Tricky Words
+            </a>
+            {onDone && (
+              <button
+                onClick={onDone}
+                className="border border-white/50 text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-blue-600 transition-colors"
+              >
+                Practice Another Lesson
+              </button>
             )}
-
-            <div className="divide-y divide-slate-100">
-              {questions.comprehension.questions.map((q, qIdx) => {
-                const qKey = `comp_${qIdx}`;
-                return (
-                  <div key={qKey} className={qIdx > 0 ? 'pt-5 mt-1' : ''}>
-                    <p className="text-xs font-semibold text-slate-400 mb-3">
-                      Question {qIdx + 1}
-                    </p>
-                    <QuestionRenderer
-                      questionKey={qKey}
-                      data={q}
-                      submitted={!!submitted[qKey]}
-                      selectedAnswer={answers[qKey] ?? ''}
-                      isCorrect={!!correct[qKey]}
-                      onAnswer={recordAnswer}
-                    />
-                  </div>
-                );
-              })}
-            </div>
           </div>
         </div>
-      </section>
+      </div>
+    );
+  }
 
-      {/* ── Section 3: Dictation ─────────────────────────────── */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="h-px flex-1 bg-slate-200" />
-          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">
-            Dictation · {questions.words.length} words
-          </h2>
-          <div className="h-px flex-1 bg-slate-200" />
+  if (phase === 'dictation') {
+    return (
+      <div className="space-y-5">
+        {/* Section header */}
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <h2 className="text-lg font-bold text-slate-900 mb-1">Dictation</h2>
+          <p className="text-sm text-slate-500">
+            Click to hear each word, then type what you hear. Press Enter or &ldquo;Check&rdquo; to submit.
+          </p>
         </div>
-
-        <p className="text-xs text-slate-400">
-          Click to hear the word, then type what you hear. Press Enter or &quot;Check&quot; to submit.
-        </p>
 
         <div className="space-y-3">
-          {questions.words.map((word, i) => (
+          {words.map((w, i) => (
             <DictationItem
-              key={i}
+              key={w.id}
               wordIndex={i}
-              word={word}
+              word={w.word}
               questionKey={`dictation_${i}`}
-              submitted={!!submitted[`dictation_${i}`]}
-              isCorrect={!!correct[`dictation_${i}`]}
-              onAnswer={recordAnswer}
+              submitted={!!dictationSubmitted[`dictation_${i}`]}
+              isCorrect={!!dictationCorrect[`dictation_${i}`]}
+              onAnswer={recordDictation}
             />
           ))}
         </div>
-      </section>
 
-      {/* ── Completion ───────────────────────────────────────── */}
-      {allDone && (
-        <div className="bg-indigo-600 rounded-xl p-6 text-center text-white">
-          <p className="text-3xl mb-2">🎉</p>
-          <h3 className="text-xl font-bold mb-1">Session Complete</h3>
-          <p className="text-indigo-100 text-sm">
-            You scored <strong className="text-white">{correctCount}</strong> out of{' '}
-            <strong className="text-white">{totalQuestions}</strong>.{' '}
-            {correctCount === totalQuestions
-              ? 'Perfect — outstanding work!'
-              : correctCount >= totalQuestions * 0.8
-              ? 'Excellent effort! Keep it up.'
-              : 'Good attempt. Review your Tricky Words and practise again.'}
-          </p>
+        {allDictationDone && (
+          <button
+            onClick={() => setPhase('done')}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl text-sm transition-colors"
+          >
+            Finish Session →
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // Phase: words
+  const currentWordSet = currentWord ? wordSets[currentWord.id] : null;
+
+  return (
+    <div className="space-y-4">
+      {/* Progress bar */}
+      <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="flex justify-between text-sm font-semibold text-slate-600 mb-2">
+          <span>Progress</span>
+          <span>Word {currentWordIndex + 1} of {words.length}</span>
         </div>
+        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-blue-600 rounded-full transition-all duration-500"
+            style={{ width: `${((currentWordIndex) / words.length) * 100}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Word practice card */}
+      {!currentWordSet || currentWordSet === 'loading' ? (
+        <div className="animate-pulse space-y-4">
+          <div className="h-24 bg-blue-100 rounded-xl" />
+          <div className="h-32 bg-slate-100 rounded-xl" />
+          <div className="h-20 bg-slate-100 rounded-xl" />
+        </div>
+      ) : currentWordSet === 'error' ? (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-5 py-4 text-sm">
+          <p className="font-semibold mb-1">Could not load questions for &ldquo;{currentWord?.word}&rdquo;</p>
+          <p className="text-xs">This word may not appear in the Harry Potter text. Try skipping to the next word.</p>
+          <button
+            onClick={handleWordComplete}
+            className="mt-3 bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors"
+          >
+            Skip this word →
+          </button>
+        </div>
+      ) : (
+        <WordPracticeCard
+          wordData={currentWordSet}
+          wordIndex={currentWordIndex}
+          totalWords={words.length}
+          onComplete={handleWordComplete}
+        />
       )}
     </div>
   );

@@ -1,84 +1,68 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { getSession } from '@/lib/session';
+import { initDb } from '@/lib/db-init';
 import { getCurrentUser } from '@/lib/auth';
 
-function decodeKey(key: string, wordsJson: string) {
-  const words = JSON.parse(wordsJson) as string[];
-
-  // New v2 format: wq_{wordIdx}_{qIdx}
-  if (key.startsWith('wq_')) {
-    const parts = key.split('_');
-    const wordIdx = parseInt(parts[1] ?? '0');
-    const qIdx = parseInt(parts[2] ?? '0');
-    const word = words[wordIdx] ?? key;
-    return { word, typeLabel: `Question ${qIdx + 1}` };
+function decodeQuestionKey(key: string): string {
+  switch (key) {
+    case 'mcq':        return 'Word Meaning (MCQ)';
+    case 'comp_0':     return 'Comprehension Q1';
+    case 'comp_1':     return 'Comprehension Q2';
+    case 'fill_blank': return 'Fill in the Blank';
+    case 'dictation':  return 'Dictation';
+    default:           return key;
   }
-
-  // Comprehension: comp_{qIdx}
-  if (key.startsWith('comp_')) {
-    const qIdx = parseInt(key.split('_')[1] ?? '0');
-    return { word: '(Comprehension)', typeLabel: `Q${qIdx + 1}` };
-  }
-
-  // Dictation: dictation_{idx}
-  if (key.startsWith('dictation_')) {
-    const idx = parseInt(key.split('_')[1] ?? '0');
-    return { word: words[idx] ?? key, typeLabel: 'Dictation' };
-  }
-
-  // Legacy v1 format: meaning_0, synonym_0, antonym_0, comp_0
-  const [type, idxStr] = key.split('_');
-  const idx = parseInt(idxStr ?? '0');
-  const word = type === 'comp' ? '(Comprehension)' : (words[idx] ?? key);
-  const typeLabel =
-    type === 'meaning' ? 'Meaning' :
-    type === 'synonym' ? 'Synonym' :
-    type === 'antonym' ? 'Antonym' :
-    type === 'comp'    ? 'Comprehension' :
-    type === 'dictation' ? 'Dictation' : type;
-  return { word, typeLabel };
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const user = await getCurrentUser();
-    let rows;
+    await initDb();
 
-    if (user) {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Login required' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const lesson = searchParams.get('lesson');
+
+    let rows;
+    if (lesson) {
       rows = await sql`
         SELECT wb.id, wb.word_set_id, wb.question_key, wb.wrong_count, wb.last_wrong_at,
-               ws.words_json
+               ws.word_id, w.word, w.lesson_number
         FROM wrong_bank wb
         JOIN word_sets ws ON wb.word_set_id = ws.id
-        WHERE wb.user_id = ${user.id} AND wb.word_set_id IS NOT NULL
+        JOIN words w ON ws.word_id = w.id
+        WHERE wb.user_id = ${user.id}
+          AND wb.word_set_id IS NOT NULL
+          AND w.lesson_number = ${lesson}
         ORDER BY wb.wrong_count DESC, wb.last_wrong_at DESC
       `;
     } else {
-      const sessionId = await getSession();
-      if (!sessionId) return NextResponse.json({ items: [] });
       rows = await sql`
         SELECT wb.id, wb.word_set_id, wb.question_key, wb.wrong_count, wb.last_wrong_at,
-               ws.words_json
+               ws.word_id, w.word, w.lesson_number
         FROM wrong_bank wb
         JOIN word_sets ws ON wb.word_set_id = ws.id
-        WHERE wb.session_id = ${sessionId} AND wb.word_set_id IS NOT NULL
+        JOIN words w ON ws.word_id = w.id
+        WHERE wb.user_id = ${user.id}
+          AND wb.word_set_id IS NOT NULL
         ORDER BY wb.wrong_count DESC, wb.last_wrong_at DESC
       `;
     }
 
-    const items = rows.map((row) => {
-      const { word, typeLabel } = decodeKey(row.question_key as string, row.words_json as string);
-      return {
-        id: row.id,
-        wordSetId: row.word_set_id,
-        questionKey: row.question_key,
-        word,
-        typeLabel,
-        wrongCount: Number(row.wrong_count),
-        lastWrongAt: row.last_wrong_at,
-      };
-    });
+    const items = rows.map((row) => ({
+      id: Number(row.id),
+      wordSetId: Number(row.word_set_id),
+      wordId: Number(row.word_id),
+      word: row.word as string,
+      lessonNumber: row.lesson_number as string | null,
+      questionKey: row.question_key as string,
+      typeLabel: decodeQuestionKey(row.question_key as string),
+      wrongCount: Number(row.wrong_count),
+      lastWrongAt: row.last_wrong_at,
+    }));
 
     return NextResponse.json({ items });
   } catch (err) {

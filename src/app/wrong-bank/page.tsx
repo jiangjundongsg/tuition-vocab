@@ -1,112 +1,111 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import WrongBankList from '@/components/WrongBankList';
-import PracticeSession from '@/components/PracticeSession';
-import { WordSetQuestions } from '@/lib/claude';
 
 interface WrongItem {
   id: number;
+  wordId: number;
+  wordSetId: number;
   word: string;
+  lessonNumber: string | null;
+  questionKey: string;
   typeLabel: string;
   wrongCount: number;
   lastWrongAt: string;
 }
 
-interface PracticeData {
-  wordSetId: number;
-  words: string[];
-  questions: WordSetQuestions;
-}
-
 export default function WrongBankPage() {
+  const router = useRouter();
   const [items, setItems] = useState<WrongItem[]>([]);
-  const [loadingList, setLoadingList] = useState(true);
-  const [loadingPractice, setLoadingPractice] = useState(false);
-  const [practiceData, setPracticeData] = useState<PracticeData | null>(null);
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
 
-  const fetchList = useCallback(async () => {
+  // Auth check
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.user) {
+          router.replace('/login?message=login-required');
+        } else {
+          setAuthChecked(true);
+        }
+      })
+      .catch(() => router.replace('/login?message=login-required'));
+  }, [router]);
+
+  const fetchItems = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await fetch('/api/wrong-bank');
       const data = await res.json();
-      setItems(data.items ?? []);
+      if (res.ok) setItems(data.items ?? []);
     } catch { /* silent */ }
-    finally { setLoadingList(false); }
+    finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { fetchList(); }, [fetchList]);
+  useEffect(() => {
+    if (authChecked) fetchItems();
+  }, [authChecked, fetchItems]);
 
-  async function startPractice() {
-    setLoadingPractice(true);
-    setError('');
-    setPracticeData(null);
-    try {
-      const res = await fetch('/api/wrong-bank/practice');
-      const data = await res.json();
-      if (!res.ok || !data.item) {
-        setError(data.message ?? 'No questions to practise.');
-        return;
-      }
-      setPracticeData({ wordSetId: data.item.wordSetId, words: data.item.words, questions: data.item.questions });
-    } catch {
-      setError('Could not load practice questions.');
-    } finally {
-      setLoadingPractice(false);
-    }
+  if (!authChecked) {
+    return (
+      <div className="animate-pulse space-y-4">
+        <div className="h-8 bg-slate-200 rounded w-48" />
+        <div className="h-32 bg-slate-100 rounded-xl" />
+      </div>
+    );
   }
 
-  function handleSessionDone() {
-    setTimeout(() => { fetchList(); setPracticeData(null); }, 1500);
-  }
+  // Group items by lesson number
+  const byLesson = items.reduce<Record<string, WrongItem[]>>((acc, item) => {
+    const key = item.lessonNumber ?? 'No Lesson';
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(item);
+    return acc;
+  }, {});
 
   return (
     <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Tricky Words</h1>
+        <p className="text-slate-500 mt-1 text-sm">
+          Questions you&apos;ve answered incorrectly. Practice them again to improve.
+        </p>
+      </div>
 
-      {practiceData ? (
-        <>
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => { setPracticeData(null); fetchList(); }}
-              className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 font-medium transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back to Tricky Words
-            </button>
-          </div>
-          <PracticeSession wordSetId={practiceData.wordSetId} questions={practiceData.questions} />
-          <button
-            onClick={handleSessionDone}
-            className="w-full border border-slate-300 text-slate-600 hover:bg-slate-50 font-semibold py-2.5 rounded-lg text-sm transition-colors"
-          >
-            Done — refresh my list
-          </button>
-        </>
+      {loading ? (
+        <div className="animate-pulse space-y-2">
+          {[1, 2, 3].map((i) => <div key={i} className="h-12 bg-slate-100 rounded-xl" />)}
+        </div>
+      ) : items.length === 0 ? (
+        <WrongBankList items={[]} />
       ) : (
-        <>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Tricky Words</h1>
-            <p className="text-slate-500 mt-1 text-sm">
-              Questions you&apos;ve answered incorrectly. Practise them until you get them right.
+        <div className="space-y-6">
+          {Object.entries(byLesson).sort().map(([lesson, lessonItems]) => (
+            <div key={lesson} className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="h-px flex-1 bg-slate-200" />
+                <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                  {lesson === 'No Lesson' ? 'No Lesson' : `Lesson ${lesson}`}
+                  {' '}· {lessonItems.length} question{lessonItems.length !== 1 ? 's' : ''}
+                </h2>
+                <div className="h-px flex-1 bg-slate-200" />
+              </div>
+              <WrongBankList items={lessonItems} />
+            </div>
+          ))}
+
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-700">
+            <p className="font-semibold mb-1">How to improve your Tricky Words</p>
+            <p className="text-blue-600 text-xs">
+              Go to <a href="/practice" className="underline font-semibold">Practice</a>, select the same lesson, and redo it.
+              Each correct answer removes a question from this list.
             </p>
           </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
-              {error}
-            </div>
-          )}
-
-          {loadingList ? (
-            <div className="animate-pulse space-y-2">
-              {[1, 2, 3].map((i) => <div key={i} className="h-12 bg-slate-100 rounded-xl" />)}
-            </div>
-          ) : (
-            <WrongBankList items={items} onPractice={startPractice} loading={loadingPractice} />
-          )}
-        </>
+        </div>
       )}
     </div>
   );

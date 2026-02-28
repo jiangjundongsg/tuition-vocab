@@ -21,13 +21,22 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid word ID' }, { status: 400 });
     }
 
-    const body = await req.json() as { lessonNumber?: number | null; difficulty?: string };
+    const body = (await req.json()) as {
+      lessonNumber?: string | null;
+      difficulty?: string;
+    };
+
+    // Validate difficulty label
+    const validDifficulties = ['high', 'medium', 'low', 'unknown'];
+    if (body.difficulty && !validDifficulties.includes(body.difficulty)) {
+      return NextResponse.json({ error: 'Invalid difficulty' }, { status: 400 });
+    }
 
     if (body.lessonNumber !== undefined && body.difficulty) {
       await sql`
         UPDATE words
         SET lesson_number = ${body.lessonNumber ?? null},
-            difficulty = ${body.difficulty}
+            difficulty    = ${body.difficulty}
         WHERE id = ${wordId}
       `;
     } else if (body.lessonNumber !== undefined) {

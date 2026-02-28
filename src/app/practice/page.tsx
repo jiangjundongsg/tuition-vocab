@@ -1,158 +1,180 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import DifficultyFilter from '@/components/DifficultyFilter';
+import { useRouter } from 'next/navigation';
 import PracticeSession from '@/components/PracticeSession';
-import { WordSetQuestions } from '@/lib/claude';
 
-type DifficultyLevel = 'all' | 'easy' | 'medium' | 'hard';
-
-interface SessionData {
-  wordSetId: number;
-  words: string[];
-  questions: WordSetQuestions;
+interface WordInfo {
+  id: number;
+  word: string;
 }
 
 export default function PracticePage() {
-  const [difficulty, setDifficulty] = useState<DifficultyLevel>('all');
-  const [lessonNumber, setLessonNumber] = useState<number | null>(null);
-  const [availableLessons, setAvailableLessons] = useState<number[]>([]);
-  const [session, setSession] = useState<SessionData | null>(null);
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const [lessons, setLessons] = useState<string[]>([]);
+  const [selectedLesson, setSelectedLesson] = useState<string | null>(null);
+  const [words, setWords] = useState<WordInfo[]>([]);
+  const [loadingWords, setLoadingWords] = useState(false);
+  const [practicing, setPracticing] = useState(false);
   const [error, setError] = useState('');
+  const [authChecked, setAuthChecked] = useState(false);
 
+  // Auth check — must be logged in
   useEffect(() => {
-    fetch('/api/words')
+    fetch('/api/auth/me')
       .then((r) => r.json())
-      .then((d) => setAvailableLessons(d.lessonNumbers ?? []))
+      .then((d) => {
+        if (!d.user) {
+          router.replace('/login?message=login-required');
+        } else {
+          setAuthChecked(true);
+        }
+      })
+      .catch(() => router.replace('/login?message=login-required'));
+  }, [router]);
+
+  // Fetch lessons
+  useEffect(() => {
+    if (!authChecked) return;
+    fetch('/api/lessons')
+      .then((r) => r.json())
+      .then((d) => setLessons(d.lessons ?? []))
       .catch(() => {});
-  }, []);
+  }, [authChecked]);
 
-  async function pickWords() {
-    setLoading(true);
+  // Fetch words for selected lesson
+  useEffect(() => {
+    if (!selectedLesson) return;
+    setLoadingWords(true);
     setError('');
-    setSession(null);
+    setWords([]);
+    fetch(`/api/words?lesson=${encodeURIComponent(selectedLesson)}`)
+      .then((r) => r.json())
+      .then((d) => {
+        const wordList = (d.words ?? []) as Array<{ id: number; word: string }>;
+        setWords(wordList.map((w) => ({ id: Number(w.id), word: w.word as string })));
+      })
+      .catch(() => setError('Could not load words for this lesson.'))
+      .finally(() => setLoadingWords(false));
+  }, [selectedLesson]);
 
-    try {
-      const res = await fetch('/api/questions/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          difficulty: difficulty === 'all' ? undefined : difficulty,
-          lessonNumber: lessonNumber ?? undefined,
-        }),
-      });
+  function startPractice() {
+    if (words.length === 0) return;
+    setPracticing(true);
+  }
 
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? 'Something went wrong');
-        return;
-      }
+  function handleDone() {
+    setPracticing(false);
+    setSelectedLesson(null);
+    setWords([]);
+  }
 
-      setSession({ wordSetId: data.wordSetId, words: data.words, questions: data.questions });
-    } catch {
-      setError('Could not connect. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+  if (!authChecked) {
+    return (
+      <div className="animate-pulse space-y-4">
+        <div className="h-8 bg-slate-200 rounded w-48" />
+        <div className="h-32 bg-slate-100 rounded-xl" />
+      </div>
+    );
+  }
+
+  if (practicing && words.length > 0) {
+    return (
+      <div className="space-y-4">
+        <button
+          onClick={() => { setPracticing(false); }}
+          className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 font-medium transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to lesson selection
+        </button>
+        <PracticeSession words={words} onDone={handleDone} />
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
 
-      {/* Page header */}
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Practice Words</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Practice</h1>
         <p className="text-slate-500 mt-1 text-sm">
-          Select a difficulty and lesson, then start a 5-word session with AI-generated questions.
+          Select a lesson to practice. You will go through each word with reading, questions, and dictation.
         </p>
       </div>
 
-      {/* Filter card */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
+      {/* Lesson selector */}
+      <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
+        <p className="text-sm font-semibold text-slate-700">Select a Lesson</p>
 
-        {/* Difficulty */}
-        <div>
-          <p className="text-sm font-semibold text-slate-700 mb-2">Difficulty</p>
-          <DifficultyFilter value={difficulty} onChange={(v) => setDifficulty(v as DifficultyLevel)} />
-        </div>
-
-        {/* Lesson filter */}
-        {availableLessons.length > 0 && (
-          <div>
-            <p className="text-sm font-semibold text-slate-700 mb-2">
-              Lesson <span className="text-slate-400 font-normal">(optional)</span>
-            </p>
-            <div className="flex flex-wrap gap-2">
+        {lessons.length === 0 ? (
+          <p className="text-sm text-slate-400">
+            No lessons available yet.{' '}
+            <a href="/upload" className="text-blue-600 hover:underline font-semibold">
+              Upload a word list →
+            </a>
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {lessons.map((lesson) => (
               <button
-                onClick={() => setLessonNumber(null)}
+                key={lesson}
+                onClick={() => { setSelectedLesson(lesson); setPracticing(false); }}
                 className={`px-4 py-2 rounded-lg border text-sm font-semibold transition-colors ${
-                  lessonNumber === null
-                    ? 'bg-indigo-600 text-white border-indigo-600'
-                    : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-300'
+                  selectedLesson === lesson
+                    ? 'bg-blue-700 text-white border-blue-700'
+                    : 'bg-white text-slate-600 border-slate-300 hover:border-blue-400'
                 }`}
               >
-                All
+                Lesson {lesson}
               </button>
-              {availableLessons.map((n) => (
-                <button
-                  key={n}
-                  onClick={() => setLessonNumber(n)}
-                  className={`px-4 py-2 rounded-lg border text-sm font-semibold transition-colors ${
-                    lessonNumber === n
-                      ? 'bg-indigo-600 text-white border-indigo-600'
-                      : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-300'
-                  }`}
-                >
-                  Lesson {n}
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
         )}
 
-        <div className="flex gap-3">
-          <button
-            onClick={pickWords}
-            disabled={loading}
-            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-          >
-            {loading ? 'Generating questions…' : 'Start Session — 5 Words'}
-          </button>
-          {session && !loading && (
-            <button
-              onClick={pickWords}
-              className="px-4 py-2.5 border border-slate-300 text-slate-600 hover:bg-slate-50 font-semibold rounded-lg text-sm transition-colors"
-            >
-              New set
-            </button>
-          )}
-        </div>
+        {/* Words preview */}
+        {selectedLesson && (
+          <div className="pt-2 border-t border-slate-100">
+            {loadingWords ? (
+              <div className="animate-pulse flex gap-2 flex-wrap">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-7 w-20 bg-slate-100 rounded-full" />
+                ))}
+              </div>
+            ) : error ? (
+              <p className="text-sm text-red-600">{error}</p>
+            ) : words.length === 0 ? (
+              <p className="text-sm text-slate-400">No words found for Lesson {selectedLesson}.</p>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-xs text-slate-500">
+                  {words.length} word{words.length !== 1 ? 's' : ''} in Lesson {selectedLesson}:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {words.map((w) => (
+                    <span
+                      key={w.id}
+                      className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full border border-blue-200"
+                    >
+                      {w.word}
+                    </span>
+                  ))}
+                </div>
+                <button
+                  onClick={startPractice}
+                  className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors"
+                >
+                  Start Practice — {words.length} word{words.length !== 1 ? 's' : ''}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Error */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
-          {error}
-          {error.includes('No words') && (
-            <a href="/upload" className="ml-2 underline font-semibold">Upload a word list →</a>
-          )}
-        </div>
-      )}
-
-      {/* Loading skeleton */}
-      {loading && (
-        <div className="space-y-4 animate-pulse">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-xl h-40 border border-slate-200" />
-          ))}
-        </div>
-      )}
-
-      {/* Session */}
-      {session && !loading && (
-        <PracticeSession wordSetId={session.wordSetId} questions={session.questions} />
-      )}
     </div>
   );
 }

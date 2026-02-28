@@ -1,10 +1,17 @@
 'use client';
 
-import { MCQData, TrueFalseData } from '@/lib/claude';
+// Generic MCQ/True-False question renderer
+interface QuestionForMCQ {
+  type: 'mcq' | 'true_false';
+  question: string;
+  options?: string[];  // present for mcq
+  answer: string;
+  explanation: string;
+}
 
 interface Props {
   questionKey: string;
-  data: MCQData | TrueFalseData;
+  data: QuestionForMCQ;
   submitted: boolean;
   selectedAnswer: string;
   onAnswer: (questionKey: string, answer: string, isCorrect: boolean) => void;
@@ -12,7 +19,7 @@ interface Props {
 
 export default function SessionMCQ({ questionKey, data, submitted, selectedAnswer, onAnswer }: Props) {
   const isTF = data.type === 'true_false';
-  const options = isTF ? ['True', 'False'] : data.options;
+  const options = isTF ? ['True', 'False'] : (data.options ?? []);
 
   return (
     <div className="space-y-3">
@@ -25,7 +32,7 @@ export default function SessionMCQ({ questionKey, data, submitted, selectedAnswe
 
           let cls = 'flex items-center gap-3 px-4 py-2.5 rounded-lg border text-sm font-medium transition-all cursor-pointer ';
           if (!submitted) {
-            cls += 'border-slate-200 bg-white hover:border-indigo-400 hover:bg-indigo-50 text-slate-700';
+            cls += 'border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50 text-slate-700';
           } else if (isCorrect) {
             cls += 'border-emerald-400 bg-emerald-50 text-emerald-800';
           } else if (isSelected) {
@@ -37,7 +44,10 @@ export default function SessionMCQ({ questionKey, data, submitted, selectedAnswe
           const label = isTF ? option[0] : String.fromCharCode(65 + i); // A, B, C, D
 
           return (
-            <button key={option} className={cls} disabled={submitted}
+            <button
+              key={option}
+              className={cls}
+              disabled={submitted}
               onClick={() => onAnswer(questionKey, option, option === data.answer)}
             >
               <span className={`shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold

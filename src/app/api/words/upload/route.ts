@@ -8,7 +8,6 @@ export async function POST(req: NextRequest) {
   try {
     await initDb();
 
-    // Teacher/admin only
     const user = await getCurrentUser();
     if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
       return NextResponse.json({ error: 'Teacher access required' }, { status: 403 });
@@ -21,41 +20,37 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'words field is required' }, { status: 400 });
     }
 
-    // Parse: each line may be "lesson_number word" (e.g. "1 cat") or just "word"
-    // Also handles comma-separated words (no lesson number)
+    // Parse CSV format: each line is "lesson_number,word" (e.g. "1A,curious")
+    // Also supports plain "word" lines without lesson number
     const lines = wordList.split(/\n/);
-    const wordEntries: Array<{ word: string; lessonNumber: number | null }> = [];
+    const wordEntries: Array<{ word: string; lessonNumber: string | null }> = [];
 
     for (const line of lines) {
       const trimmed = line.trim();
       if (!trimmed) continue;
 
-      // Check "N word" pattern — lesson number followed by the word
-      const lessonMatch = trimmed.match(/^(\d+)\s+(.+)$/);
-      if (lessonMatch) {
-        const lessonNumber = parseInt(lessonMatch[1]);
-        // The rest of the line may contain multiple words
-        const wordsOnLine = lessonMatch[2]
-          .split(/[\s,]+/)
-          .map((w) => w.trim().toLowerCase().replace(/[^a-z'-]/g, ''))
-          .filter((w) => w.length > 1);
-        for (const word of wordsOnLine) {
-          wordEntries.push({ word, lessonNumber });
+      // Check CSV format: "lesson_number,word"
+      const csvMatch = trimmed.match(/^([^,]+),(.+)$/);
+      if (csvMatch) {
+        const lessonNumber = csvMatch[1].trim();
+        const wordPart = csvMatch[2]
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z'-]/g, '');
+        if (wordPart.length > 1) {
+          wordEntries.push({ word: wordPart, lessonNumber: lessonNumber || null });
         }
       } else {
-        // No lesson number — split by commas or spaces
-        const wordsOnLine = trimmed
-          .split(/[\s,]+/)
-          .map((w) => w.trim().toLowerCase().replace(/[^a-z'-]/g, ''))
-          .filter((w) => w.length > 1);
-        for (const word of wordsOnLine) {
+        // Plain word (no lesson number)
+        const word = trimmed.toLowerCase().replace(/[^a-z'-]/g, '');
+        if (word.length > 1) {
           wordEntries.push({ word, lessonNumber: null });
         }
       }
     }
 
     // Deduplicate (keep last occurrence to preserve lesson number)
-    const seen = new Map<string, number | null>();
+    const seen = new Map<string, string | null>();
     for (const { word, lessonNumber } of wordEntries) {
       seen.set(word, lessonNumber);
     }
@@ -67,7 +62,12 @@ export async function POST(req: NextRequest) {
     const uniqueWords = [...seen.keys()];
     const scored = scoreWords(uniqueWords);
 
-    const inserted: Array<{ word: string; zipf: number | null; difficulty: string; lessonNumber: number | null }> = [];
+    const inserted: Array<{
+      word: string;
+      zipf: number | null;
+      difficulty: string;
+      lessonNumber: string | null;
+    }> = [];
     const skipped: string[] = [];
 
     for (const { word, zipf, difficulty } of scored) {
@@ -77,9 +77,9 @@ export async function POST(req: NextRequest) {
           INSERT INTO words (word, zipf_score, difficulty, lesson_number)
           VALUES (${word}, ${zipf}, ${difficulty}, ${lessonNumber})
           ON CONFLICT (word) DO UPDATE
-            SET zipf_score     = EXCLUDED.zipf_score,
-                difficulty     = EXCLUDED.difficulty,
-                lesson_number  = COALESCE(EXCLUDED.lesson_number, words.lesson_number)
+            SET zipf_score    = EXCLUDED.zipf_score,
+                difficulty    = EXCLUDED.difficulty,
+                lesson_number = COALESCE(EXCLUDED.lesson_number, words.lesson_number)
         `;
         inserted.push({ word, zipf, difficulty, lessonNumber });
       } catch {

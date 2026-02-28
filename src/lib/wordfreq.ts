@@ -11,7 +11,6 @@ function getWordMap(): Map<string, number> {
 
   for (const [word, logFreq] of data) {
     // Convert natural log frequency to Zipf score
-    // zipf = (logFreq * log10(e)) + 9
     const zipf = logFreq * 0.4343 + 9;
     wordMap.set(word.toLowerCase(), zipf);
   }
@@ -24,22 +23,22 @@ export function getZipfScore(word: string): number | null {
   return map.get(word.toLowerCase()) ?? null;
 }
 
-export type Difficulty = 'easy' | 'medium' | 'hard';
+export type Difficulty = 'high' | 'medium' | 'low' | 'unknown';
 
 export function getDifficulty(word: string): { zipf: number | null; difficulty: Difficulty } {
   const zipf = getZipfScore(word);
 
   if (zipf === null) {
-    return { zipf: null, difficulty: 'hard' };
+    return { zipf: null, difficulty: 'unknown' };
   }
 
   let difficulty: Difficulty;
   if (zipf >= 5.5) {
-    difficulty = 'easy';
+    difficulty = 'high';
   } else if (zipf >= 4.0) {
     difficulty = 'medium';
   } else {
-    difficulty = 'hard';
+    difficulty = 'low';
   }
 
   return { zipf, difficulty };

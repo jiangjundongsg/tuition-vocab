@@ -3,19 +3,28 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import TeacherSQLPortal from '@/components/TeacherSQLPortal';
 
 interface Word {
   id: number;
   word: string;
   difficulty: string;
-  lesson_number: number | null;
+  lesson_number: string | null;
   zipf_score: number | null;
 }
 
-const DIFFICULTY_OPTIONS = ['easy', 'medium', 'hard'];
+const DIFFICULTY_OPTIONS = ['high', 'medium', 'low', 'unknown'];
+
+const DIFFICULTY_COLORS: Record<string, string> = {
+  high:    'bg-emerald-100 text-emerald-700',
+  medium:  'bg-amber-100 text-amber-700',
+  low:     'bg-rose-100 text-rose-700',
+  unknown: 'bg-slate-100 text-slate-500',
+};
 
 export default function WordsPage() {
   const router = useRouter();
+  const [tab, setTab] = useState<'words' | 'sql'>('words');
   const [words, setWords] = useState<Word[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -23,8 +32,8 @@ export default function WordsPage() {
   const [editDifficulty, setEditDifficulty] = useState('');
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [filterLesson, setFilterLesson] = useState<number | null>(null);
-  const [lessonNumbers, setLessonNumbers] = useState<number[]>([]);
+  const [filterLesson, setFilterLesson] = useState<string | null>(null);
+  const [lessonNumbers, setLessonNumbers] = useState<string[]>([]);
   const [error, setError] = useState('');
 
   const fetchWords = useCallback(async () => {
@@ -58,14 +67,14 @@ export default function WordsPage() {
 
   function startEdit(word: Word) {
     setEditingId(word.id);
-    setEditLesson(word.lesson_number !== null ? String(word.lesson_number) : '');
+    setEditLesson(word.lesson_number ?? '');
     setEditDifficulty(word.difficulty);
   }
 
   async function saveEdit(id: number) {
     setSaving(true);
     try {
-      const lessonNumber = editLesson.trim() === '' ? null : parseInt(editLesson);
+      const lessonNumber = editLesson.trim() || null;
       const res = await fetch(`/api/words/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -74,7 +83,7 @@ export default function WordsPage() {
       if (!res.ok) throw new Error('Save failed');
       const data = await res.json();
       setWords((prev) =>
-        prev.map((w) => (w.id === id ? { ...w, ...data.word, lesson_number: data.word.lesson_number } : w))
+        prev.map((w) => (w.id === id ? { ...w, ...data.word } : w))
       );
       setEditingId(null);
     } catch {
@@ -98,34 +107,22 @@ export default function WordsPage() {
     }
   }
 
-  const difficultyColor = (d: string) => {
-    if (d === 'easy') return 'bg-emerald-100 text-emerald-700';
-    if (d === 'medium') return 'bg-amber-100 text-amber-700';
-    return 'bg-rose-100 text-rose-700';
-  };
-
-  const freqLabel = (zipf: number | null) => {
-    if (zipf === null) return { label: 'Unknown', color: 'text-slate-400' };
-    if (zipf >= 5.5) return { label: 'High', color: 'text-emerald-600' };
-    if (zipf >= 4.0) return { label: 'Medium', color: 'text-amber-600' };
-    return { label: 'Low', color: 'text-rose-600' };
-  };
-
   const filtered = filterLesson !== null
     ? words.filter((w) => w.lesson_number === filterLesson)
     : words;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Word List</h1>
-          <p className="text-slate-500 text-sm mt-1">{words.length} words total</p>
+          <h1 className="text-2xl font-bold text-slate-900">Manage Words</h1>
+          <p className="text-slate-500 text-sm mt-1">{words.length} words in database</p>
         </div>
         <Link
           href="/upload"
-          className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
+          className="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
         >
           + Upload Words
         </Link>
@@ -137,153 +134,178 @@ export default function WordsPage() {
         </div>
       )}
 
-      {/* Lesson filter */}
-      {lessonNumbers.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setFilterLesson(null)}
-            className={`px-3 py-1.5 rounded-lg border text-sm font-semibold transition-colors ${
-              filterLesson === null
-                ? 'bg-indigo-600 text-white border-indigo-600'
-                : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-300'
-            }`}
-          >
-            All
-          </button>
-          {lessonNumbers.map((n) => (
-            <button
-              key={n}
-              onClick={() => setFilterLesson(n)}
-              className={`px-3 py-1.5 rounded-lg border text-sm font-semibold transition-colors ${
-                filterLesson === n
-                  ? 'bg-indigo-600 text-white border-indigo-600'
-                  : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-300'
-              }`}
-            >
-              Lesson {n}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Tabs */}
+      <div className="flex border-b border-slate-200">
+        <button
+          onClick={() => setTab('words')}
+          className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
+            tab === 'words'
+              ? 'border-blue-700 text-blue-700'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          Word List
+        </button>
+        <button
+          onClick={() => setTab('sql')}
+          className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
+            tab === 'sql'
+              ? 'border-blue-700 text-blue-700'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          SQL Query
+        </button>
+      </div>
 
-      {/* Table */}
-      {loading ? (
-        <div className="animate-pulse space-y-2">
-          {[1, 2, 3, 4, 5].map((i) => <div key={i} className="h-12 bg-slate-100 rounded-xl" />)}
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
-          <svg className="w-12 h-12 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <p className="font-semibold text-slate-700 mb-1">No words yet.</p>
-          <Link href="/upload" className="text-indigo-600 font-semibold text-sm hover:underline mt-1 inline-block">
-            Upload a word list →
-          </Link>
+      {tab === 'sql' ? (
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <TeacherSQLPortal />
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50">
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Word</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Lesson</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Difficulty</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Zipf Score</th>
-                <th className="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {filtered.map((word) => (
-                <tr key={word.id} className="hover:bg-slate-50 transition-colors">
-                  {editingId === word.id ? (
-                    <>
-                      <td className="px-5 py-2.5 font-semibold text-slate-800">{word.word}</td>
-                      <td className="px-4 py-2.5 text-center">
-                        <input
-                          type="number"
-                          value={editLesson}
-                          onChange={(e) => setEditLesson(e.target.value)}
-                          placeholder="—"
-                          className="w-16 border border-slate-300 rounded-lg px-2 py-1 text-center text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400"
-                        />
-                      </td>
-                      <td className="px-4 py-2.5 text-center">
-                        <select
-                          value={editDifficulty}
-                          onChange={(e) => setEditDifficulty(e.target.value)}
-                          className="border border-slate-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400"
-                        >
-                          {DIFFICULTY_OPTIONS.map((d) => (
-                            <option key={d} value={d}>{d}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-4 py-2.5 text-center hidden sm:table-cell">
-                        {(() => { const f = freqLabel(word.zipf_score); return (
-                          <span className={`text-xs font-semibold ${f.color}`}>
-                            {word.zipf_score !== null ? word.zipf_score.toFixed(1) : '—'}
-                            <span className="font-normal text-slate-400 ml-1">({f.label})</span>
-                          </span>
-                        ); })()}
-                      </td>
-                      <td className="px-5 py-2.5 text-right space-x-2">
-                        <button
-                          onClick={() => saveEdit(word.id)}
-                          disabled={saving}
-                          className="text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
-                        >
-                          {saving ? '...' : 'Save'}
-                        </button>
-                        <button
-                          onClick={() => setEditingId(null)}
-                          className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-2 py-1.5 transition-colors"
-                        >
-                          Cancel
-                        </button>
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td className="px-5 py-2.5 font-semibold text-slate-800">{word.word}</td>
-                      <td className="px-4 py-2.5 text-center text-slate-400 text-xs">
-                        {word.lesson_number !== null ? `Lesson ${word.lesson_number}` : '—'}
-                      </td>
-                      <td className="px-4 py-2.5 text-center">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${difficultyColor(word.difficulty)}`}>
-                          {word.difficulty}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5 text-center hidden sm:table-cell">
-                        {(() => { const f = freqLabel(word.zipf_score); return (
-                          <span className={`text-xs font-semibold ${f.color}`}>
-                            {word.zipf_score !== null ? word.zipf_score.toFixed(1) : '—'}
-                            <span className="font-normal text-slate-400 ml-1">({f.label})</span>
-                          </span>
-                        ); })()}
-                      </td>
-                      <td className="px-5 py-2.5 text-right space-x-3">
-                        <button
-                          onClick={() => startEdit(word)}
-                          className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => deleteWord(word.id)}
-                          disabled={deletingId === word.id}
-                          className="text-xs font-semibold text-red-400 hover:text-red-600 transition-colors disabled:opacity-50"
-                        >
-                          {deletingId === word.id ? '...' : 'Delete'}
-                        </button>
-                      </td>
-                    </>
-                  )}
-                </tr>
+        <>
+          {/* Lesson filter */}
+          {lessonNumbers.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setFilterLesson(null)}
+                className={`px-3 py-1.5 rounded-lg border text-sm font-semibold transition-colors ${
+                  filterLesson === null
+                    ? 'bg-blue-700 text-white border-blue-700'
+                    : 'bg-white text-slate-600 border-slate-300 hover:border-blue-400'
+                }`}
+              >
+                All
+              </button>
+              {lessonNumbers.map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setFilterLesson(n)}
+                  className={`px-3 py-1.5 rounded-lg border text-sm font-semibold transition-colors ${
+                    filterLesson === n
+                      ? 'bg-blue-700 text-white border-blue-700'
+                      : 'bg-white text-slate-600 border-slate-300 hover:border-blue-400'
+                  }`}
+                >
+                  Lesson {n}
+                </button>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          )}
+
+          {/* Table */}
+          {loading ? (
+            <div className="animate-pulse space-y-2">
+              {[1, 2, 3, 4, 5].map((i) => <div key={i} className="h-12 bg-slate-100 rounded-xl" />)}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
+              <p className="font-semibold text-slate-700 mb-1">No words yet.</p>
+              <Link href="/upload" className="text-blue-700 font-semibold text-sm hover:underline mt-1 inline-block">
+                Upload a word list →
+              </Link>
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50">
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Word</th>
+                    <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Lesson</th>
+                    <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Difficulty</th>
+                    <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Zipf</th>
+                    <th className="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {filtered.map((word) => (
+                    <tr key={word.id} className="hover:bg-slate-50 transition-colors">
+                      {editingId === word.id ? (
+                        <>
+                          <td className="px-5 py-2.5 font-semibold text-slate-800">{word.word}</td>
+                          <td className="px-4 py-2.5 text-center">
+                            <input
+                              type="text"
+                              value={editLesson}
+                              onChange={(e) => setEditLesson(e.target.value)}
+                              placeholder="e.g. 1A"
+                              className="w-20 border border-slate-300 rounded-lg px-2 py-1 text-center text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                            />
+                          </td>
+                          <td className="px-4 py-2.5 text-center">
+                            <select
+                              value={editDifficulty}
+                              onChange={(e) => setEditDifficulty(e.target.value)}
+                              className="border border-slate-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                            >
+                              {DIFFICULTY_OPTIONS.map((d) => (
+                                <option key={d} value={d}>{d}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-4 py-2.5 text-center hidden sm:table-cell">
+                            <span className="text-xs text-slate-400">
+                              {word.zipf_score !== null ? word.zipf_score.toFixed(1) : '—'}
+                            </span>
+                          </td>
+                          <td className="px-5 py-2.5 text-right space-x-2">
+                            <button
+                              onClick={() => saveEdit(word.id)}
+                              disabled={saving}
+                              className="text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
+                            >
+                              {saving ? '…' : 'Save'}
+                            </button>
+                            <button
+                              onClick={() => setEditingId(null)}
+                              className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-2 py-1.5 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="px-5 py-2.5 font-semibold text-slate-800">{word.word}</td>
+                          <td className="px-4 py-2.5 text-center text-slate-400 text-xs">
+                            {word.lesson_number !== null ? `Lesson ${word.lesson_number}` : '—'}
+                          </td>
+                          <td className="px-4 py-2.5 text-center">
+                            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                              DIFFICULTY_COLORS[word.difficulty] ?? DIFFICULTY_COLORS.unknown
+                            }`}>
+                              {word.difficulty}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2.5 text-center hidden sm:table-cell">
+                            <span className="text-xs text-slate-400">
+                              {word.zipf_score !== null ? word.zipf_score.toFixed(1) : '—'}
+                            </span>
+                          </td>
+                          <td className="px-5 py-2.5 text-right space-x-3">
+                            <button
+                              onClick={() => startEdit(word)}
+                              className="text-xs font-semibold text-blue-700 hover:text-blue-900 transition-colors"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => deleteWord(word.id)}
+                              disabled={deletingId === word.id}
+                              className="text-xs font-semibold text-red-400 hover:text-red-600 transition-colors disabled:opacity-50"
+                            >
+                              {deletingId === word.id ? '…' : 'Delete'}
+                            </button>
+                          </td>
+                        </>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
