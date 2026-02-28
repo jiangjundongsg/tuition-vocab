@@ -22,6 +22,26 @@ function hasEncodingIssues(line: string): boolean {
   return false;
 }
 
+/** Replace Windows-1252 / Latin-1 special characters with clean ASCII equivalents. */
+function cleanLine(line: string): string {
+  return line
+    // Curly / smart single quotes → straight apostrophe
+    .replace(/[\x91\x92\u2018\u2019]/g, "'")
+    // Curly / smart double quotes → straight double quote
+    .replace(/[\x93\x94\u201C\u201D]/g, '"')
+    // En dash / em dash → hyphen
+    .replace(/[\x96\x97\u2013\u2014]/g, '-')
+    // Ellipsis character → three dots
+    .replace(/[\x85\u2026]/g, '...')
+    // Non-breaking space → regular space
+    .replace(/\xA0/g, ' ')
+    // Bullet / dagger / other Windows-1252 symbols → removed
+    .replace(/[\x80-\x84\x86-\x90\x95\x98\x99\x9A-\x9F]/g, '')
+    // Collapse multiple spaces
+    .replace(/ {2,}/g, ' ')
+    .trim();
+}
+
 function loadParagraphs(): string[] {
   if (paragraphs) return paragraphs;
 
@@ -31,7 +51,7 @@ function loadParagraphs(): string[] {
 
   paragraphs = content
     .split('\n')
-    .map((line) => line.trim())
+    .map((line) => cleanLine(line))
     .filter((line) => line.length >= 50 && !isChapterHeader(line) && !hasEncodingIssues(line));
 
   return paragraphs;

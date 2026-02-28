@@ -63,7 +63,7 @@ export function generateFillBlank(paragraph: string, targetWord: string): FillBl
   // - not the target word
   // - length ≥ 4
   // - not a stopword
-  // - zipf score > 3.50 (meaningful words, not too rare)
+  // - zipf score < 4.2 (less common / harder words — better for fill-in-blank)
   const candidates = tokens
     .map((t, i) => ({ ...t, i }))
     .filter(({ i, word }) => {
@@ -73,7 +73,7 @@ export function generateFillBlank(paragraph: string, targetWord: string): FillBl
       if (STOPWORDS.has(w)) return false;
       if (!/^[a-z]/.test(w)) return false;
       const zipf = getZipfScore(w);
-      if (zipf === null || zipf <= 3.70) return false;
+      if (zipf === null || zipf >= 4.2) return false;
       return true;
     });
 
