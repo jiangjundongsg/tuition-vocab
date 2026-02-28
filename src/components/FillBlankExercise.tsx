@@ -37,7 +37,6 @@ export default function FillBlankExercise({ questionKey, data, submitted, onAnsw
     onAnswer(questionKey, JSON.stringify(inputs), allCorrect);
   }
 
-  // Split displayText on {{N}} placeholders and render inline inputs
   const parts = data.displayText.split(/(\{\{\d+\}\})/g);
 
   return (
@@ -46,13 +45,13 @@ export default function FillBlankExercise({ questionKey, data, submitted, onAnsw
         Fill in the Blanks
       </p>
       <p className="text-xs text-slate-400">
-        Each blank shows the first letter as a hint. Fill in the complete word.
+        The first letter of each missing word is shown. Fill in the complete word.
       </p>
 
-      {/* Paragraph with inline blank inputs — inputs bottom-aligned with text */}
+      {/* Paragraph with inline blank inputs — first letter matches paragraph font/size exactly */}
       <div
-        className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm text-slate-700"
-        style={{ lineHeight: '2.4' }}
+        className="bg-slate-50 border border-slate-100 rounded-xl p-4 text-sm text-slate-700"
+        style={{ lineHeight: '2.6' }}
       >
         {parts.map((part, i) => {
           const match = part.match(/^\{\{(\d+)\}\}$/);
@@ -65,25 +64,38 @@ export default function FillBlankExercise({ questionKey, data, submitted, onAnsw
             const isChecked = checked;
             const isCorrect = correct[id];
 
+            // Colour scheme: indigo when unchecked, green/red after checking
+            const hintColor = !isChecked ? '#4F46E5' : isCorrect ? '#059669' : '#dc2626';
+            const borderColor = !isChecked ? '#a5b4fc' : isCorrect ? '#6ee7b7' : '#fca5a5';
+            const inputBg = isChecked ? (isCorrect ? '#ecfdf5' : '#fff1f2') : 'transparent';
+            const inputColor = !isChecked ? '#1e1b4b' : isCorrect ? '#065f46' : '#991b1b';
+
             return (
               <span
                 key={i}
-                style={{ display: 'inline-flex', alignItems: 'flex-end', verticalAlign: 'bottom', margin: '0 2px' }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'flex-end',
+                  verticalAlign: 'bottom',
+                  margin: '0 1px',
+                }}
               >
-                {/* First-letter hint */}
+                {/* First letter — exactly same font, size, and weight as surrounding paragraph text */}
                 <span
                   style={{
-                    fontSize: '0.8em',
-                    fontWeight: 700,
-                    fontFamily: 'monospace',
-                    paddingBottom: '2px',
-                    color: !isChecked ? '#2563eb' : isCorrect ? '#059669' : '#dc2626',
+                    fontSize: 'inherit',      // same size as paragraph text
+                    fontFamily: 'inherit',    // same font as paragraph text
+                    fontWeight: 'inherit',    // same weight as paragraph text
+                    lineHeight: 'inherit',
+                    color: hintColor,
                     userSelect: 'none',
+                    paddingBottom: '2px',
                   }}
                 >
                   {blank.original[0]}
                 </span>
-                {/* Underline input — bottom aligned */}
+
+                {/* Underline input — bottom-aligned with text baseline */}
                 <input
                   type="text"
                   value={val}
@@ -93,26 +105,24 @@ export default function FillBlankExercise({ questionKey, data, submitted, onAnsw
                   placeholder="___"
                   style={{
                     border: 'none',
-                    borderBottom: `2px solid ${
-                      !isChecked ? '#93c5fd' : isCorrect ? '#6ee7b7' : '#fca5a5'
-                    }`,
-                    background: isChecked
-                      ? isCorrect ? '#ecfdf5' : '#fff1f2'
-                      : 'transparent',
-                    width: `${Math.max(blank.original.length * 9, 48)}px`,
-                    padding: '0 2px 0 0',
+                    borderBottom: `2px solid ${borderColor}`,
+                    background: inputBg,
+                    width: `${Math.max((blank.original.length - 1) * 8 + 16, 32)}px`,
+                    padding: '0 2px 1px',
                     fontSize: 'inherit',
+                    fontFamily: 'inherit',
                     textAlign: 'center',
                     outline: 'none',
-                    color: !isChecked ? '#1e3a5f' : isCorrect ? '#065f46' : '#991b1b',
+                    color: inputColor,
                     fontWeight: 600,
                   }}
                 />
-                {/* Correct answer shown below if wrong */}
+
+                {/* Show correct answer in brackets if wrong */}
                 {isChecked && !isCorrect && (
                   <span
                     style={{
-                      fontSize: '0.7em',
+                      fontSize: '0.75em',
                       color: '#059669',
                       fontWeight: 700,
                       paddingBottom: '2px',
@@ -134,17 +144,17 @@ export default function FillBlankExercise({ questionKey, data, submitted, onAnsw
         <button
           onClick={check}
           disabled={!data.blanks.every((b) => (inputs[b.id] ?? '').trim().length > 0)}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold disabled:opacity-40 transition-colors"
+          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold disabled:opacity-40 transition-colors shadow-sm"
         >
           Check Answers
         </button>
       )}
 
       {checked && (
-        <p className={`text-xs px-3 py-2 rounded-lg border ${
+        <p className={`text-xs px-3 py-2 rounded-xl border ${
           Object.values(correct).every(Boolean)
-            ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-            : 'bg-amber-50 border-amber-200 text-amber-700'
+            ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+            : 'bg-amber-50 border-amber-100 text-amber-700'
         }`}>
           {Object.values(correct).every(Boolean)
             ? 'All blanks correct!'

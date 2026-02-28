@@ -6,6 +6,36 @@ import FillBlankExercise from './FillBlankExercise';
 import { WordQuestions } from '@/lib/claude';
 import { FillBlankQuestion } from '@/lib/fillblank';
 
+function SpeakButton({ word }: { word: string }) {
+  const [speaking, setSpeaking] = useState(false);
+
+  function speak() {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(word);
+    utterance.rate = 0.8;
+    utterance.lang = 'en-US';
+    setSpeaking(true);
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => setSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+  }
+
+  return (
+    <button
+      onClick={speak}
+      disabled={speaking}
+      title="Hear the word"
+      className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 disabled:opacity-60 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+    >
+      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.784L4.27 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.27l4.113-3.784a1 1 0 011 .076zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
+      </svg>
+      {speaking ? 'Speaking…' : 'Hear'}
+    </button>
+  );
+}
+
 export interface WordSetData {
   wordSetId: number;
   word: string;
@@ -61,12 +91,15 @@ export default function WordPracticeCard({ wordData, wordIndex, totalWords, onCo
     <div className="space-y-5">
       {/* Word header */}
       <div className="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl p-5 text-white shadow-sm">
-        <div className="flex items-center gap-3 mb-1">
+        <div className="flex items-center gap-3 mb-2">
           <span className="text-xs font-semibold bg-white/20 px-2.5 py-1 rounded-full">
             Word {wordIndex + 1} of {totalWords}
           </span>
         </div>
-        <h2 className="text-2xl font-bold tracking-wide">{wordData.word}</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-bold tracking-wide flex-1">{wordData.word}</h2>
+          <SpeakButton word={wordData.word} />
+        </div>
       </div>
 
       {/* Paragraph */}

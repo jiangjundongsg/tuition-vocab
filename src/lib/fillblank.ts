@@ -73,7 +73,7 @@ export function generateFillBlank(paragraph: string, targetWord: string): FillBl
       if (STOPWORDS.has(w)) return false;
       if (!/^[a-z]/.test(w)) return false;
       const zipf = getZipfScore(w);
-      if (zipf === null || zipf <= 3.50) return false;
+      if (zipf === null || zipf <= 3.70) return false;
       return true;
     });
 
