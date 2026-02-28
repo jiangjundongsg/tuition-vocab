@@ -16,7 +16,7 @@ interface Props {
 export default function WrongBankList({ items }: Props) {
   if (items.length === 0) {
     return (
-      <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
+      <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
         <svg className="w-12 h-12 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
@@ -29,7 +29,7 @@ export default function WrongBankList({ items }: Props) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-slate-100 bg-slate-50">

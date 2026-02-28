@@ -15,9 +15,8 @@ export default function HomePage() {
             English Vocabulary Practice
           </p>
           <h1 className="text-5xl sm:text-6xl text-slate-900 leading-[1.1]">
-            Build your vocabulary,<br />
             <span className="italic bg-gradient-to-r from-indigo-600 to-violet-500 bg-clip-text text-transparent">
-              one word at a time
+              Build your vocabulary
             </span>
           </h1>
           <p className="text-lg text-slate-500 max-w-xl leading-relaxed font-light">

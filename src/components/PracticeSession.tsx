@@ -174,7 +174,7 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
     const correctRepractice = Object.values(repracticeCorrect).filter(Boolean).length;
     return (
       <div className="space-y-6">
-        <div className="bg-blue-700 rounded-xl p-8 text-center text-white">
+        <div className="bg-indigo-600 rounded-xl p-8 text-center text-white">
           <p className="text-5xl mb-4">🎉</p>
           <h2 className="text-2xl font-bold mb-2">Session Complete!</h2>
           <div className="text-blue-100 text-sm mb-4 space-y-1">
@@ -224,9 +224,9 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
         </div>
 
         {/* Word + question */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
+        <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-4">
           <div className="flex items-center gap-3">
-            <span className="bg-blue-700 text-white text-sm font-bold px-3 py-1 rounded-lg">
+            <span className="bg-indigo-600 text-white text-sm font-bold px-3 py-1 rounded-lg">
               {item.word}
             </span>
             <span className="text-xs text-slate-400">{item.typeLabel}</span>
@@ -305,7 +305,7 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
               </span>
               <button
                 onClick={nextRepractice}
-                className="ml-4 bg-blue-700 hover:bg-blue-800 text-white font-semibold px-4 py-1.5 rounded-lg text-sm transition-colors"
+                className="ml-4 bg-indigo-600 hover:bg-indigo-800 text-white font-semibold px-4 py-1.5 rounded-lg text-sm transition-colors"
               >
                 {repracticeIndex < wrongItems.length - 1 ? 'Next →' : 'Finish →'}
               </button>
@@ -320,7 +320,7 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
   if (phase === 'dictation') {
     return (
       <div className="space-y-5">
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
+        <div className="bg-white rounded-2xl border border-slate-100 p-5">
           <h2 className="text-lg font-bold text-slate-900 mb-1">Dictation</h2>
           <p className="text-sm text-slate-500">
             Click to hear each word, then type what you hear. The word meaning is shown as a hint.
@@ -351,7 +351,7 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
         {allDictationDone && (
           <button
             onClick={finishDictation}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl text-sm transition-colors"
+            className="w-full bg-indigo-600 hover:bg-indigo-600 text-white font-semibold py-3 rounded-xl text-sm transition-colors"
           >
             Review Tricky Words →
           </button>
@@ -366,14 +366,14 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
   return (
     <div className="space-y-4">
       {/* Progress bar */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
+      <div className="bg-white rounded-2xl border border-slate-100 p-4">
         <div className="flex justify-between text-sm font-semibold text-slate-600 mb-2">
           <span>Progress</span>
           <span>Word {currentWordIndex + 1} of {words.length}</span>
         </div>
         <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
           <div
-            className="h-full bg-blue-600 rounded-full transition-all duration-500"
+            className="h-full bg-indigo-600 rounded-full transition-all duration-500"
             style={{ width: `${(currentWordIndex / words.length) * 100}%` }}
           />
         </div>

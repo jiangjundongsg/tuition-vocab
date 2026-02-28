@@ -122,7 +122,7 @@ export default function WordsPage() {
         </div>
         <Link
           href="/upload"
-          className="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
         >
           + Upload Words
         </Link>
@@ -140,7 +140,7 @@ export default function WordsPage() {
           onClick={() => setTab('words')}
           className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
             tab === 'words'
-              ? 'border-blue-700 text-blue-700'
+              ? 'border-blue-700 text-indigo-600'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -150,7 +150,7 @@ export default function WordsPage() {
           onClick={() => setTab('sql')}
           className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
             tab === 'sql'
-              ? 'border-blue-700 text-blue-700'
+              ? 'border-blue-700 text-indigo-600'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -159,7 +159,7 @@ export default function WordsPage() {
       </div>
 
       {tab === 'sql' ? (
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
+        <div className="bg-white rounded-2xl border border-slate-100 p-5">
           <TeacherSQLPortal />
         </div>
       ) : (
@@ -171,8 +171,8 @@ export default function WordsPage() {
                 onClick={() => setFilterLesson(null)}
                 className={`px-3 py-1.5 rounded-lg border text-sm font-semibold transition-colors ${
                   filterLesson === null
-                    ? 'bg-blue-700 text-white border-blue-700'
-                    : 'bg-white text-slate-600 border-slate-300 hover:border-blue-400'
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-300'
                 }`}
               >
                 All
@@ -183,8 +183,8 @@ export default function WordsPage() {
                   onClick={() => setFilterLesson(n)}
                   className={`px-3 py-1.5 rounded-lg border text-sm font-semibold transition-colors ${
                     filterLesson === n
-                      ? 'bg-blue-700 text-white border-blue-700'
-                      : 'bg-white text-slate-600 border-slate-300 hover:border-blue-400'
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-300'
                   }`}
                 >
                   Lesson {n}
@@ -199,14 +199,14 @@ export default function WordsPage() {
               {[1, 2, 3, 4, 5].map((i) => <div key={i} className="h-12 bg-slate-100 rounded-xl" />)}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
+            <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
               <p className="font-semibold text-slate-700 mb-1">No words yet.</p>
-              <Link href="/upload" className="text-blue-700 font-semibold text-sm hover:underline mt-1 inline-block">
+              <Link href="/upload" className="text-indigo-600 font-semibold text-sm hover:underline mt-1 inline-block">
                 Upload a word list →
               </Link>
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50">
@@ -229,14 +229,14 @@ export default function WordsPage() {
                               value={editLesson}
                               onChange={(e) => setEditLesson(e.target.value)}
                               placeholder="e.g. 1A"
-                              className="w-20 border border-slate-300 rounded-lg px-2 py-1 text-center text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                              className="w-20 border border-slate-300 rounded-lg px-2 py-1 text-center text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100"
                             />
                           </td>
                           <td className="px-4 py-2.5 text-center">
                             <select
                               value={editDifficulty}
                               onChange={(e) => setEditDifficulty(e.target.value)}
-                              className="border border-slate-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                              className="border border-slate-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100"
                             >
                               {DIFFICULTY_OPTIONS.map((d) => (
                                 <option key={d} value={d}>{d}</option>
@@ -252,7 +252,7 @@ export default function WordsPage() {
                             <button
                               onClick={() => saveEdit(word.id)}
                               disabled={saving}
-                              className="text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
+                              className="text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
                             >
                               {saving ? '…' : 'Save'}
                             </button>
@@ -285,7 +285,7 @@ export default function WordsPage() {
                           <td className="px-5 py-2.5 text-right space-x-3">
                             <button
                               onClick={() => startEdit(word)}
-                              className="text-xs font-semibold text-blue-700 hover:text-blue-900 transition-colors"
+                              className="text-xs font-semibold text-indigo-600 hover:text-blue-900 transition-colors"
                             >
                               Edit
                             </button>

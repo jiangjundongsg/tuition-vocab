@@ -60,9 +60,9 @@ export default function WordPracticeCard({ wordData, wordIndex, totalWords, onCo
   return (
     <div className="space-y-5">
       {/* Word header */}
-      <div className="bg-blue-700 rounded-xl p-5 text-white">
+      <div className="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl p-5 text-white shadow-sm">
         <div className="flex items-center gap-3 mb-1">
-          <span className="text-xs font-semibold bg-blue-600 px-2.5 py-1 rounded-full">
+          <span className="text-xs font-semibold bg-white/20 px-2.5 py-1 rounded-full">
             Word {wordIndex + 1} of {totalWords}
           </span>
         </div>
@@ -70,7 +70,7 @@ export default function WordPracticeCard({ wordData, wordIndex, totalWords, onCo
       </div>
 
       {/* Paragraph */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
+      <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
         <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
           Read the passage
         </p>
@@ -83,8 +83,8 @@ export default function WordPracticeCard({ wordData, wordIndex, totalWords, onCo
       <div className="space-y-4">
 
         {/* Q1: Word Meaning MCQ */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-3">
+        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+          <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-3">
             Q1 — Word Meaning
           </p>
           <SessionMCQ
@@ -97,8 +97,8 @@ export default function WordPracticeCard({ wordData, wordIndex, totalWords, onCo
         </div>
 
         {/* Q2: Comprehension 1 */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-3">
+        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+          <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-3">
             Q2 — Comprehension
           </p>
           <SessionMCQ
@@ -111,8 +111,8 @@ export default function WordPracticeCard({ wordData, wordIndex, totalWords, onCo
         </div>
 
         {/* Q3: Comprehension 2 */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-3">
+        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+          <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-3">
             Q3 — Comprehension
           </p>
           <SessionMCQ
@@ -125,8 +125,8 @@ export default function WordPracticeCard({ wordData, wordIndex, totalWords, onCo
         </div>
 
         {/* Q4: Fill in the Blank */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-3">
+        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+          <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-3">
             Q4 — Fill in the Blank
           </p>
           <FillBlankExercise
@@ -140,17 +140,17 @@ export default function WordPracticeCard({ wordData, wordIndex, totalWords, onCo
 
       {/* Score + Next button */}
       {allAnswered && (
-        <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 flex items-center justify-between">
+        <div className="bg-slate-50 rounded-2xl border border-slate-100 p-4 flex items-center justify-between">
           <span className="text-sm text-slate-600">
             Score:{' '}
-            <strong className={correctCount === 4 ? 'text-emerald-600' : 'text-blue-700'}>
+            <strong className={correctCount === 4 ? 'text-emerald-600' : 'text-indigo-600'}>
               {correctCount} / 4
             </strong>
             {correctCount === 4 && ' — Perfect!'}
           </span>
           <button
             onClick={onComplete}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg text-sm transition-colors"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2 rounded-lg text-sm transition-colors"
           >
             {isLast ? 'Continue to Dictation →' : 'Next Word →'}
           </button>
