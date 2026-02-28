@@ -13,16 +13,26 @@ function isChapterHeader(line: string): boolean {
   return false;
 }
 
+function hasEncodingIssues(line: string): boolean {
+  // Unicode replacement character — appears as black diamond with ?
+  if (line.includes('\uFFFD')) return true;
+  // High ratio of non-ASCII / non-printable characters
+  const nonPrintable = (line.match(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g) ?? []).length;
+  if (nonPrintable > 0) return true;
+  return false;
+}
+
 function loadParagraphs(): string[] {
   if (paragraphs) return paragraphs;
 
   const filePath = path.join(process.cwd(), 'data', 'TextBook_Harry_Portter.txt');
-  const content = fs.readFileSync(filePath, 'utf-8');
+  // Read as latin1 (covers Windows-1252) to avoid Unicode replacement characters
+  const content = fs.readFileSync(filePath, 'latin1');
 
   paragraphs = content
     .split('\n')
     .map((line) => line.trim())
-    .filter((line) => line.length >= 50 && !isChapterHeader(line));
+    .filter((line) => line.length >= 50 && !isChapterHeader(line) && !hasEncodingIssues(line));
 
   return paragraphs;
 }
