@@ -13,9 +13,9 @@ export interface MCQData {
 }
 
 export interface CompQuestionData {
-  type: 'mcq' | 'true_false';
+  type: 'mcq';
   question: string;
-  options?: string[];  // present for mcq, absent for true_false
+  options: string[];  // exactly 4, each option is a full descriptive phrase
   answer: string;
   explanation: string;
 }
@@ -36,31 +36,37 @@ function buildPrompt(word: string, paragraph: string): string {
 Target word: "${word}"
 
 Create EXACTLY 3 questions:
-1. One MCQ testing the meaning of "${word}" as used in the paragraph above (4 child-friendly options)
-2. Two comprehension questions about the paragraph (each can be MCQ with 4 options OR True/False)
+1. One MCQ testing the meaning of "${word}" as used in the paragraph above (4 options)
+2. Two comprehension MCQs about the paragraph (4 options each)
+
+Rules for ALL options:
+- Every option must be a complete descriptive phrase or sentence (at least 5 words) — never just one or two words
+- Options should be plausible and similar in length to avoid guessing by elimination
+- Do NOT use True/False questions
 
 Return ONLY this exact JSON:
 {
   "mcq": {
     "type": "mcq",
     "question": "What does '${word}' mean in the paragraph?",
-    "options": ["correct meaning", "wrong option", "wrong option", "wrong option"],
-    "answer": "correct meaning",
+    "options": ["a full phrase describing the correct meaning", "a plausible but wrong phrase", "another plausible but wrong phrase", "another plausible but wrong phrase"],
+    "answer": "a full phrase describing the correct meaning",
     "explanation": "Child-friendly explanation (1–2 sentences)"
   },
   "comp": [
     {
       "type": "mcq",
-      "question": "A comprehension question about the paragraph?",
-      "options": ["correct answer", "wrong option", "wrong option", "wrong option"],
-      "answer": "correct answer",
-      "explanation": "Short explanation"
+      "question": "A comprehension question requiring thought about the paragraph?",
+      "options": ["the correct answer in a full phrase", "a plausible but wrong full phrase", "another plausible but wrong full phrase", "another plausible but wrong full phrase"],
+      "answer": "the correct answer in a full phrase",
+      "explanation": "Short explanation referencing the paragraph"
     },
     {
-      "type": "true_false",
-      "question": "A true or false statement about the paragraph.",
-      "answer": "True",
-      "explanation": "Short explanation"
+      "type": "mcq",
+      "question": "Another comprehension question about the paragraph?",
+      "options": ["the correct answer in a full phrase", "a plausible but wrong full phrase", "another plausible but wrong full phrase", "another plausible but wrong full phrase"],
+      "answer": "the correct answer in a full phrase",
+      "explanation": "Short explanation referencing the paragraph"
     }
   ]
 }`;

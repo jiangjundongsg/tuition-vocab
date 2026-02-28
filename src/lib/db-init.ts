@@ -126,5 +126,23 @@ export async function initDb() {
     `.catch(() => {}),
   ]);
 
+  // One-time migrations table — tracks migrations that must run exactly once
+  await sql`
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      version    TEXT PRIMARY KEY,
+      applied_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `.catch(() => {});
+
+  // v3.1: clear word_sets cache — comprehension questions changed to MCQ-only
+  const m1 = await sql`
+    INSERT INTO schema_migrations (version) VALUES ('v3.1-comp-mcq-only')
+    ON CONFLICT (version) DO NOTHING
+    RETURNING version
+  `.catch(() => []);
+  if (m1.length > 0) {
+    await sql`DELETE FROM word_sets`.catch(() => {});
+  }
+
   global.__vocabDbInitialized = true;
 }

@@ -1,10 +1,10 @@
 'use client';
 
-// Generic MCQ/True-False question renderer
+// Generic MCQ question renderer
 interface QuestionForMCQ {
-  type: 'mcq' | 'true_false';
+  type: 'mcq' | 'true_false';  // true_false kept for type safety but MCQ is always used
   question: string;
-  options?: string[];  // present for mcq
+  options?: string[];
   answer: string;
   explanation: string;
 }
