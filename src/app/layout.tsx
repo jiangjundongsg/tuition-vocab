@@ -1,12 +1,20 @@
 import type { Metadata } from 'next';
-import { Plus_Jakarta_Sans } from 'next/font/google';
+import { DM_Sans, DM_Serif_Display } from 'next/font/google';
 import './globals.css';
 import ChildHeader from '@/components/ChildHeader';
 
-const font = Plus_Jakarta_Sans({
+const dmSans = DM_Sans({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-jakarta',
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-dm-sans',
+  display: 'swap',
+});
+
+const dmSerif = DM_Serif_Display({
+  subsets: ['latin'],
+  weight: ['400'],
+  variable: '--font-dm-serif',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -16,10 +24,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={font.variable}>
-      <body className="min-h-screen bg-slate-50 font-[family-name:var(--font-jakarta)] text-slate-800 antialiased">
+    <html lang="en" className={`${dmSans.variable} ${dmSerif.variable}`}>
+      <body className="min-h-screen bg-white font-sans text-slate-800 antialiased">
         <ChildHeader />
-        <main className="max-w-3xl mx-auto px-4 py-8">
+        <main className="max-w-3xl mx-auto px-4 py-10">
           {children}
         </main>
       </body>

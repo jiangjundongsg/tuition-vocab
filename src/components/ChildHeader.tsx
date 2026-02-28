@@ -52,16 +52,21 @@ export default function ChildHeader() {
   const navItems = isTeacher ? teacherNav : studentNav;
 
   return (
-    <header className="bg-blue-700 sticky top-0 z-50 shadow-sm">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
+    <header className="bg-white sticky top-0 z-50 border-b border-slate-100">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-6">
 
         {/* Logo */}
-        <Link href="/" className="text-lg font-extrabold text-white tracking-tight shrink-0">
-          Vocab Star
+        <Link href="/" className="flex items-center gap-2 shrink-0">
+          <span className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/>
+            </svg>
+          </span>
+          <span className="text-base font-bold text-slate-900 tracking-tight">Vocab Star</span>
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden sm:flex items-center gap-0.5 flex-1">
+        <nav className="hidden sm:flex items-center gap-1 flex-1">
           {navItems.map(({ href, label }) => {
             const active = pathname === href;
             return (
@@ -70,8 +75,8 @@ export default function ChildHeader() {
                 href={href}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   active
-                    ? 'bg-blue-800 text-white'
-                    : 'text-blue-100 hover:text-white hover:bg-blue-600'
+                    ? 'bg-slate-100 text-slate-900'
+                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
                 }`}
               >
                 {label}
@@ -85,17 +90,17 @@ export default function ChildHeader() {
           {!loadingUser && (
             user ? (
               <>
-                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
                   isTeacher
-                    ? 'bg-amber-100 text-amber-700'
-                    : 'bg-blue-600 text-blue-100'
+                    ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'
+                    : 'bg-blue-50 text-blue-700 ring-1 ring-blue-100'
                 }`}>
-                  {isTeacher ? '👩‍🏫 ' : ''}{user.displayName ?? user.email.split('@')[0]}
+                  {user.displayName ?? user.email.split('@')[0]}
                   {isTeacher && ' · Teacher'}
                 </span>
                 <button
                   onClick={handleLogout}
-                  className="text-xs font-semibold text-blue-200 hover:text-white px-3 py-1.5 rounded-md hover:bg-blue-600 transition-colors"
+                  className="text-xs font-medium text-slate-400 hover:text-slate-700 px-3 py-1.5 rounded-md hover:bg-slate-50 transition-colors"
                 >
                   Log out
                 </button>
@@ -104,13 +109,13 @@ export default function ChildHeader() {
               <>
                 <Link
                   href="/login"
-                  className="text-sm font-medium text-blue-100 hover:text-white px-3 py-1.5 rounded-md hover:bg-blue-600 transition-colors"
+                  className="text-sm font-medium text-slate-500 hover:text-slate-900 px-3 py-1.5 rounded-md hover:bg-slate-50 transition-colors"
                 >
                   Log in
                 </Link>
                 <Link
                   href="/register"
-                  className="text-sm font-semibold text-blue-700 bg-white hover:bg-blue-50 px-4 py-1.5 rounded-md transition-colors"
+                  className="text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg transition-colors shadow-sm"
                 >
                   Sign up
                 </Link>
@@ -121,7 +126,7 @@ export default function ChildHeader() {
 
         {/* Mobile menu button */}
         <button
-          className="sm:hidden p-2 rounded-md text-blue-200 hover:bg-blue-600"
+          className="sm:hidden p-2 rounded-md text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors"
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Toggle menu"
         >
@@ -136,26 +141,26 @@ export default function ChildHeader() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="sm:hidden bg-blue-800 border-t border-blue-600 px-4 py-3 space-y-1">
+        <div className="sm:hidden border-t border-slate-100 bg-white px-4 py-3 space-y-0.5">
           {navItems.map(({ href, label }) => (
             <Link
               key={href}
               href={href}
               onClick={() => setMenuOpen(false)}
-              className={`block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 pathname === href
-                  ? 'bg-blue-900 text-white'
-                  : 'text-blue-100 hover:bg-blue-700 hover:text-white'
+                  ? 'bg-slate-100 text-slate-900'
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
               {label}
             </Link>
           ))}
-          <div className="pt-2 border-t border-blue-600">
+          <div className="pt-3 mt-2 border-t border-slate-100">
             {!loadingUser && (user ? (
               <button
                 onClick={handleLogout}
-                className="w-full text-left px-3 py-2 text-sm text-blue-200 hover:bg-blue-700 hover:text-white rounded-md"
+                className="w-full text-left px-3 py-2 text-sm text-slate-400 hover:bg-slate-50 hover:text-slate-700 rounded-lg transition-colors"
               >
                 Log out ({user.displayName ?? user.email.split('@')[0]})
               </button>
@@ -164,14 +169,14 @@ export default function ChildHeader() {
                 <Link
                   href="/login"
                   onClick={() => setMenuOpen(false)}
-                  className="flex-1 text-center py-2 text-sm font-medium border border-blue-500 rounded-md text-blue-100"
+                  className="flex-1 text-center py-2 text-sm font-medium border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
                 >
                   Log in
                 </Link>
                 <Link
                   href="/register"
                   onClick={() => setMenuOpen(false)}
-                  className="flex-1 text-center py-2 text-sm font-semibold bg-white text-blue-700 rounded-md"
+                  className="flex-1 text-center py-2 text-sm font-semibold bg-blue-600 text-white rounded-lg"
                 >
                   Sign up
                 </Link>

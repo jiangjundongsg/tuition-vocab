@@ -59,81 +59,77 @@ export default function RegisterPage() {
     }
   }
 
+  const inputClass = "w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all bg-white";
+  const labelClass = "block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2";
+
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-xl mb-5">
-            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div className="flex flex-col items-center pt-8 pb-16">
+      <div className="w-full max-w-sm">
+
+        {/* Header */}
+        <div className="mb-8">
+          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center mb-5">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Create Account</h1>
-          <p className="text-slate-500 mt-1 text-sm">Join Vocab Star and start learning</p>
+          <h1 className="text-3xl text-slate-900">Create account</h1>
+          <p className="text-slate-400 mt-1 text-sm">Join Vocab Star and start learning</p>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white rounded-xl border border-slate-200 p-8 space-y-5"
-        >
+        <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
+            <div className="bg-red-50 border border-red-100 text-red-600 rounded-xl px-4 py-3 text-sm">
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-              Your Name <span className="font-normal text-slate-400">(optional)</span>
+            <label className={labelClass}>
+              Name <span className="normal-case font-normal text-slate-400">(optional)</span>
             </label>
             <input
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="e.g. Alex"
-              className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-colors"
+              className={inputClass}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-              Email Address
-            </label>
+            <label className={labelClass}>Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="your@email.com"
-              className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-colors"
+              className={inputClass}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-              Password
-            </label>
+            <label className={labelClass}>Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               placeholder="At least 6 characters"
-              className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-colors"
+              className={inputClass}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-              Confirm Password
-            </label>
+            <label className={labelClass}>Confirm password</label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               placeholder="Type your password again"
-              className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-colors"
+              className={inputClass}
             />
           </div>
 
@@ -142,21 +138,19 @@ export default function RegisterPage() {
             <button
               type="button"
               onClick={() => setShowTeacherField(!showTeacherField)}
-              className="text-xs text-slate-400 hover:text-indigo-600 font-medium transition-colors"
+              className="text-xs text-slate-400 hover:text-blue-600 font-medium transition-colors"
             >
               {showTeacherField ? '▲ Hide teacher options' : '▼ I am a teacher'}
             </button>
             {showTeacherField && (
               <div className="mt-3">
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                  Teacher Code
-                </label>
+                <label className={labelClass}>Teacher code</label>
                 <input
                   type="text"
                   value={teacherCode}
                   onChange={(e) => setTeacherCode(e.target.value)}
                   placeholder="Enter your teacher access code"
-                  className="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-colors"
+                  className={inputClass}
                 />
                 <p className="text-xs text-slate-400 mt-1.5">Ask your school admin for the teacher code.</p>
               </div>
@@ -166,14 +160,14 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm py-2.5 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm py-3 rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm mt-2"
           >
-            {loading ? 'Creating account…' : 'Create Account'}
+            {loading ? 'Creating account…' : 'Create account'}
           </button>
 
-          <p className="text-center text-sm text-slate-500">
+          <p className="text-center text-sm text-slate-400 pt-1">
             Already have an account?{' '}
-            <Link href="/login" className="text-indigo-600 font-semibold hover:underline">
+            <Link href="/login" className="text-blue-600 font-semibold hover:underline">
               Log in
             </Link>
           </p>
