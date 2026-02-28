@@ -59,7 +59,7 @@ export default function RegisterPage() {
     }
   }
 
-  const inputClass = "w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all bg-white";
+  const inputClass = "w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all bg-white";
   const labelClass = "block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2";
 
   return (
@@ -68,7 +68,7 @@ export default function RegisterPage() {
 
         {/* Header */}
         <div className="mb-8">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center mb-5">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center mb-5 shadow-sm">
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
             </svg>
@@ -160,14 +160,14 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm py-3 rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm mt-2"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm py-3 rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm mt-2"
           >
             {loading ? 'Creating account…' : 'Create account'}
           </button>
 
           <p className="text-center text-sm text-slate-400 pt-1">
             Already have an account?{' '}
-            <Link href="/login" className="text-blue-600 font-semibold hover:underline">
+            <Link href="/login" className="text-indigo-600 font-semibold hover:underline">
               Log in
             </Link>
           </p>
