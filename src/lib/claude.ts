@@ -72,7 +72,27 @@ Return ONLY this exact JSON:
 }`;
 }
 
-// ── Generate ─────────────────────────────────────────────────────────────────
+// ── Generate paragraph (fallback when word not in textbook) ──────────────────
+
+export async function generateParagraph(word: string): Promise<string> {
+  const message = await client.messages.create({
+    model: 'claude-haiku-4-5',
+    max_tokens: 300,
+    system: `You are an experienced primary school English teacher for students aged 7–12.
+Write clear, child-friendly paragraphs suitable for 10-year-olds.
+Return ONLY the paragraph text — no title, no explanation, no extra text.`,
+    messages: [{
+      role: 'user',
+      content: `Write a short paragraph of 100–150 words that uses the word "${word}" naturally in context. The paragraph should be appropriate for a 10-year-old child, tell a simple story or describe a situation, and make the meaning of "${word}" clear from context.`,
+    }],
+  });
+
+  const content = message.content[0];
+  if (content.type !== 'text') throw new Error('Unexpected response type from Claude');
+  return content.text.trim();
+}
+
+// ── Generate questions ────────────────────────────────────────────────────────
 
 export async function generateWordQuestions(
   word: string,

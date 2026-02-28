@@ -144,5 +144,16 @@ export async function initDb() {
     await sql`DELETE FROM word_sets`.catch(() => {});
   }
 
+  // v3.2: clear word_sets cache — fill-blank now uses 5 blanks with zipf > 3.50
+  const m2 = await sql`
+    INSERT INTO schema_migrations (version) VALUES ('v3.2-fillblank-5-zipf')
+    ON CONFLICT (version) DO NOTHING
+    RETURNING version
+  `.catch(() => []);
+  if (m2.length > 0) {
+    await sql`DELETE FROM word_sets`.catch(() => {});
+    await sql`DELETE FROM wrong_bank`.catch(() => {});
+  }
+
   global.__vocabDbInitialized = true;
 }

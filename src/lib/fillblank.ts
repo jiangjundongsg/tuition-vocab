@@ -1,3 +1,5 @@
+import { getZipfScore } from './wordfreq';
+
 export interface FillBlankQuestion {
   type: 'fill_blank';
   displayText: string;  // paragraph text with {{N}} placeholders for each blank
@@ -26,8 +28,9 @@ function makeHint(word: string): string {
 
 /**
  * Generate a fill-in-blank question from a paragraph + target word.
- * The target word is always a blank. Up to 3 additional blanks are chosen
- * from other words (length ≥ 4, not stopwords).
+ * The target word is always a blank. Up to 4 additional blanks are chosen
+ * from words with zipf_score > 3.50 (length ≥ 4, not stopwords).
+ * Total blanks: up to 5.
  */
 export function generateFillBlank(paragraph: string, targetWord: string): FillBlankQuestion {
   // Tokenize: find all word tokens with their positions
@@ -56,18 +59,27 @@ export function generateFillBlank(paragraph: string, targetWord: string): FillBl
     };
   }
 
-  // Candidate words for additional blanks (length ≥ 4, not stopword, not target)
+  // Candidate words for additional blanks:
+  // - not the target word
+  // - length ≥ 4
+  // - not a stopword
+  // - zipf score > 3.50 (meaningful words, not too rare)
   const candidates = tokens
     .map((t, i) => ({ ...t, i }))
     .filter(({ i, word }) => {
       if (i === targetIndex) return false;
       const w = word.toLowerCase();
-      return w.length >= 4 && !STOPWORDS.has(w) && /^[a-z]/.test(w);
+      if (w.length < 4) return false;
+      if (STOPWORDS.has(w)) return false;
+      if (!/^[a-z]/.test(w)) return false;
+      const zipf = getZipfScore(w);
+      if (zipf === null || zipf <= 3.50) return false;
+      return true;
     });
 
-  // Shuffle candidates and pick up to 3 additional blanks
+  // Shuffle candidates and pick up to 4 additional blanks (total 5 with target)
   const shuffled = [...candidates].sort(() => Math.random() - 0.5);
-  const extra = shuffled.slice(0, 3);
+  const extra = shuffled.slice(0, 4);
 
   // Collect all blank positions sorted by appearance in text
   const blankPositions = [

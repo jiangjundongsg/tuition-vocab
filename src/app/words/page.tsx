@@ -24,7 +24,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 
 export default function WordsPage() {
   const router = useRouter();
-  const [tab, setTab] = useState<'words' | 'sql'>('words');
+  const [tab, setTab] = useState<'words' | 'sql'>('sql');
   const [words, setWords] = useState<Word[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);

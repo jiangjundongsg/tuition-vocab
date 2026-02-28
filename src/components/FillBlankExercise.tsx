@@ -49,7 +49,11 @@ export default function FillBlankExercise({ questionKey, data, submitted, onAnsw
         Each blank shows the first letter as a hint. Fill in the complete word.
       </p>
 
-      <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm text-slate-700 leading-relaxed">
+      {/* Paragraph with inline blank inputs — inputs bottom-aligned with text */}
+      <div
+        className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm text-slate-700"
+        style={{ lineHeight: '2.4' }}
+      >
         {parts.map((part, i) => {
           const match = part.match(/^\{\{(\d+)\}\}$/);
           if (match) {
@@ -62,25 +66,62 @@ export default function FillBlankExercise({ questionKey, data, submitted, onAnsw
             const isCorrect = correct[id];
 
             return (
-              <span key={i} className="inline-flex flex-col items-center mx-1 align-middle">
-                <span className="text-xs text-blue-600 font-mono font-bold">{blank.hint}</span>
+              <span
+                key={i}
+                style={{ display: 'inline-flex', alignItems: 'flex-end', verticalAlign: 'bottom', margin: '0 2px' }}
+              >
+                {/* First-letter hint */}
+                <span
+                  style={{
+                    fontSize: '0.8em',
+                    fontWeight: 700,
+                    fontFamily: 'monospace',
+                    paddingBottom: '2px',
+                    color: !isChecked ? '#2563eb' : isCorrect ? '#059669' : '#dc2626',
+                    userSelect: 'none',
+                  }}
+                >
+                  {blank.original[0]}
+                </span>
+                {/* Underline input — bottom aligned */}
                 <input
                   type="text"
                   value={val}
                   onChange={(e) => setInput(id, e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && check()}
                   disabled={isChecked || submitted}
-                  placeholder="..."
-                  className={`w-24 border rounded px-2 py-0.5 text-center text-sm font-medium focus:outline-none transition-colors ${
-                    !isChecked
-                      ? 'border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                      : isCorrect
-                      ? 'border-emerald-400 bg-emerald-50 text-emerald-800'
-                      : 'border-red-400 bg-red-50 text-red-800'
-                  }`}
+                  placeholder="___"
+                  style={{
+                    border: 'none',
+                    borderBottom: `2px solid ${
+                      !isChecked ? '#93c5fd' : isCorrect ? '#6ee7b7' : '#fca5a5'
+                    }`,
+                    background: isChecked
+                      ? isCorrect ? '#ecfdf5' : '#fff1f2'
+                      : 'transparent',
+                    width: `${Math.max(blank.original.length * 9, 48)}px`,
+                    padding: '0 2px 0 0',
+                    fontSize: 'inherit',
+                    textAlign: 'center',
+                    outline: 'none',
+                    color: !isChecked ? '#1e3a5f' : isCorrect ? '#065f46' : '#991b1b',
+                    fontWeight: 600,
+                  }}
                 />
+                {/* Correct answer shown below if wrong */}
                 {isChecked && !isCorrect && (
-                  <span className="text-xs text-emerald-600 font-semibold">{blank.original}</span>
+                  <span
+                    style={{
+                      fontSize: '0.7em',
+                      color: '#059669',
+                      fontWeight: 700,
+                      paddingBottom: '2px',
+                      marginLeft: '2px',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    ({blank.original})
+                  </span>
                 )}
               </span>
             );
@@ -107,7 +148,7 @@ export default function FillBlankExercise({ questionKey, data, submitted, onAnsw
         }`}>
           {Object.values(correct).every(Boolean)
             ? 'All blanks correct!'
-            : `${Object.values(correct).filter(Boolean).length} of ${data.blanks.length} correct. The correct answers are highlighted above.`}
+            : `${Object.values(correct).filter(Boolean).length} of ${data.blanks.length} correct. Correct answers shown in brackets.`}
         </p>
       )}
     </div>

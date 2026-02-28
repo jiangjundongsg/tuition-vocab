@@ -90,7 +90,7 @@ export default function PracticePage() {
           </svg>
           Back to lesson selection
         </button>
-        <PracticeSession words={words} onDone={handleDone} />
+        <PracticeSession words={words} lessonNumber={selectedLesson!} onDone={handleDone} />
       </div>
     );
   }

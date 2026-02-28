@@ -5,13 +5,14 @@ import { useState } from 'react';
 interface Props {
   wordIndex: number;
   word: string;
+  meaning?: string;
   questionKey: string;
   submitted: boolean;
   isCorrect: boolean;
   onAnswer: (questionKey: string, typed: string, isCorrect: boolean) => void;
 }
 
-export default function DictationItem({ wordIndex, word, questionKey, submitted, isCorrect, onAnswer }: Props) {
+export default function DictationItem({ wordIndex, word, meaning, questionKey, submitted, isCorrect, onAnswer }: Props) {
   const [typed, setTyped] = useState('');
   const [speaking, setSpeaking] = useState(false);
 
@@ -38,6 +39,11 @@ export default function DictationItem({ wordIndex, word, questionKey, submitted,
       isCorrect ? 'border-emerald-300 bg-emerald-50/50' :
       'border-red-300 bg-red-50/50'
     } p-4`}>
+      {meaning && (
+        <p className="text-xs text-slate-500 italic mb-2 ml-10">
+          Meaning: {meaning}
+        </p>
+      )}
       <div className="flex items-center gap-3 mb-3">
         <span className="w-7 h-7 rounded-full bg-slate-100 text-slate-600 text-xs font-bold flex items-center justify-center shrink-0">
           {wordIndex + 1}

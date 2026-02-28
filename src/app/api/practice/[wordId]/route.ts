@@ -3,7 +3,7 @@ import sql from '@/lib/db';
 import { initDb } from '@/lib/db-init';
 import { getCurrentUser } from '@/lib/auth';
 import { findParagraphForWord } from '@/lib/textbook';
-import { generateWordQuestions } from '@/lib/claude';
+import { generateWordQuestions, generateParagraph } from '@/lib/claude';
 import { generateFillBlank } from '@/lib/fillblank';
 
 export async function GET(
@@ -55,13 +55,10 @@ export async function GET(
     }
     const word = wordRows[0].word as string;
 
-    // 3. Find paragraph from Harry Potter text
-    const paragraph = findParagraphForWord(word);
+    // 3. Find paragraph from Harry Potter text; fall back to Claude-generated paragraph
+    let paragraph = findParagraphForWord(word);
     if (!paragraph) {
-      return NextResponse.json(
-        { error: `No paragraph found for word "${word}"` },
-        { status: 404 }
-      );
+      paragraph = await generateParagraph(word);
     }
 
     // 4. Generate questions via Claude
