@@ -72,7 +72,7 @@ export default function SessionMCQ({ questionKey, data, submitted, selectedAnswe
     utt.onerror = done;
     setSpeakingOption(option);
     setHighlightStart(-1);
-    window.speechSynthesis.speak(utt);
+    setTimeout(() => window.speechSynthesis.speak(utt), 50);
   }
 
   return (
@@ -87,7 +87,7 @@ export default function SessionMCQ({ questionKey, data, submitted, selectedAnswe
 
           let cls = 'flex items-center gap-3 px-4 py-2.5 rounded-lg border text-sm font-medium transition-all cursor-pointer ';
           if (!submitted) {
-            cls += 'border-slate-200 bg-white hover:border-indigo-400 hover:bg-indigo-600 text-slate-700';
+            cls += 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-800 text-slate-700';
           } else if (isCorrect) {
             cls += 'border-emerald-400 bg-emerald-50 text-emerald-800';
           } else if (isSelected) {

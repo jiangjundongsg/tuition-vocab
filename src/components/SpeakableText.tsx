@@ -63,7 +63,8 @@ export default function SpeakableText({
 
     setSpeaking(true);
     setHighlightStart(-1);
-    window.speechSynthesis.speak(utt);
+    // Small delay after cancel() so Chrome re-fires onboundary events correctly on second play
+    setTimeout(() => window.speechSynthesis.speak(utt), 50);
   }
 
   return (

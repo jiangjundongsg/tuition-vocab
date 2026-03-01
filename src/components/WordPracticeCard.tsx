@@ -142,7 +142,7 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
     utterance.onerror = done;
     setReadingPassage(true);
     setPassageHighlight(-1);
-    window.speechSynthesis.speak(utterance);
+    setTimeout(() => window.speechSynthesis.speak(utterance), 50);
   }
 
   const correctCount = Object.values(correctMap).filter(Boolean).length;

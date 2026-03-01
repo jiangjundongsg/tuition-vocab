@@ -14,12 +14,14 @@ interface User {
 const studentNav = [
   { href: '/',            label: 'Home' },
   { href: '/practice',   label: 'Practice' },
+  { href: '/dictation',  label: 'Dictation' },
   { href: '/wrong-bank', label: 'Tricky Words' },
 ];
 
 const teacherNav = [
   { href: '/',            label: 'Home' },
   { href: '/practice',   label: 'Practice' },
+  { href: '/dictation',  label: 'Dictation' },
   { href: '/wrong-bank', label: 'Tricky Words' },
   { href: '/words',      label: 'Management' },
 ];
