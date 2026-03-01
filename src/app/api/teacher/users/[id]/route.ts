@@ -26,6 +26,11 @@ export async function PATCH(
       age?: number | null;
       passageSource?: string;
       password?: string;
+      numComprehension?: number;
+      numBlanks?: number;
+      blankZipfMax?: number;
+      passageWordCount?: number;
+      compQuestionType?: string;
     };
 
     // Build update fields
@@ -46,6 +51,27 @@ export async function PATCH(
       await sql`UPDATE users SET passage_source = ${src} WHERE id = ${targetId}`;
     }
 
+    if (body.numComprehension !== undefined) {
+      const v = Math.min(Math.max(Number(body.numComprehension) || 2, 1), 4);
+      await sql`UPDATE users SET num_comprehension = ${v} WHERE id = ${targetId}`;
+    }
+    if (body.numBlanks !== undefined) {
+      const v = Math.min(Math.max(Number(body.numBlanks) || 5, 1), 10);
+      await sql`UPDATE users SET num_blanks = ${v} WHERE id = ${targetId}`;
+    }
+    if (body.blankZipfMax !== undefined) {
+      const v = Math.min(Math.max(Number(body.blankZipfMax) || 4.2, 2.0), 7.0);
+      await sql`UPDATE users SET blank_zipf_max = ${v} WHERE id = ${targetId}`;
+    }
+    if (body.passageWordCount !== undefined) {
+      const v = Math.min(Math.max(Number(body.passageWordCount) || 150, 50), 400);
+      await sql`UPDATE users SET passage_word_count = ${v} WHERE id = ${targetId}`;
+    }
+    if (body.compQuestionType !== undefined) {
+      const v = ['mcq', 'true_false', 'mixed'].includes(body.compQuestionType) ? body.compQuestionType : 'mcq';
+      await sql`UPDATE users SET comp_question_type = ${v} WHERE id = ${targetId}`;
+    }
+
     if (body.password) {
       if (body.password.length < 6) {
         return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
@@ -58,7 +84,9 @@ export async function PATCH(
     void updates;
 
     const rows = await sql`
-      SELECT id, email, display_name, role, age, passage_source FROM users WHERE id = ${targetId}
+      SELECT id, email, display_name, role, age, passage_source,
+             num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type
+      FROM users WHERE id = ${targetId}
     `;
     if (rows.length === 0) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -72,6 +100,11 @@ export async function PATCH(
         role: rows[0].role,
         age: rows[0].age != null ? Number(rows[0].age) : null,
         passageSource: rows[0].passage_source,
+        numComprehension: Number(rows[0].num_comprehension) || 2,
+        numBlanks:        Number(rows[0].num_blanks) || 5,
+        blankZipfMax:     Number(rows[0].blank_zipf_max) || 4.2,
+        passageWordCount: Number(rows[0].passage_word_count) || 150,
+        compQuestionType: (rows[0].comp_question_type as string) || 'mcq',
       },
     });
   } catch (err) {

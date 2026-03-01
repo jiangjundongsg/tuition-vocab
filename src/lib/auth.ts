@@ -10,6 +10,12 @@ export interface AuthUser {
   role: string; // 'student' | 'teacher' | 'admin'
   age: number | null;
   passageSource: string;
+  // Per-user question config
+  numComprehension: number;
+  numBlanks: number;
+  blankZipfMax: number;
+  passageWordCount: number;
+  compQuestionType: string;
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
@@ -22,7 +28,8 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     if (isNaN(userId)) return null;
 
     const rows = await sql`
-      SELECT id, email, display_name, role, age, passage_source
+      SELECT id, email, display_name, role, age, passage_source,
+             num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type
       FROM users WHERE id = ${userId}
     `;
 
@@ -35,6 +42,11 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       role: (rows[0].role as string) ?? 'student',
       age: rows[0].age != null ? Number(rows[0].age) : null,
       passageSource: (rows[0].passage_source as string) || 'TextBook_Harry_Portter',
+      numComprehension: Number(rows[0].num_comprehension) || 2,
+      numBlanks: Number(rows[0].num_blanks) || 5,
+      blankZipfMax: Number(rows[0].blank_zipf_max) || 4.2,
+      passageWordCount: Number(rows[0].passage_word_count) || 150,
+      compQuestionType: (rows[0].comp_question_type as string) || 'mcq',
     };
   } catch {
     return null;

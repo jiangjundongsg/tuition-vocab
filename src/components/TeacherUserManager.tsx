@@ -9,6 +9,11 @@ interface UserRow {
   role: string;
   age: number | null;
   passageSource: string;
+  numComprehension: number;
+  numBlanks: number;
+  blankZipfMax: number;
+  passageWordCount: number;
+  compQuestionType: string;
 }
 
 interface EditState {
@@ -16,6 +21,11 @@ interface EditState {
   age: string;
   passageSource: string;
   password: string;
+  numComprehension: string;
+  numBlanks: string;
+  blankZipfMax: string;
+  passageWordCount: string;
+  compQuestionType: string;
 }
 
 const ROLE_COLORS: Record<string, string> = {
@@ -24,13 +34,24 @@ const ROLE_COLORS: Record<string, string> = {
   student: 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100',
 };
 
+const COMP_TYPE_OPTIONS = [
+  { value: 'mcq',        label: 'MCQ (4 options)' },
+  { value: 'true_false', label: 'True / False' },
+  { value: 'mixed',      label: 'Mixed' },
+];
+
 export default function TeacherUserManager() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editState, setEditState] = useState<EditState>({ displayName: '', age: '', passageSource: '', password: '' });
+  const [editState, setEditState] = useState<EditState>({
+    displayName: '', age: '', passageSource: '', password: '',
+    numComprehension: '2', numBlanks: '5', blankZipfMax: '4.2',
+    passageWordCount: '150', compQuestionType: 'mcq',
+  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [expandedConfig, setExpandedConfig] = useState<number | null>(null);
 
   useEffect(() => {
     fetch('/api/teacher/users')
@@ -42,11 +63,17 @@ export default function TeacherUserManager() {
 
   function startEdit(u: UserRow) {
     setEditingId(u.id);
+    setExpandedConfig(null);
     setEditState({
-      displayName: u.displayName ?? '',
-      age: u.age != null ? String(u.age) : '',
-      passageSource: u.passageSource,
-      password: '',
+      displayName:      u.displayName ?? '',
+      age:              u.age != null ? String(u.age) : '',
+      passageSource:    u.passageSource,
+      password:         '',
+      numComprehension: String(u.numComprehension),
+      numBlanks:        String(u.numBlanks),
+      blankZipfMax:     String(u.blankZipfMax),
+      passageWordCount: String(u.passageWordCount),
+      compQuestionType: u.compQuestionType,
     });
     setError('');
   }
@@ -56,9 +83,14 @@ export default function TeacherUserManager() {
     setError('');
     try {
       const body: Record<string, unknown> = {
-        displayName: editState.displayName,
-        age: editState.age ? parseInt(editState.age) : null,
-        passageSource: editState.passageSource || 'TextBook_Harry_Portter',
+        displayName:      editState.displayName,
+        age:              editState.age ? parseInt(editState.age) : null,
+        passageSource:    editState.passageSource || 'TextBook_Harry_Portter',
+        numComprehension: parseInt(editState.numComprehension) || 2,
+        numBlanks:        parseInt(editState.numBlanks) || 5,
+        blankZipfMax:     parseFloat(editState.blankZipfMax) || 4.2,
+        passageWordCount: parseInt(editState.passageWordCount) || 150,
+        compQuestionType: editState.compQuestionType,
       };
       if (editState.password) body.password = editState.password;
 
@@ -70,12 +102,7 @@ export default function TeacherUserManager() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Save failed');
 
-      setUsers((prev) => prev.map((u) => u.id === id ? {
-        ...u,
-        displayName: data.user.displayName,
-        age: data.user.age,
-        passageSource: data.user.passageSource,
-      } : u));
+      setUsers((prev) => prev.map((u) => u.id === id ? { ...u, ...data.user } : u));
       setEditingId(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');
@@ -101,95 +128,156 @@ export default function TeacherUserManager() {
               <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">User</th>
               <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Role</th>
               <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Age</th>
-              <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Passage Source</th>
+              <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Passage Source</th>
+              <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Q Config</th>
               <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
             {users.map((u) => (
-              <tr key={u.id} className="hover:bg-slate-50 transition-colors">
-                {editingId === u.id ? (
-                  <>
-                    <td className="px-4 py-2.5">
-                      <input
-                        value={editState.displayName}
-                        onChange={(e) => setEditState((s) => ({ ...s, displayName: e.target.value }))}
-                        placeholder="Display name"
-                        className={inputClass}
-                      />
-                      <p className="text-xs text-slate-400 mt-0.5">{u.email}</p>
+              <>
+                <tr key={u.id} className="hover:bg-slate-50 transition-colors">
+                  {editingId === u.id ? (
+                    /* ── Edit row ── */
+                    <>
+                      <td className="px-4 py-3" colSpan={6}>
+                        <div className="space-y-4">
+                          {/* Basic fields */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div>
+                              <p className="text-xs text-slate-400 mb-1">Display name</p>
+                              <input value={editState.displayName}
+                                onChange={(e) => setEditState((s) => ({ ...s, displayName: e.target.value }))}
+                                placeholder="Display name" className={inputClass} />
+                            </div>
+                            <div>
+                              <p className="text-xs text-slate-400 mb-1">Age</p>
+                              <input type="number" min={5} max={18} value={editState.age}
+                                onChange={(e) => setEditState((s) => ({ ...s, age: e.target.value }))}
+                                placeholder="Age" className={inputClass} />
+                            </div>
+                            <div className="col-span-2">
+                              <p className="text-xs text-slate-400 mb-1">Passage source</p>
+                              <input value={editState.passageSource}
+                                onChange={(e) => setEditState((s) => ({ ...s, passageSource: e.target.value }))}
+                                placeholder="TextBook_Harry_Portter" className={inputClass} />
+                            </div>
+                          </div>
+
+                          {/* Question config fields */}
+                          <div>
+                            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Question Settings</p>
+                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                              <div>
+                                <p className="text-xs text-slate-400 mb-1">Comp. questions</p>
+                                <input type="number" min={1} max={4} value={editState.numComprehension}
+                                  onChange={(e) => setEditState((s) => ({ ...s, numComprehension: e.target.value }))}
+                                  className={inputClass} />
+                              </div>
+                              <div>
+                                <p className="text-xs text-slate-400 mb-1">Fill blanks</p>
+                                <input type="number" min={1} max={10} value={editState.numBlanks}
+                                  onChange={(e) => setEditState((s) => ({ ...s, numBlanks: e.target.value }))}
+                                  className={inputClass} />
+                              </div>
+                              <div>
+                                <p className="text-xs text-slate-400 mb-1">Blank Zipf max</p>
+                                <input type="number" min={2} max={7} step={0.1} value={editState.blankZipfMax}
+                                  onChange={(e) => setEditState((s) => ({ ...s, blankZipfMax: e.target.value }))}
+                                  className={inputClass} />
+                              </div>
+                              <div>
+                                <p className="text-xs text-slate-400 mb-1">Passage words</p>
+                                <input type="number" min={50} max={400} step={10} value={editState.passageWordCount}
+                                  onChange={(e) => setEditState((s) => ({ ...s, passageWordCount: e.target.value }))}
+                                  className={inputClass} />
+                              </div>
+                              <div>
+                                <p className="text-xs text-slate-400 mb-1">Q type</p>
+                                <select value={editState.compQuestionType}
+                                  onChange={(e) => setEditState((s) => ({ ...s, compQuestionType: e.target.value }))}
+                                  className={inputClass}>
+                                  {COMP_TYPE_OPTIONS.map((o) => (
+                                    <option key={o.value} value={o.value}>{o.label}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Password */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <p className="text-xs text-slate-400 mb-1">New password (leave blank to keep)</p>
+                              <input type="password" value={editState.password}
+                                onChange={(e) => setEditState((s) => ({ ...s, password: e.target.value }))}
+                                placeholder="New password" className={inputClass} />
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex gap-2">
+                            <button onClick={() => saveEdit(u.id)} disabled={saving}
+                              className="text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-1.5 rounded-lg transition-colors disabled:opacity-60">
+                              {saving ? 'Saving…' : 'Save'}
+                            </button>
+                            <button onClick={() => setEditingId(null)}
+                              className="text-xs font-semibold text-slate-400 hover:text-slate-700 px-3 py-1.5 transition-colors">
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    /* ── Read row ── */
+                    <>
+                      <td className="px-4 py-2.5">
+                        <p className="font-semibold text-slate-800 text-sm">{u.displayName ?? '—'}</p>
+                        <p className="text-xs text-slate-400">{u.email}</p>
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${ROLE_COLORS[u.role] ?? ROLE_COLORS.student}`}>
+                          {u.role}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5 text-center text-xs text-slate-500">{u.age ?? '—'}</td>
+                      <td className="px-3 py-2.5 text-xs text-slate-500 font-mono hidden md:table-cell truncate max-w-[120px]">
+                        {u.passageSource}
+                      </td>
+                      <td className="px-3 py-2.5 text-center hidden lg:table-cell">
+                        <button
+                          onClick={() => setExpandedConfig(expandedConfig === u.id ? null : u.id)}
+                          className="text-xs text-indigo-500 hover:text-indigo-700 font-semibold"
+                        >
+                          {expandedConfig === u.id ? 'Hide' : 'View'}
+                        </button>
+                      </td>
+                      <td className="px-4 py-2.5 text-right">
+                        <button onClick={() => startEdit(u)}
+                          className="text-xs font-semibold text-indigo-600 hover:text-indigo-900 transition-colors">
+                          Edit
+                        </button>
+                      </td>
+                    </>
+                  )}
+                </tr>
+
+                {/* Expanded config row */}
+                {expandedConfig === u.id && editingId !== u.id && (
+                  <tr key={`${u.id}-config`} className="bg-slate-50">
+                    <td colSpan={6} className="px-4 py-3">
+                      <div className="flex flex-wrap gap-4 text-xs text-slate-600">
+                        <span><span className="font-semibold text-slate-400">Comp. Qs:</span> {u.numComprehension}</span>
+                        <span><span className="font-semibold text-slate-400">Fill blanks:</span> {u.numBlanks}</span>
+                        <span><span className="font-semibold text-slate-400">Blank Zipf max:</span> {u.blankZipfMax}</span>
+                        <span><span className="font-semibold text-slate-400">Passage words:</span> {u.passageWordCount}</span>
+                        <span><span className="font-semibold text-slate-400">Q type:</span> {u.compQuestionType}</span>
+                      </div>
                     </td>
-                    <td className="px-3 py-2.5 text-center">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${ROLE_COLORS[u.role] ?? ROLE_COLORS.student}`}>
-                        {u.role}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <input
-                        type="number"
-                        min={5}
-                        max={18}
-                        value={editState.age}
-                        onChange={(e) => setEditState((s) => ({ ...s, age: e.target.value }))}
-                        placeholder="Age"
-                        className={inputClass}
-                      />
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <input
-                        value={editState.passageSource}
-                        onChange={(e) => setEditState((s) => ({ ...s, passageSource: e.target.value }))}
-                        placeholder="TextBook_Harry_Portter"
-                        className={inputClass}
-                      />
-                      <input
-                        type="password"
-                        value={editState.password}
-                        onChange={(e) => setEditState((s) => ({ ...s, password: e.target.value }))}
-                        placeholder="New password (leave blank to keep)"
-                        className={`${inputClass} mt-1`}
-                      />
-                    </td>
-                    <td className="px-4 py-2.5 text-right space-x-2 whitespace-nowrap">
-                      <button
-                        onClick={() => saveEdit(u.id)}
-                        disabled={saving}
-                        className="text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
-                      >
-                        {saving ? '…' : 'Save'}
-                      </button>
-                      <button
-                        onClick={() => setEditingId(null)}
-                        className="text-xs font-semibold text-slate-400 hover:text-slate-700 px-2 py-1.5 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </td>
-                  </>
-                ) : (
-                  <>
-                    <td className="px-4 py-2.5">
-                      <p className="font-semibold text-slate-800 text-sm">{u.displayName ?? '—'}</p>
-                      <p className="text-xs text-slate-400">{u.email}</p>
-                    </td>
-                    <td className="px-3 py-2.5 text-center">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${ROLE_COLORS[u.role] ?? ROLE_COLORS.student}`}>
-                        {u.role}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5 text-center text-xs text-slate-500">{u.age ?? '—'}</td>
-                    <td className="px-3 py-2.5 text-xs text-slate-500 font-mono">{u.passageSource}</td>
-                    <td className="px-4 py-2.5 text-right">
-                      <button
-                        onClick={() => startEdit(u)}
-                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-900 transition-colors"
-                      >
-                        Edit
-                      </button>
-                    </td>
-                  </>
+                  </tr>
                 )}
-              </tr>
+              </>
             ))}
           </tbody>
         </table>

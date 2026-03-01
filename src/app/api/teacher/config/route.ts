@@ -11,25 +11,12 @@ export async function GET() {
       return NextResponse.json({ error: 'Teacher access required' }, { status: 403 });
     }
 
-    const rows = await sql`
-      SELECT num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type
-      FROM question_config WHERE id = 1
-    `;
-    if (rows.length === 0) {
-      return NextResponse.json({
-        numComprehension: 2,
-        numBlanks: 5,
-        blankZipfMax: 4.2,
-        passageWordCount: 150,
-        compQuestionType: 'mcq',
-      });
-    }
     return NextResponse.json({
-      numComprehension: Number(rows[0].num_comprehension),
-      numBlanks: Number(rows[0].num_blanks),
-      blankZipfMax: Number(rows[0].blank_zipf_max),
-      passageWordCount: Number(rows[0].passage_word_count) || 150,
-      compQuestionType: (rows[0].comp_question_type as string) || 'mcq',
+      numComprehension: user.numComprehension,
+      numBlanks:        user.numBlanks,
+      blankZipfMax:     user.blankZipfMax,
+      passageWordCount: user.passageWordCount,
+      compQuestionType: user.compQuestionType,
     });
   } catch (err) {
     console.error('Config GET error:', err);
@@ -62,24 +49,19 @@ export async function PUT(req: NextRequest) {
       : 'mcq';
 
     await sql`
-      INSERT INTO question_config (id, num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type, updated_at)
-      VALUES (1, ${numComp}, ${nBlanks}, ${zipfMax}, ${wordCount}, ${qType}, NOW())
-      ON CONFLICT (id) DO UPDATE
-        SET num_comprehension  = EXCLUDED.num_comprehension,
-            num_blanks         = EXCLUDED.num_blanks,
-            blank_zipf_max     = EXCLUDED.blank_zipf_max,
-            passage_word_count = EXCLUDED.passage_word_count,
-            comp_question_type = EXCLUDED.comp_question_type,
-            updated_at         = NOW()
+      UPDATE users
+      SET num_comprehension  = ${numComp},
+          num_blanks         = ${nBlanks},
+          blank_zipf_max     = ${zipfMax},
+          passage_word_count = ${wordCount},
+          comp_question_type = ${qType}
+      WHERE id = ${user.id}
     `;
-
-    // Clear word_sets cache so next practice uses new config
-    await sql`DELETE FROM word_sets`.catch(() => {});
 
     return NextResponse.json({
       numComprehension: numComp,
-      numBlanks: nBlanks,
-      blankZipfMax: zipfMax,
+      numBlanks:        nBlanks,
+      blankZipfMax:     zipfMax,
       passageWordCount: wordCount,
       compQuestionType: qType,
     });

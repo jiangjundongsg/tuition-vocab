@@ -6,25 +6,6 @@ import { findParagraphForWord } from '@/lib/textbook';
 import { generateWordQuestions, generateParagraph } from '@/lib/claude';
 import { generateFillBlank } from '@/lib/fillblank';
 
-async function getConfig() {
-  try {
-    const rows = await sql`
-      SELECT num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type
-      FROM question_config WHERE id = 1
-    `;
-    if (rows.length > 0) {
-      return {
-        numComp:   Number(rows[0].num_comprehension) || 2,
-        numBlanks: Number(rows[0].num_blanks) || 5,
-        zipfMax:   Number(rows[0].blank_zipf_max) || 4.2,
-        wordCount: Number(rows[0].passage_word_count) || 150,
-        compType:  (rows[0].comp_question_type as string) || 'mcq',
-      };
-    }
-  } catch { /* ignore */ }
-  return { numComp: 2, numBlanks: 5, zipfMax: 4.2, wordCount: 150, compType: 'mcq' };
-}
-
 export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ wordId: string }> }
@@ -50,9 +31,15 @@ export async function POST(
     }
     const word = wordRows[0].word as string;
 
-    const config = await getConfig();
-    const age = user.age ?? 10;
+    const age          = user.age ?? 10;
     const passageSource = user.passageSource || 'TextBook_Harry_Portter';
+    const config = {
+      numComp:   user.numComprehension,
+      numBlanks: user.numBlanks,
+      zipfMax:   user.blankZipfMax,
+      wordCount: user.passageWordCount,
+      compType:  user.compQuestionType,
+    };
 
     // Get current paragraph so we can pick a DIFFERENT one
     const current = await sql`SELECT paragraph_text FROM word_sets WHERE word_id = ${wordId} LIMIT 1`;
