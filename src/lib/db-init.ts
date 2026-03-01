@@ -37,16 +37,18 @@ export async function initDb() {
   // Round 1b: question_config singleton — teacher-configurable question settings
   await sql`
     CREATE TABLE IF NOT EXISTS question_config (
-      id                INTEGER PRIMARY KEY DEFAULT 1,
-      num_comprehension INTEGER NOT NULL DEFAULT 2,
-      num_blanks        INTEGER NOT NULL DEFAULT 5,
-      blank_zipf_max    REAL    NOT NULL DEFAULT 4.2,
-      updated_at        TIMESTAMPTZ DEFAULT NOW()
+      id                  INTEGER PRIMARY KEY DEFAULT 1,
+      num_comprehension   INTEGER NOT NULL DEFAULT 2,
+      num_blanks          INTEGER NOT NULL DEFAULT 5,
+      blank_zipf_max      REAL    NOT NULL DEFAULT 4.2,
+      passage_word_count  INTEGER NOT NULL DEFAULT 150,
+      comp_question_type  TEXT    NOT NULL DEFAULT 'mcq',
+      updated_at          TIMESTAMPTZ DEFAULT NOW()
     )
   `;
   await sql`
-    INSERT INTO question_config (id, num_comprehension, num_blanks, blank_zipf_max)
-    VALUES (1, 2, 5, 4.2)
+    INSERT INTO question_config (id, num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type)
+    VALUES (1, 2, 5, 4.2, 150, 'mcq')
     ON CONFLICT (id) DO NOTHING
   `.catch(() => {});
 
@@ -90,6 +92,8 @@ export async function initDb() {
     // Expand question_config table with new columns
     sql`ALTER TABLE question_config ADD COLUMN IF NOT EXISTS num_blanks INTEGER NOT NULL DEFAULT 5`.catch(() => {}),
     sql`ALTER TABLE question_config ADD COLUMN IF NOT EXISTS blank_zipf_max REAL NOT NULL DEFAULT 4.2`.catch(() => {}),
+    sql`ALTER TABLE question_config ADD COLUMN IF NOT EXISTS passage_word_count INTEGER NOT NULL DEFAULT 150`.catch(() => {}),
+    sql`ALTER TABLE question_config ADD COLUMN IF NOT EXISTS comp_question_type TEXT NOT NULL DEFAULT 'mcq'`.catch(() => {}),
   ]);
 
   // Migrate lesson_number INTEGER → TEXT (only if still integer type)
@@ -182,6 +186,16 @@ export async function initDb() {
   if (m5.length > 0) {
     await sql`DELETE FROM word_sets`.catch(() => {});
     await sql`DELETE FROM wrong_bank`.catch(() => {});
+  }
+
+  // v3.6: Configurable passage word count + comprehension question type
+  const m6 = await sql`
+    INSERT INTO schema_migrations (version) VALUES ('v3.6-passage-wordcount-comp-type')
+    ON CONFLICT (version) DO NOTHING
+    RETURNING version
+  `.catch(() => []);
+  if (m6.length > 0) {
+    await sql`DELETE FROM word_sets`.catch(() => {});
   }
 
   global.__vocabDbInitialized = true;

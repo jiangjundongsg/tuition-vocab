@@ -8,16 +8,21 @@ import { generateFillBlank } from '@/lib/fillblank';
 
 async function getConfig() {
   try {
-    const rows = await sql`SELECT num_comprehension, num_blanks, blank_zipf_max FROM question_config WHERE id = 1`;
+    const rows = await sql`
+      SELECT num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type
+      FROM question_config WHERE id = 1
+    `;
     if (rows.length > 0) {
       return {
-        numComp: Number(rows[0].num_comprehension) || 2,
-        numBlanks: Number(rows[0].num_blanks) || 5,
-        zipfMax: Number(rows[0].blank_zipf_max) || 4.2,
+        numComp:      Number(rows[0].num_comprehension) || 2,
+        numBlanks:    Number(rows[0].num_blanks) || 5,
+        zipfMax:      Number(rows[0].blank_zipf_max) || 4.2,
+        wordCount:    Number(rows[0].passage_word_count) || 150,
+        compType:     (rows[0].comp_question_type as string) || 'mcq',
       };
     }
   } catch { /* ignore */ }
-  return { numComp: 2, numBlanks: 5, zipfMax: 4.2 };
+  return { numComp: 2, numBlanks: 5, zipfMax: 4.2, wordCount: 150, compType: 'mcq' };
 }
 
 export async function GET(
@@ -72,11 +77,11 @@ export async function GET(
     // Find paragraph
     let paragraph = findParagraphForWord(word, passageSource);
     if (!paragraph) {
-      paragraph = await generateParagraph(word, age);
+      paragraph = await generateParagraph(word, age, config.wordCount);
     }
 
     // Generate questions
-    const questions = await generateWordQuestions(word, paragraph, age, config.numComp);
+    const questions = await generateWordQuestions(word, paragraph, age, config.numComp, config.compType as import('@/lib/claude').CompQuestionType);
 
     // Generate fill-in-blank
     const fillBlank = generateFillBlank(paragraph, word, config.numBlanks, config.zipfMax);

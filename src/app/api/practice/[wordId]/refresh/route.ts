@@ -8,16 +8,21 @@ import { generateFillBlank } from '@/lib/fillblank';
 
 async function getConfig() {
   try {
-    const rows = await sql`SELECT num_comprehension, num_blanks, blank_zipf_max FROM question_config WHERE id = 1`;
+    const rows = await sql`
+      SELECT num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type
+      FROM question_config WHERE id = 1
+    `;
     if (rows.length > 0) {
       return {
-        numComp: Number(rows[0].num_comprehension) || 2,
+        numComp:   Number(rows[0].num_comprehension) || 2,
         numBlanks: Number(rows[0].num_blanks) || 5,
-        zipfMax: Number(rows[0].blank_zipf_max) || 4.2,
+        zipfMax:   Number(rows[0].blank_zipf_max) || 4.2,
+        wordCount: Number(rows[0].passage_word_count) || 150,
+        compType:  (rows[0].comp_question_type as string) || 'mcq',
       };
     }
   } catch { /* ignore */ }
-  return { numComp: 2, numBlanks: 5, zipfMax: 4.2 };
+  return { numComp: 2, numBlanks: 5, zipfMax: 4.2, wordCount: 150, compType: 'mcq' };
 }
 
 export async function POST(
@@ -68,11 +73,11 @@ export async function POST(
 
     // Fall back to Claude-generated if no different paragraph found
     if (!newParagraph) {
-      newParagraph = await generateParagraph(word, age);
+      newParagraph = await generateParagraph(word, age, config.wordCount);
     }
 
     // Regenerate questions and fill-blank with new paragraph
-    const questions = await generateWordQuestions(word, newParagraph, age, config.numComp);
+    const questions = await generateWordQuestions(word, newParagraph, age, config.numComp, config.compType as import('@/lib/claude').CompQuestionType);
     const fillBlank = generateFillBlank(newParagraph, word, config.numBlanks, config.zipfMax);
 
     // Update cache
