@@ -74,28 +74,10 @@ export default function HomePage() {
             vocabulary
           </h1>
 
-          <p className="text-lg text-slate-500 leading-relaxed font-light max-w-lg">
+          <p className="text-lg text-slate-500 leading-relaxed font-light">
             Practice with reading passages, AI-generated questions, fill-in-the-blank
             exercises, and dictation — all designed for primary school students.
           </p>
-
-          <div className="flex items-center gap-3 pt-1">
-            <Link
-              href="/practice"
-              className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-6 py-2.5 rounded-xl shadow-sm shadow-indigo-200/60 hover:shadow-md hover:shadow-indigo-200 hover:-translate-y-px transition-all duration-150"
-            >
-              Start practising
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-            <Link
-              href="/wrong-bank"
-              className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 px-5 py-2.5 rounded-xl border border-white/80 bg-white/60 backdrop-blur-sm hover:bg-white hover:border-slate-200 transition-all duration-150 shadow-sm"
-            >
-              Tricky words
-            </Link>
-          </div>
         </div>
       </div>
 
