@@ -30,3 +30,11 @@ input, textarea, select {
 html {
   scroll-behavior: smooth;
 }
+
+/* Subtle dot-grid background — monotone grey */
+body {
+  background-color: #f1f5f9;
+  background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
+  background-size: 22px 22px;
+  background-attachment: fixed;
+}
