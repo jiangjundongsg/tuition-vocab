@@ -34,26 +34,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No PDF file provided' }, { status: 400 });
     }
 
-    if (file.type !== 'application/pdf') {
+    // Accept application/pdf or files with .pdf extension (some browsers omit MIME type)
+    const isPDF = file.type === 'application/pdf' || file.name?.toLowerCase().endsWith('.pdf');
+    if (!isPDF) {
       return NextResponse.json({ error: 'Only PDF files are supported' }, { status: 400 });
     }
 
     const bytes = await file.arrayBuffer();
+    if (bytes.byteLength === 0) {
+      return NextResponse.json({ error: 'The PDF file appears to be empty' }, { status: 400 });
+    }
     if (bytes.byteLength > MAX_PDF_BYTES) {
       return NextResponse.json({ error: 'PDF is too large (max 32 MB)' }, { status: 400 });
     }
 
     const base64 = Buffer.from(bytes).toString('base64');
 
-    // Send PDF to Claude via document API
+    // Use claude-sonnet-4-6 which has confirmed document/PDF support
     const message = await client.messages.create({
-      model: 'claude-haiku-4-5',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1000,
       messages: [
         {
           role: 'user',
           content: [
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             {
               type: 'document',
               source: {
@@ -61,6 +65,7 @@ export async function POST(req: NextRequest) {
                 media_type: 'application/pdf',
                 data: base64,
               },
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as any,
             {
               type: 'text',
@@ -134,7 +139,8 @@ ambitious`,
       lessonNumber,
     });
   } catch (err) {
-    console.error('PDF upload error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('PDF upload error:', message);
+    return NextResponse.json({ error: `Upload failed: ${message}` }, { status: 500 });
   }
 }
