@@ -21,7 +21,7 @@ const teacherNav = [
   { href: '/',            label: 'Home' },
   { href: '/practice',   label: 'Practice' },
   { href: '/wrong-bank', label: 'Tricky Words' },
-  { href: '/words',      label: 'Manage Words' },
+  { href: '/words',      label: 'SQL & Manage' },
   { href: '/upload',     label: 'Upload' },
 ];
 
@@ -102,8 +102,12 @@ export default function ChildHeader() {
                 </span>
                 <button
                   onClick={handleLogout}
-                  className="text-xs font-medium text-slate-400 hover:text-slate-700 px-3 py-1.5 rounded-md hover:bg-slate-50 transition-colors"
+                  title="Log out"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-red-600 border border-slate-200 hover:border-red-300 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
                 >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
                   Log out
                 </button>
               </>
@@ -162,8 +166,11 @@ export default function ChildHeader() {
             {!loadingUser && (user ? (
               <button
                 onClick={handleLogout}
-                className="w-full text-left px-3 py-2 text-sm text-slate-400 hover:bg-slate-50 hover:text-slate-700 rounded-lg transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-slate-200 hover:border-red-300"
               >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
                 Log out ({user.displayName ?? user.email.split('@')[0]})
               </button>
             ) : (

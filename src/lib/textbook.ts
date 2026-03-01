@@ -29,6 +29,8 @@ function cleanLine(line: string): string {
     .replace(/[\x85\u2026]/g, '...')
     .replace(/\xA0/g, ' ')
     .replace(/[\x80-\x84\x86-\x90\x95\x98\x99\x9A-\x9F]/g, '')
+    // Strip Latin-1 supplement punctuation / symbols (A1–BF) that appear as garbage
+    .replace(/[\xA1-\xBF]/g, '')
     .replace(/ {2,}/g, ' ')
     .trim();
 }
