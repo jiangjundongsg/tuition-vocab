@@ -6,6 +6,7 @@ import TeacherSQLPortal from '@/components/TeacherSQLPortal';
 import TeacherUserManager from '@/components/TeacherUserManager';
 import WordUploader from '@/components/WordUploader';
 import PhotoUploader from '@/components/PhotoUploader';
+import PDFUploader from '@/components/PDFUploader';
 
 interface Word {
   id: number;
@@ -29,7 +30,7 @@ type Tab = 'sql' | 'words' | 'users' | 'upload';
 export default function WordsPage() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('sql');
-  const [uploadSubTab, setUploadSubTab] = useState<'csv' | 'photo'>('csv');
+  const [uploadSubTab, setUploadSubTab] = useState<'csv' | 'photo' | 'pdf'>('csv');
   const [words, setWords] = useState<Word[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -172,7 +173,7 @@ export default function WordsPage() {
         <div className="space-y-6">
           {/* Upload sub-tabs */}
           <div className="flex border-b border-slate-200">
-            {(['csv', 'photo'] as const).map((st) => (
+            {(['csv', 'photo', 'pdf'] as const).map((st) => (
               <button
                 key={st}
                 onClick={() => setUploadSubTab(st)}
@@ -182,12 +183,34 @@ export default function WordsPage() {
                     : 'border-transparent text-slate-500 hover:text-slate-800'
                 }`}
               >
-                {st === 'csv' ? 'CSV / Text' : '📷 Photo'}
+                {st === 'csv' ? 'CSV / Text' : st === 'photo' ? '📷 Photo' : '📄 PDF'}
               </button>
             ))}
           </div>
 
-          {uploadSubTab === 'csv' ? (
+          {uploadSubTab === 'pdf' ? (
+            <>
+              <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+                <PDFUploader />
+              </div>
+              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">How it works</p>
+                <div className="space-y-2.5 text-xs text-slate-500">
+                  {[
+                    'Upload a PDF file such as a textbook page or printed word list.',
+                    'Claude AI will read the document and extract vocabulary words.',
+                    "Words are assigned to today's date if no lesson number is given.",
+                    'Difficulty is scored automatically based on word frequency data.',
+                  ].map((step, i) => (
+                    <div key={i} className="flex gap-3">
+                      <span className="text-indigo-400 font-bold shrink-0">{String(i + 1).padStart(2, '0')}</span>
+                      <span>{step}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : uploadSubTab === 'csv' ? (
             <>
               <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
                 <WordUploader />
