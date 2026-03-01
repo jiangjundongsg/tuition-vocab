@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef } from 'react';
 import SpeakableText from './SpeakableText';
-import { makeUtterance, cancelAndSpeak } from '@/lib/tts';
+import { makeUtterance, cancelAndSpeak, computeHighlightSchedule } from '@/lib/tts';
 
 interface QuestionForMCQ {
   type: 'mcq' | 'true_false';
@@ -69,13 +69,13 @@ export default function SessionMCQ({ questionKey, data, submitted, selectedAnswe
 
     const optTokens = tokenizedOptions.find((t) => t.opt === option)?.tokens ?? [];
     const utt = makeUtterance(option, 0.9);
+    const schedule = computeHighlightSchedule(optTokens, 0.9);
 
     utt.onstart = () => {
       clearTimers();
-      const msPerChar = 1000 / (0.9 * 13.5);
-      timers.current = optTokens
-        .filter((t) => t.isWord)
-        .map((tok) => setTimeout(() => setHighlightStart(tok.start), tok.start * msPerChar));
+      timers.current = schedule.map(({ charStart, delay }) =>
+        setTimeout(() => setHighlightStart(charStart), delay),
+      );
     };
 
     utt.onboundary = (ev) => {

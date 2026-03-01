@@ -5,7 +5,7 @@ import SessionMCQ from './SessionMCQ';
 import FillBlankExercise from './FillBlankExercise';
 import { WordQuestions } from '@/lib/claude';
 import { FillBlankQuestion } from '@/lib/fillblank';
-import { makeUtterance, cancelAndSpeak } from '@/lib/tts';
+import { makeUtterance, cancelAndSpeak, computeHighlightSchedule } from '@/lib/tts';
 
 // ── Speak word button ────────────────────────────────────────────────────────
 
@@ -142,12 +142,12 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
     }
     const utterance = makeUtterance(data.paragraph, 0.85);
 
+    const schedule = computeHighlightSchedule(passageTokens, 0.85);
     utterance.onstart = () => {
       clearPassageTimers();
-      const msPerChar = 1000 / (0.85 * 13.5);
-      passageTimers.current = passageTokens
-        .filter((t) => t.isWord)
-        .map((tok) => setTimeout(() => setPassageHighlight(tok.start), tok.start * msPerChar));
+      passageTimers.current = schedule.map(({ charStart, delay }) =>
+        setTimeout(() => setPassageHighlight(charStart), delay),
+      );
     };
 
     utterance.onboundary = (e) => {

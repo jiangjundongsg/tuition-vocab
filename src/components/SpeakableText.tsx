@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useRef } from 'react';
-import { makeUtterance, cancelAndSpeak } from '@/lib/tts';
+import { makeUtterance, cancelAndSpeak, computeHighlightSchedule } from '@/lib/tts';
 
 function tokenize(text: string) {
   const tokens: Array<{ text: string; isWord: boolean; start: number }> = [];
@@ -54,14 +54,13 @@ export default function SpeakableText({
 
     const utt = makeUtterance(text, rate);
 
-    // Timer-based highlighting — works on every play regardless of browser onboundary support.
-    // Calibration: ~13.5 chars/sec at rate=1.0 (≈135 WPM × 6 chars/word ÷ 60).
+    // Syllable-based timer highlighting — works on every play, better sync than char-length.
+    const schedule = computeHighlightSchedule(tokens, rate);
     utt.onstart = () => {
       clearTimers();
-      const msPerChar = 1000 / (rate * 13.5);
-      timers.current = tokens
-        .filter((t) => t.isWord)
-        .map((tok) => setTimeout(() => setHighlightStart(tok.start), tok.start * msPerChar));
+      timers.current = schedule.map(({ charStart, delay }) =>
+        setTimeout(() => setHighlightStart(charStart), delay),
+      );
     };
 
     // onboundary gives more accurate timing when the browser supports it.

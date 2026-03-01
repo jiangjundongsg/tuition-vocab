@@ -65,6 +65,53 @@ function getBestVoice(): SpeechSynthesisVoice | null {
   return null;
 }
 
+// ── Highlight schedule ────────────────────────────────────────────────────────
+
+/**
+ * Estimate syllable count for a single word.
+ * Uses vowel-group counting with a silent-trailing-e correction.
+ */
+function syllableCount(word: string): number {
+  const w = word.toLowerCase().replace(/[^a-z]/g, '');
+  if (w.length === 0) return 0;
+  if (w.length <= 2) return 1;
+  const groups = w.match(/[aeiouy]+/g);
+  let n = groups ? groups.length : 1;
+  // Silent trailing 'e' (e.g. "make", "voice") — only when the char before it is a consonant
+  if (w.endsWith('e') && w.length > 2 && !/[aeiouy]e$/.test(w)) n = Math.max(1, n - 1);
+  return Math.max(1, n);
+}
+
+/**
+ * Build a highlight schedule from pre-tokenised word tokens.
+ * Returns {charStart, delay} pairs — delay is ms from when speech begins (onstart).
+ *
+ * Uses syllable duration rather than character length so that short words like
+ * "the" and long words like "extraordinary" are timed proportionally.
+ *
+ * Calibration: 220 ms/syllable at rate=1.0 ≈ 150 WPM average.
+ * Punctuation after a word adds an extra pause (period → +250 ms, comma → +120 ms).
+ */
+export function computeHighlightSchedule(
+  tokens: Array<{ text: string; isWord: boolean; start: number }>,
+  rate: number,
+): Array<{ charStart: number; delay: number }> {
+  const msPerSyllable = 220 / rate;
+  let elapsed = 0;
+  const schedule: Array<{ charStart: number; delay: number }> = [];
+
+  for (const tok of tokens) {
+    if (!tok.isWord) continue;
+    schedule.push({ charStart: tok.start, delay: Math.round(elapsed) });
+    elapsed += syllableCount(tok.text) * msPerSyllable;
+    // Punctuation pauses
+    if (/[.!?]$/.test(tok.text))   elapsed += 250 / rate;
+    else if (/[,;:]$/.test(tok.text)) elapsed += 120 / rate;
+  }
+
+  return schedule;
+}
+
 /** Create a SpeechSynthesisUtterance with the best available English voice. */
 export function makeUtterance(text: string, rate = 0.9): SpeechSynthesisUtterance {
   const utt = new SpeechSynthesisUtterance(text);
