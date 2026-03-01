@@ -102,13 +102,10 @@ export default function SpeakableText({
       <button
         onClick={handleSpeak}
         title={speaking ? 'Stop reading' : 'Read aloud'}
-        className={`shrink-0 mt-0.5 p-1 rounded-lg transition-colors ${
-          speaking
-            ? 'text-indigo-600 bg-indigo-50'
-            : 'text-slate-300 hover:text-indigo-500 hover:bg-indigo-50'
-        }`}
+        className="shrink-0 flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 px-2.5 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
       >
         {SPEAKER_ICON}
+        {speaking ? 'Stop' : 'Read aloud'}
       </button>
     </div>
   );

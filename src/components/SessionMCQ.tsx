@@ -152,14 +152,13 @@ export default function SessionMCQ({ questionKey, data, submitted, selectedAnswe
               <span
                 role="button"
                 tabIndex={0}
-                title="Read option aloud"
+                title={isSpeaking ? 'Stop reading' : 'Read aloud'}
                 onClick={(e) => speakOption(e, option)}
                 onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && speakOption(e, option)}
-                className={`shrink-0 p-1 rounded transition-colors ${
-                  isSpeaking ? 'text-indigo-500' : 'text-slate-300 hover:text-indigo-400'
-                }`}
+                className="shrink-0 flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 px-2.5 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
               >
                 {SPEAKER_ICON}
+                {isSpeaking ? 'Stop' : 'Read aloud'}
               </span>
 
               {submitted && isCorrect && <span className="text-emerald-600">✓</span>}
