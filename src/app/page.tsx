@@ -60,13 +60,13 @@ export default function HomePage() {
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-sky-200 rounded-full opacity-20 blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
         <div className="absolute top-1/3 right-1/3 w-56 h-56 bg-indigo-100 rounded-full opacity-30 blur-2xl pointer-events-none" />
 
-        <div className="relative max-w-2xl space-y-6">
+        <div className="relative space-y-6">
           <div className="inline-flex items-center gap-2 bg-white/70 backdrop-blur-sm border border-indigo-100 rounded-full px-3.5 py-1.5 text-xs font-semibold text-indigo-600 shadow-sm">
             <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
             English Vocabulary Practice
           </div>
 
-          <h1 className="text-5xl sm:text-6xl text-slate-900 leading-[1.06]">
+          <h1 className="max-w-2xl text-5xl sm:text-6xl text-slate-900 leading-[1.06]">
             <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-500 bg-clip-text text-transparent">
               Build your
             </span>
