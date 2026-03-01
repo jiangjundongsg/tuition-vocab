@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import SpeakableText from './SpeakableText';
 
 // Generic MCQ question renderer
@@ -19,9 +20,38 @@ interface Props {
   onAnswer: (questionKey: string, answer: string, isCorrect: boolean) => void;
 }
 
+const SPEAKER_ICON = (
+  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+    <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.784L4.27 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.27l4.113-3.784a1 1 0 011 .076zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
+  </svg>
+);
+
 export default function SessionMCQ({ questionKey, data, submitted, selectedAnswer, onAnswer }: Props) {
+  const [speakingOption, setSpeakingOption] = useState<string | null>(null);
+
   const isTF = data.type === 'true_false';
   const options = isTF ? ['True', 'False'] : (data.options ?? []);
+
+  function speakOption(e: React.MouseEvent | React.KeyboardEvent, option: string) {
+    e.stopPropagation();
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+
+    if (speakingOption === option) {
+      window.speechSynthesis.cancel();
+      setSpeakingOption(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(option);
+    utt.rate = 0.9;
+    utt.lang = 'en-US';
+    const done = () => setSpeakingOption(null);
+    utt.onend = done;
+    utt.onerror = done;
+    setSpeakingOption(option);
+    window.speechSynthesis.speak(utt);
+  }
 
   return (
     <div className="space-y-3">
@@ -31,6 +61,7 @@ export default function SessionMCQ({ questionKey, data, submitted, selectedAnswe
         {options.map((option, i) => {
           const isSelected = selectedAnswer === option;
           const isCorrect = option === data.answer;
+          const isSpeaking = speakingOption === option;
 
           let cls = 'flex items-center gap-3 px-4 py-2.5 rounded-lg border text-sm font-medium transition-all cursor-pointer ';
           if (!submitted) {
@@ -60,6 +91,21 @@ export default function SessionMCQ({ questionKey, data, submitted, selectedAnswe
                 {label}
               </span>
               <span className="flex-1 text-left">{option}</span>
+
+              {/* Speak option — stops propagation so it doesn't select the answer */}
+              <span
+                role="button"
+                tabIndex={0}
+                title="Read option aloud"
+                onClick={(e) => speakOption(e, option)}
+                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && speakOption(e, option)}
+                className={`shrink-0 p-1 rounded transition-colors ${
+                  isSpeaking ? 'text-indigo-500' : 'text-slate-300 hover:text-indigo-400'
+                }`}
+              >
+                {SPEAKER_ICON}
+              </span>
+
               {submitted && isCorrect && <span className="text-emerald-600">✓</span>}
               {submitted && isSelected && !isCorrect && <span className="text-red-500">✗</span>}
             </button>
