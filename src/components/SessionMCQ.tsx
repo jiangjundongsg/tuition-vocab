@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import SpeakableText from './SpeakableText';
 import { makeUtterance } from '@/lib/tts';
 
@@ -27,11 +27,29 @@ const SPEAKER_ICON = (
   </svg>
 );
 
+function tokenize(text: string) {
+  const tokens: Array<{ text: string; isWord: boolean; start: number }> = [];
+  const re = /\S+|\s+/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    tokens.push({ text: m[0], isWord: /\S/.test(m[0]), start: m.index });
+  }
+  return tokens;
+}
+
 export default function SessionMCQ({ questionKey, data, submitted, selectedAnswer, onAnswer }: Props) {
   const [speakingOption, setSpeakingOption] = useState<string | null>(null);
+  const [highlightStart, setHighlightStart] = useState(-1);
 
   const isTF = data.type === 'true_false';
   const options = isTF ? ['True', 'False'] : (data.options ?? []);
+
+  // Pre-tokenize all options so rendering is stable
+  const tokenizedOptions = useMemo(
+    () => options.map((opt) => ({ opt, tokens: tokenize(opt) })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data.options, isTF],
+  );
 
   function speakOption(e: React.MouseEvent | React.KeyboardEvent, option: string) {
     e.stopPropagation();
@@ -40,15 +58,20 @@ export default function SessionMCQ({ questionKey, data, submitted, selectedAnswe
     if (speakingOption === option) {
       window.speechSynthesis.cancel();
       setSpeakingOption(null);
+      setHighlightStart(-1);
       return;
     }
 
     window.speechSynthesis.cancel();
     const utt = makeUtterance(option, 0.9);
-    const done = () => setSpeakingOption(null);
+    utt.onboundary = (ev) => {
+      if (ev.name === 'word') setHighlightStart(ev.charIndex);
+    };
+    const done = () => { setSpeakingOption(null); setHighlightStart(-1); };
     utt.onend = done;
     utt.onerror = done;
     setSpeakingOption(option);
+    setHighlightStart(-1);
     window.speechSynthesis.speak(utt);
   }
 
@@ -57,7 +80,7 @@ export default function SessionMCQ({ questionKey, data, submitted, selectedAnswe
       <SpeakableText text={data.question} />
 
       <div className={`grid gap-2 ${isTF ? 'grid-cols-2' : 'grid-cols-1'}`}>
-        {options.map((option, i) => {
+        {tokenizedOptions.map(({ opt: option, tokens }, i) => {
           const isSelected = selectedAnswer === option;
           const isCorrect = option === data.answer;
           const isSpeaking = speakingOption === option;
@@ -89,7 +112,28 @@ export default function SessionMCQ({ questionKey, data, submitted, selectedAnswe
                   'bg-slate-100 text-slate-400'}`}>
                 {label}
               </span>
-              <span className="flex-1 text-left">{option}</span>
+
+              {/* Option text — highlighted word-by-word while speaking */}
+              <span className="flex-1 text-left">
+                {isSpeaking
+                  ? tokens.map((tok, j) =>
+                      tok.isWord ? (
+                        <mark
+                          key={j}
+                          style={{
+                            background: highlightStart === tok.start ? '#fef08a' : 'transparent',
+                            borderRadius: '3px',
+                            padding: '0 1px',
+                          }}
+                        >
+                          {tok.text}
+                        </mark>
+                      ) : (
+                        <span key={j}>{tok.text}</span>
+                      )
+                    )
+                  : option}
+              </span>
 
               {/* Speak option — stops propagation so it doesn't select the answer */}
               <span
