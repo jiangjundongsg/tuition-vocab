@@ -64,8 +64,7 @@ export default function FillBlankExercise({ questionKey, data, submitted, onAnsw
             const isChecked = checked;
             const isCorrect = correct[id];
 
-            // Colour scheme: indigo when unchecked, green/red after checking
-            const hintColor = !isChecked ? '#4F46E5' : isCorrect ? '#059669' : '#dc2626';
+            // Colour scheme after checking: green = correct, red = wrong
             const borderColor = !isChecked ? '#a5b4fc' : isCorrect ? '#6ee7b7' : '#fca5a5';
             const inputBg = isChecked ? (isCorrect ? '#ecfdf5' : '#fff1f2') : 'transparent';
             const inputColor = !isChecked ? '#1e1b4b' : isCorrect ? '#065f46' : '#991b1b';
@@ -80,34 +79,19 @@ export default function FillBlankExercise({ questionKey, data, submitted, onAnsw
                   margin: '0 1px',
                 }}
               >
-                {/* First letter — exactly same font, size, and weight as surrounding paragraph text */}
-                <span
-                  style={{
-                    fontSize: 'inherit',      // same size as paragraph text
-                    fontFamily: 'inherit',    // same font as paragraph text
-                    fontWeight: 'inherit',    // same weight as paragraph text
-                    lineHeight: 'inherit',
-                    color: hintColor,
-                    userSelect: 'none',
-                    paddingBottom: '2px',
-                  }}
-                >
-                  {blank.original[0]}
-                </span>
-
-                {/* Underline input — bottom-aligned with text baseline */}
+                {/* Underline input — first letter shown as grey placeholder hint */}
                 <input
                   type="text"
                   value={val}
                   onChange={(e) => setInput(id, e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && check()}
                   disabled={isChecked || submitted}
-                  placeholder=""
+                  placeholder={blank.original[0]}
                   style={{
                     border: 'none',
                     borderBottom: `2px solid ${borderColor}`,
                     background: inputBg,
-                    width: `calc(${Math.max(blank.original.length - 1, 2)}ch + 6px)`,
+                    width: `calc(${Math.max(blank.original.length, 3)}ch + 6px)`,
                     padding: '0 2px 1px 3px',
                     textAlign: 'left',
                     outline: 'none',

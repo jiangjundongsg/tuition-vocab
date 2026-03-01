@@ -14,6 +14,7 @@ interface WrongBankItem {
   lessonNumber: string | null;
   questionKey: string;
   typeLabel: string;
+  correctAnswer: string;
   wrongCount: number;
 }
 

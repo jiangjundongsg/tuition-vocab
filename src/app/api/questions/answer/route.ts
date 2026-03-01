@@ -10,10 +10,11 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { wordSetId, questionKey, isCorrect } = body as {
+    const { wordSetId, questionKey, isCorrect, correctAnswer } = body as {
       wordSetId: number;
       questionKey: string;
       isCorrect: boolean;
+      correctAnswer?: string;
     };
 
     if (!wordSetId || !questionKey) {
@@ -36,13 +37,14 @@ export async function POST(req: NextRequest) {
       `;
     } else {
       await sql`
-        INSERT INTO wrong_bank (user_id, word_set_id, question_key, wrong_count, last_wrong_at)
-        VALUES (${user.id}, ${wordSetId}, ${questionKey}, 1, NOW())
+        INSERT INTO wrong_bank (user_id, word_set_id, question_key, wrong_count, last_wrong_at, correct_answer)
+        VALUES (${user.id}, ${wordSetId}, ${questionKey}, 1, NOW(), ${correctAnswer ?? ''})
         ON CONFLICT (user_id, word_set_id, question_key)
           WHERE user_id IS NOT NULL AND word_set_id IS NOT NULL
         DO UPDATE SET
-          wrong_count   = wrong_bank.wrong_count + 1,
-          last_wrong_at = NOW()
+          wrong_count    = wrong_bank.wrong_count + 1,
+          last_wrong_at  = NOW(),
+          correct_answer = EXCLUDED.correct_answer
       `;
     }
 

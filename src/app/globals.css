@@ -48,6 +48,12 @@ input, textarea, select, button {
   font: inherit;
 }
 
+/* Placeholder text — grey, consistent across browsers */
+input::placeholder, textarea::placeholder {
+  color: #9ca3af;
+  opacity: 1;
+}
+
 html {
   scroll-behavior: smooth;
 }

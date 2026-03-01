@@ -87,15 +87,27 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
       setSubmitted((s) => ({ ...s, [questionKey]: true }));
       setAnswers((a) => ({ ...a, [questionKey]: answer }));
       setCorrectMap((c) => ({ ...c, [questionKey]: isCorrect }));
+
+      // Derive correct answer for wrong-bank storage
+      let correctAnswer = '';
+      if (questionKey === 'mcq') {
+        correctAnswer = data.questions.mcq.answer;
+      } else if (questionKey.startsWith('comp_')) {
+        const idx = parseInt(questionKey.split('_')[1] ?? '0');
+        correctAnswer = data.questions.comp[idx]?.answer ?? '';
+      } else if (questionKey === 'fill_blank') {
+        correctAnswer = data.fillBlank.blanks.map((b) => b.original).join(', ');
+      }
+
       try {
         await fetch('/api/questions/answer', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ wordSetId: data.wordSetId, questionKey, isCorrect }),
+          body: JSON.stringify({ wordSetId: data.wordSetId, questionKey, isCorrect, correctAnswer }),
         });
       } catch { /* silent */ }
     },
-    [data.wordSetId, submitted]
+    [data, submitted]
   );
 
   async function handleChangePassage() {

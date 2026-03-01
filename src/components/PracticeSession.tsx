@@ -19,6 +19,7 @@ interface WrongBankItem {
   lessonNumber: string | null;
   questionKey: string;
   typeLabel: string;
+  correctAnswer: string;
   wrongCount: number;
 }
 
@@ -116,6 +117,7 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
             wordSetId: ws.wordSetId,
             questionKey: 'dictation',
             isCorrect,
+            correctAnswer: wordInfo.word,
           }),
         });
       } catch { /* silent */ }

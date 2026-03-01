@@ -19,6 +19,7 @@ interface WrongBankItem {
   lessonNumber: string | null;
   questionKey: string;
   typeLabel: string;
+  correctAnswer: string;
   wrongCount: number;
 }
 
@@ -98,7 +99,7 @@ export default function DictationSession({ words, lessonNumber, onDone }: Props)
         await fetch('/api/questions/answer', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ wordSetId: ws.wordSetId, questionKey: 'dictation', isCorrect }),
+          body: JSON.stringify({ wordSetId: ws.wordSetId, questionKey: 'dictation', isCorrect, correctAnswer: wordInfo.word }),
         });
       } catch { /* silent */ }
     },
