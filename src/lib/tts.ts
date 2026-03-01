@@ -10,7 +10,6 @@
  *  6. Browser default
  */
 
-// Preferred voice name patterns, ordered best → fallback
 const VOICE_PATTERNS: RegExp[] = [
   /google us english/i,
   /microsoft.*aria.*natural/i,
@@ -21,14 +20,15 @@ const VOICE_PATTERNS: RegExp[] = [
   /microsoft.*en.*(us|gb)/i,
 ];
 
-let cachedVoice: SpeechSynthesisVoice | null | undefined = undefined;
+// Cache the voice NAME rather than the object — Chrome invalidates voice objects
+// after speechSynthesis.cancel(), causing the voice to revert to the system default.
+let cachedVoiceName: string | null | undefined = undefined; // undefined = not yet resolved
 
 function pickVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
   for (const pattern of VOICE_PATTERNS) {
     const v = voices.find((v) => pattern.test(v.name));
     if (v) return v;
   }
-  // Fallback: any en-US, then any English
   return (
     voices.find((v) => v.lang === 'en-US') ??
     voices.find((v) => v.lang.startsWith('en')) ??
@@ -39,27 +39,33 @@ function pickVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null 
 function getBestVoice(): SpeechSynthesisVoice | null {
   if (typeof window === 'undefined' || !window.speechSynthesis) return null;
 
-  if (cachedVoice !== undefined) return cachedVoice;
-
   const voices = window.speechSynthesis.getVoices();
+
   if (voices.length > 0) {
-    cachedVoice = pickVoice(voices);
-    return cachedVoice;
+    // Resolve name on first successful load
+    if (cachedVoiceName === undefined) {
+      cachedVoiceName = pickVoice(voices)?.name ?? null;
+    }
+    // Re-find the object each call — stale objects cause wrong voice after cancel()
+    if (!cachedVoiceName) return null;
+    return voices.find((v) => v.name === cachedVoiceName) ?? null;
   }
 
-  // Voices not ready yet — register a one-time listener and return null for now
-  window.speechSynthesis.addEventListener(
-    'voiceschanged',
-    () => { cachedVoice = pickVoice(window.speechSynthesis.getVoices()); },
-    { once: true },
-  );
+  // Voices not ready yet (async Chrome first load)
+  if (cachedVoiceName === undefined) {
+    window.speechSynthesis.addEventListener(
+      'voiceschanged',
+      () => {
+        const v = pickVoice(window.speechSynthesis.getVoices());
+        cachedVoiceName = v?.name ?? null;
+      },
+      { once: true },
+    );
+  }
   return null;
 }
 
-/**
- * Create a SpeechSynthesisUtterance pre-configured with the best available
- * English voice, the given rate, and sensible pitch.
- */
+/** Create a SpeechSynthesisUtterance with the best available English voice. */
 export function makeUtterance(text: string, rate = 0.9): SpeechSynthesisUtterance {
   const utt = new SpeechSynthesisUtterance(text);
   utt.lang = 'en-US';
@@ -68,4 +74,21 @@ export function makeUtterance(text: string, rate = 0.9): SpeechSynthesisUtteranc
   const voice = getBestVoice();
   if (voice) utt.voice = voice;
   return utt;
+}
+
+/**
+ * Cancel any current speech then speak `utt` after a delay long enough for
+ * Chrome to fully reset its engine — without this, onboundary events stop
+ * firing on the second (and subsequent) plays, and the voice may revert.
+ */
+export function cancelAndSpeak(utt: SpeechSynthesisUtterance): void {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  setTimeout(() => {
+    // Re-assign the voice inside the timeout so Chrome receives a fresh object
+    const voice = getBestVoice();
+    if (voice) utt.voice = voice;
+    window.speechSynthesis.resume(); // un-pause if Chrome left it paused
+    window.speechSynthesis.speak(utt);
+  }, 150);
 }

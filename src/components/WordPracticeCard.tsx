@@ -5,7 +5,7 @@ import SessionMCQ from './SessionMCQ';
 import FillBlankExercise from './FillBlankExercise';
 import { WordQuestions } from '@/lib/claude';
 import { FillBlankQuestion } from '@/lib/fillblank';
-import { makeUtterance } from '@/lib/tts';
+import { makeUtterance, cancelAndSpeak } from '@/lib/tts';
 
 // ── Speak word button ────────────────────────────────────────────────────────
 
@@ -132,7 +132,6 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
       setPassageHighlight(-1);
       return;
     }
-    window.speechSynthesis.cancel();
     const utterance = makeUtterance(data.paragraph, 0.85);
     utterance.onboundary = (e) => {
       if (e.name === 'word') setPassageHighlight(e.charIndex);
@@ -142,7 +141,7 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
     utterance.onerror = done;
     setReadingPassage(true);
     setPassageHighlight(-1);
-    setTimeout(() => window.speechSynthesis.speak(utterance), 50);
+    cancelAndSpeak(utterance);
   }
 
   const correctCount = Object.values(correctMap).filter(Boolean).length;

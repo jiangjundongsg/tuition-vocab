@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import SpeakableText from './SpeakableText';
-import { makeUtterance } from '@/lib/tts';
+import { makeUtterance, cancelAndSpeak } from '@/lib/tts';
 
 // Generic MCQ question renderer
 interface QuestionForMCQ {
@@ -62,7 +62,6 @@ export default function SessionMCQ({ questionKey, data, submitted, selectedAnswe
       return;
     }
 
-    window.speechSynthesis.cancel();
     const utt = makeUtterance(option, 0.9);
     utt.onboundary = (ev) => {
       if (ev.name === 'word') setHighlightStart(ev.charIndex);
@@ -72,7 +71,7 @@ export default function SessionMCQ({ questionKey, data, submitted, selectedAnswe
     utt.onerror = done;
     setSpeakingOption(option);
     setHighlightStart(-1);
-    setTimeout(() => window.speechSynthesis.speak(utt), 50);
+    cancelAndSpeak(utt);
   }
 
   return (

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { makeUtterance } from '@/lib/tts';
+import { makeUtterance, cancelAndSpeak } from '@/lib/tts';
 
 interface Props {
   wordIndex: number;
@@ -24,12 +24,11 @@ export default function DictationItem({ wordIndex, word, meaning, questionKey, s
 
   function speak() {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
     const utterance = makeUtterance(word, 0.8);
     setSpeaking(true);
     utterance.onend = () => setSpeaking(false);
     utterance.onerror = () => setSpeaking(false);
-    window.speechSynthesis.speak(utterance);
+    cancelAndSpeak(utterance);
   }
 
   function submit() {

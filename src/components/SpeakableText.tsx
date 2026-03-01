@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { makeUtterance } from '@/lib/tts';
+import { makeUtterance, cancelAndSpeak } from '@/lib/tts';
 
 // Split text into word/whitespace tokens, recording the char offset of each token.
 // The charIndex from SpeechSynthesisUtterance.onboundary matches these offsets.
@@ -51,7 +51,6 @@ export default function SpeakableText({
       return;
     }
 
-    window.speechSynthesis.cancel();
     const utt = makeUtterance(text, rate);
 
     utt.onboundary = (e) => {
@@ -63,8 +62,7 @@ export default function SpeakableText({
 
     setSpeaking(true);
     setHighlightStart(-1);
-    // Small delay after cancel() so Chrome re-fires onboundary events correctly on second play
-    setTimeout(() => window.speechSynthesis.speak(utt), 50);
+    cancelAndSpeak(utt);
   }
 
   return (
