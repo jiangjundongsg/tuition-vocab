@@ -398,6 +398,7 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
         </div>
       ) : (
         <WordPracticeCard
+          wordId={currentWord.id}
           wordData={currentWordSet}
           wordIndex={currentWordIndex}
           totalWords={words.length}

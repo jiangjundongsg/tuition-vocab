@@ -8,6 +8,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
+  const [age, setAge] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [teacherCode, setTeacherCode] = useState('');
@@ -40,6 +41,7 @@ export default function RegisterPage() {
           password,
           displayName,
           teacherCode: teacherCode.trim() || undefined,
+          age: age ? parseInt(age) : undefined,
         }),
       });
 
@@ -93,6 +95,19 @@ export default function RegisterPage() {
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="e.g. Alex"
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label className={labelClass}>Age</label>
+            <input
+              type="number"
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+              min={5}
+              max={18}
+              placeholder="e.g. 10"
               className={inputClass}
             />
           </div>

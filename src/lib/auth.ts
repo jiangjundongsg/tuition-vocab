@@ -8,6 +8,8 @@ export interface AuthUser {
   email: string;
   displayName: string | null;
   role: string; // 'student' | 'teacher' | 'admin'
+  age: number | null;
+  passageSource: string;
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
@@ -20,7 +22,8 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     if (isNaN(userId)) return null;
 
     const rows = await sql`
-      SELECT id, email, display_name, role FROM users WHERE id = ${userId}
+      SELECT id, email, display_name, role, age, passage_source
+      FROM users WHERE id = ${userId}
     `;
 
     if (rows.length === 0) return null;
@@ -30,6 +33,8 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       email: rows[0].email as string,
       displayName: rows[0].display_name as string | null,
       role: (rows[0].role as string) ?? 'student',
+      age: rows[0].age != null ? Number(rows[0].age) : null,
+      passageSource: (rows[0].passage_source as string) || 'TextBook_Harry_Portter',
     };
   } catch {
     return null;

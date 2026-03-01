@@ -9,11 +9,12 @@ const TEACHER_CODE = process.env.TEACHER_CODE ?? 'VOCAB_TEACHER';
 export async function POST(req: NextRequest) {
   try {
     await initDb();
-    const { email, password, displayName, teacherCode } = await req.json() as {
+    const { email, password, displayName, teacherCode, age } = await req.json() as {
       email: string;
       password: string;
       displayName?: string;
       teacherCode?: string;
+      age?: number;
     };
 
     if (!email || !password) {
@@ -26,7 +27,6 @@ export async function POST(req: NextRequest) {
 
     const emailLower = email.toLowerCase().trim();
 
-    // Check if email already exists
     const existing = await sql`SELECT id FROM users WHERE email = ${emailLower}`;
     if (existing.length > 0) {
       return NextResponse.json({ error: 'An account with this email already exists' }, { status: 409 });
@@ -35,11 +35,12 @@ export async function POST(req: NextRequest) {
     const role = teacherCode?.trim() === TEACHER_CODE ? 'teacher' : 'student';
     const passwordHash = await bcrypt.hash(password, 10);
     const name = displayName?.trim() || null;
+    const ageVal = typeof age === 'number' && age > 0 ? age : null;
 
     const rows = await sql`
-      INSERT INTO users (email, password_hash, display_name, role)
-      VALUES (${emailLower}, ${passwordHash}, ${name}, ${role})
-      RETURNING id, email, display_name, role
+      INSERT INTO users (email, password_hash, display_name, role, age)
+      VALUES (${emailLower}, ${passwordHash}, ${name}, ${role}, ${ageVal})
+      RETURNING id, email, display_name, role, age
     `;
 
     const user = rows[0];
@@ -51,6 +52,7 @@ export async function POST(req: NextRequest) {
         email: user.email,
         displayName: user.display_name,
         role: user.role,
+        age: user.age,
       },
     });
   } catch (err) {

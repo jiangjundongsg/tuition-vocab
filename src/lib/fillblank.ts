@@ -28,11 +28,17 @@ function makeHint(word: string): string {
 
 /**
  * Generate a fill-in-blank question from a paragraph + target word.
- * The target word is always a blank. Up to 4 additional blanks are chosen
- * from words with zipf_score > 3.50 (length ≥ 4, not stopwords).
- * Total blanks: up to 5.
+ * @param paragraph    The passage text
+ * @param targetWord   Always included as one blank
+ * @param numBlanks    Total number of blanks (default 5, configurable by teacher)
+ * @param zipfMax      Max zipf score for candidates (default 4.2 — picks harder words)
  */
-export function generateFillBlank(paragraph: string, targetWord: string): FillBlankQuestion {
+export function generateFillBlank(
+  paragraph: string,
+  targetWord: string,
+  numBlanks = 5,
+  zipfMax = 4.2,
+): FillBlankQuestion {
   // Tokenize: find all word tokens with their positions
   const tokens: Array<{ word: string; start: number; end: number }> = [];
   const wordRegex = /\b([a-zA-Z'-]+)\b/g;
@@ -51,7 +57,6 @@ export function generateFillBlank(paragraph: string, targetWord: string): FillBl
   const targetIndex = tokens.findIndex((t) => t.word.toLowerCase() === targetLower);
 
   if (targetIndex === -1) {
-    // Target word not found — just use a single-blank question
     return {
       type: 'fill_blank',
       displayText: `{{0}} ... ${paragraph.slice(0, 80)}...`,
@@ -59,11 +64,7 @@ export function generateFillBlank(paragraph: string, targetWord: string): FillBl
     };
   }
 
-  // Candidate words for additional blanks:
-  // - not the target word
-  // - length ≥ 4
-  // - not a stopword
-  // - zipf score < 4.2 (less common / harder words — better for fill-in-blank)
+  // Candidate words: length ≥ 4, not stopword, zipf < zipfMax (harder/less common words)
   const candidates = tokens
     .map((t, i) => ({ ...t, i }))
     .filter(({ i, word }) => {
@@ -73,13 +74,13 @@ export function generateFillBlank(paragraph: string, targetWord: string): FillBl
       if (STOPWORDS.has(w)) return false;
       if (!/^[a-z]/.test(w)) return false;
       const zipf = getZipfScore(w);
-      if (zipf === null || zipf >= 4.2) return false;
+      if (zipf === null || zipf >= zipfMax) return false;
       return true;
     });
 
-  // Shuffle candidates and pick up to 4 additional blanks (total 5 with target)
+  // Shuffle and pick up to (numBlanks - 1) extra blanks
   const shuffled = [...candidates].sort(() => Math.random() - 0.5);
-  const extra = shuffled.slice(0, 4);
+  const extra = shuffled.slice(0, numBlanks - 1);
 
   // Collect all blank positions sorted by appearance in text
   const blankPositions = [

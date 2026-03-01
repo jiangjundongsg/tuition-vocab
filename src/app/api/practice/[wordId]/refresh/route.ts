@@ -20,7 +20,7 @@ async function getConfig() {
   return { numComp: 2, numBlanks: 5, zipfMax: 4.2 };
 }
 
-export async function GET(
+export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ wordId: string }> }
 ) {
@@ -38,26 +38,6 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid word ID' }, { status: 400 });
     }
 
-    // Check cache
-    const cached = await sql`
-      SELECT id, paragraph_text, questions_json, fill_blank_json
-      FROM word_sets WHERE word_id = ${wordId} LIMIT 1
-    `;
-
-    if (
-      cached.length > 0 &&
-      cached[0].paragraph_text &&
-      cached[0].questions_json &&
-      cached[0].fill_blank_json
-    ) {
-      return NextResponse.json({
-        wordSetId: Number(cached[0].id),
-        paragraph: cached[0].paragraph_text as string,
-        questions: JSON.parse(cached[0].questions_json as string),
-        fillBlank: JSON.parse(cached[0].fill_blank_json as string),
-      });
-    }
-
     // Fetch word
     const wordRows = await sql`SELECT id, word FROM words WHERE id = ${wordId} LIMIT 1`;
     if (wordRows.length === 0) {
@@ -69,24 +49,38 @@ export async function GET(
     const age = user.age ?? 10;
     const passageSource = user.passageSource || 'TextBook_Harry_Portter';
 
-    // Find paragraph
-    let paragraph = findParagraphForWord(word, passageSource);
-    if (!paragraph) {
-      paragraph = await generateParagraph(word, age);
+    // Get current paragraph so we can pick a DIFFERENT one
+    const current = await sql`SELECT paragraph_text FROM word_sets WHERE word_id = ${wordId} LIMIT 1`;
+    const currentParagraph = current.length > 0 ? current[0].paragraph_text as string : null;
+
+    // Find all matching paragraphs, exclude the current one
+    const { findParagraphForWord: findAll } = await import('@/lib/textbook');
+    let newParagraph: string | null = null;
+
+    // Try up to 5 times to get a different paragraph
+    for (let i = 0; i < 5; i++) {
+      const candidate = findAll(word, passageSource);
+      if (candidate && candidate !== currentParagraph) {
+        newParagraph = candidate;
+        break;
+      }
     }
 
-    // Generate questions
-    const questions = await generateWordQuestions(word, paragraph, age, config.numComp);
+    // Fall back to Claude-generated if no different paragraph found
+    if (!newParagraph) {
+      newParagraph = await generateParagraph(word, age);
+    }
 
-    // Generate fill-in-blank
-    const fillBlank = generateFillBlank(paragraph, word, config.numBlanks, config.zipfMax);
+    // Regenerate questions and fill-blank with new paragraph
+    const questions = await generateWordQuestions(word, newParagraph, age, config.numComp);
+    const fillBlank = generateFillBlank(newParagraph, word, config.numBlanks, config.zipfMax);
 
-    // Cache
+    // Update cache
     const inserted = await sql`
       INSERT INTO word_sets (word_id, paragraph_text, questions_json, fill_blank_json)
       VALUES (
         ${wordId},
-        ${paragraph},
+        ${newParagraph},
         ${JSON.stringify(questions)},
         ${JSON.stringify(fillBlank)}
       )
@@ -100,12 +94,12 @@ export async function GET(
 
     return NextResponse.json({
       wordSetId: Number(inserted[0].id),
-      paragraph,
+      paragraph: newParagraph,
       questions,
       fillBlank,
     });
   } catch (err) {
-    console.error('Practice word error:', err);
+    console.error('Refresh word error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

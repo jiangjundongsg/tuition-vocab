@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import TeacherSQLPortal from '@/components/TeacherSQLPortal';
+import TeacherConfig from '@/components/TeacherConfig';
+import TeacherUserManager from '@/components/TeacherUserManager';
 
 interface Word {
   id: number;
@@ -24,7 +26,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 
 export default function WordsPage() {
   const router = useRouter();
-  const [tab, setTab] = useState<'words' | 'sql'>('sql');
+  const [tab, setTab] = useState<'words' | 'sql' | 'config' | 'users'>('sql');
   const [words, setWords] = useState<Word[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -135,32 +137,38 @@ export default function WordsPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-200">
-        <button
-          onClick={() => setTab('words')}
-          className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
-            tab === 'words'
-              ? 'border-indigo-600 text-indigo-600'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          Word List
-        </button>
-        <button
-          onClick={() => setTab('sql')}
-          className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
-            tab === 'sql'
-              ? 'border-indigo-600 text-indigo-600'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          SQL Query
-        </button>
+      <div className="flex flex-wrap border-b border-slate-200 gap-x-1">
+        {([
+          { key: 'sql',    label: 'SQL Query' },
+          { key: 'words',  label: 'Word List' },
+          { key: 'users',  label: 'Users' },
+          { key: 'config', label: 'Settings' },
+        ] as const).map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
+              tab === key
+                ? 'border-indigo-600 text-indigo-600'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {tab === 'sql' ? (
         <div className="bg-white rounded-2xl border border-slate-100 p-5">
           <TeacherSQLPortal />
+        </div>
+      ) : tab === 'config' ? (
+        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+          <TeacherConfig />
+        </div>
+      ) : tab === 'users' ? (
+        <div className="space-y-2">
+          <TeacherUserManager />
         </div>
       ) : (
         <>
