@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import sql from '@/lib/db';
+import { initDb } from '@/lib/db-init';
 import { getCurrentUser } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   try {
+    await initDb();
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: 'Login required' }, { status: 401 });
