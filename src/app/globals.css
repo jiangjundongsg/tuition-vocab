@@ -43,9 +43,9 @@ main > div {
   border-radius: 4px;
 }
 
-/* Form elements inherit font */
+/* Form elements inherit font (all properties, not just family) */
 input, textarea, select, button {
-  font-family: inherit;
+  font: inherit;
 }
 
 html {
