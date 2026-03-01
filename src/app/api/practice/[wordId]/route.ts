@@ -3,8 +3,20 @@ import sql from '@/lib/db';
 import { initDb } from '@/lib/db-init';
 import { getCurrentUser } from '@/lib/auth';
 import { findParagraphForWord } from '@/lib/textbook';
-import { generateWordQuestions, generateParagraph } from '@/lib/claude';
+import { generateWordQuestions, generateParagraph, WordQuestions } from '@/lib/claude';
 import { generateFillBlank } from '@/lib/fillblank';
+
+// Shuffle MCQ options on every response so the correct answer isn't always A
+function shuffleArr<T>(arr: T[]): T[] {
+  return [...arr].sort(() => Math.random() - 0.5);
+}
+function shuffleQuestions(q: WordQuestions): WordQuestions {
+  return {
+    ...q,
+    mcq:  { ...q.mcq,  options: shuffleArr(q.mcq.options  ?? []) },
+    comp: q.comp.map((c) => ({ ...c, options: shuffleArr(c.options ?? []) })),
+  };
+}
 
 export async function GET(
   _req: NextRequest,
@@ -42,12 +54,11 @@ export async function GET(
       const cachedQ = JSON.parse(cached[0].questions_json as string);
       const cachedCompCount = Array.isArray(cachedQ?.comp) ? cachedQ.comp.length : 0;
       if (cachedCompCount === numComp) {
-        // Re-generate fill-blank fresh using user's own settings
         const fillBlank = generateFillBlank(cached[0].paragraph_text as string, '', numBlanks, zipfMax);
         return NextResponse.json({
           wordSetId: Number(cached[0].id),
           paragraph: cached[0].paragraph_text as string,
-          questions: cachedQ,
+          questions: shuffleQuestions(cachedQ),
           fillBlank,
         });
       }
@@ -92,7 +103,7 @@ export async function GET(
     return NextResponse.json({
       wordSetId: Number(inserted[0].id),
       paragraph,
-      questions,
+      questions: shuffleQuestions(questions),
       fillBlank,
     });
   } catch (err) {

@@ -108,13 +108,13 @@ export default function FillBlankExercise({ questionKey, data, submitted, onAnsw
                     borderBottom: `2px solid ${borderColor}`,
                     background: inputBg,
                     width: `${Math.max((blank.original.length - 1) * 8 + 16, 32)}px`,
-                    padding: '0 2px 1px',
+                    padding: '0 2px 1px 3px',
                     fontSize: 'inherit',
                     fontFamily: 'inherit',
-                    textAlign: 'center',
+                    fontWeight: 'inherit',
+                    textAlign: 'left',
                     outline: 'none',
                     color: inputColor,
-                    fontWeight: 600,
                   }}
                 />
 
