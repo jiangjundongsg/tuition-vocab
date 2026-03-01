@@ -33,6 +33,7 @@ export default function SpeakableText({
   const [speaking, setSpeaking] = useState(false);
   const [highlightStart, setHighlightStart] = useState(-1);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const scheduleRef = useRef<Array<{ charStart: number; delay: number }>>([]);
 
   const tokens = useMemo(() => tokenize(text), [text]);
 
@@ -57,15 +58,26 @@ export default function SpeakableText({
     // Syllable-based timer highlighting — works on every play, better sync than char-length.
     const schedule = computeHighlightSchedule(tokens, rate);
     utt.onstart = () => {
+      scheduleRef.current = schedule;
       clearTimers();
       timers.current = schedule.map(({ charStart, delay }) =>
         setTimeout(() => setHighlightStart(charStart), delay),
       );
     };
 
-    // onboundary gives more accurate timing when the browser supports it.
+    // onboundary gives exact timing when the browser supports it.
+    // Resync remaining timers from the actual boundary position to correct drift.
     utt.onboundary = (e) => {
-      if (e.name === 'word') setHighlightStart(e.charIndex);
+      if (e.name !== 'word') return;
+      setHighlightStart(e.charIndex);
+      const sched = scheduleRef.current;
+      const idx = sched.findIndex((s) => s.charStart === e.charIndex);
+      if (idx < 0) return;
+      clearTimers();
+      const base = sched[idx].delay;
+      timers.current = sched.slice(idx + 1).map(({ charStart, delay }) =>
+        setTimeout(() => setHighlightStart(charStart), Math.max(0, delay - base)),
+      );
     };
 
     const done = () => { clearTimers(); setSpeaking(false); setHighlightStart(-1); };

@@ -64,6 +64,7 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
   const [readingPassage, setReadingPassage] = useState(false);
   const [passageHighlight, setPassageHighlight] = useState(-1);
   const passageTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const passageScheduleRef = useRef<Array<{ charStart: number; delay: number }>>([]);
 
   const passageTokens = useMemo(() => {
     const tokens: Array<{ text: string; isWord: boolean; start: number }> = [];
@@ -144,6 +145,7 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
 
     const schedule = computeHighlightSchedule(passageTokens, 0.85);
     utterance.onstart = () => {
+      passageScheduleRef.current = schedule;
       clearPassageTimers();
       passageTimers.current = schedule.map(({ charStart, delay }) =>
         setTimeout(() => setPassageHighlight(charStart), delay),
@@ -151,7 +153,16 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
     };
 
     utterance.onboundary = (e) => {
-      if (e.name === 'word') setPassageHighlight(e.charIndex);
+      if (e.name !== 'word') return;
+      setPassageHighlight(e.charIndex);
+      const sched = passageScheduleRef.current;
+      const idx = sched.findIndex((s) => s.charStart === e.charIndex);
+      if (idx < 0) return;
+      clearPassageTimers();
+      const base = sched[idx].delay;
+      passageTimers.current = sched.slice(idx + 1).map(({ charStart, delay }) =>
+        setTimeout(() => setPassageHighlight(charStart), Math.max(0, delay - base)),
+      );
     };
 
     const done = () => { clearPassageTimers(); setReadingPassage(false); setPassageHighlight(-1); };

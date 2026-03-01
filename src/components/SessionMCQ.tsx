@@ -40,6 +40,7 @@ export default function SessionMCQ({ questionKey, data, submitted, selectedAnswe
   const [speakingOption, setSpeakingOption] = useState<string | null>(null);
   const [highlightStart, setHighlightStart] = useState(-1);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const scheduleRef = useRef<Array<{ charStart: number; delay: number }>>([]);
 
   const isTF = data.type === 'true_false';
   const options = isTF ? ['True', 'False'] : (data.options ?? []);
@@ -72,6 +73,7 @@ export default function SessionMCQ({ questionKey, data, submitted, selectedAnswe
     const schedule = computeHighlightSchedule(optTokens, 0.9);
 
     utt.onstart = () => {
+      scheduleRef.current = schedule;
       clearTimers();
       timers.current = schedule.map(({ charStart, delay }) =>
         setTimeout(() => setHighlightStart(charStart), delay),
@@ -79,7 +81,16 @@ export default function SessionMCQ({ questionKey, data, submitted, selectedAnswe
     };
 
     utt.onboundary = (ev) => {
-      if (ev.name === 'word') setHighlightStart(ev.charIndex);
+      if (ev.name !== 'word') return;
+      setHighlightStart(ev.charIndex);
+      const sched = scheduleRef.current;
+      const idx = sched.findIndex((s) => s.charStart === ev.charIndex);
+      if (idx < 0) return;
+      clearTimers();
+      const base = sched[idx].delay;
+      timers.current = sched.slice(idx + 1).map(({ charStart, delay }) =>
+        setTimeout(() => setHighlightStart(charStart), Math.max(0, delay - base)),
+      );
     };
 
     const done = () => { clearTimers(); setSpeakingOption(null); setHighlightStart(-1); };
