@@ -52,19 +52,24 @@ export function generateFillBlank(
     });
   }
 
-  // Find target word position (required blank)
+  // Find target word position — required blank.
+  // 1) Try exact case-insensitive match.
+  // 2) Fallback: prefix/stem match for inflected forms (e.g. "curious" → "curiously").
   const targetLower = targetWord.toLowerCase();
-  const targetIndex = tokens.findIndex((t) => t.word.toLowerCase() === targetLower);
+  let targetIndex = tokens.findIndex((t) => t.word.toLowerCase() === targetLower);
 
-  if (targetIndex === -1) {
-    return {
-      type: 'fill_blank',
-      displayText: `{{0}} ... ${paragraph.slice(0, 80)}...`,
-      blanks: [{ id: 0, original: targetWord, hint: makeHint(targetWord) }],
-    };
+  if (targetIndex === -1 && targetLower.length > 2) {
+    targetIndex = tokens.findIndex((t) => {
+      const tl = t.word.toLowerCase();
+      return tl.startsWith(targetLower) || targetLower.startsWith(tl);
+    });
   }
+  // targetIndex may still be -1 if the word simply isn't in the passage.
+  // In that case we proceed without a forced blank — candidates fill all slots.
+  // The full paragraph is always shown (no "..." truncation).
 
   // Candidate words: length ≥ 4, not stopword, zipf < zipfMax (harder/less common words)
+  // When targetIndex === -1, no token is excluded by the index check (no index equals -1).
   const candidates = tokens
     .map((t, i) => ({ ...t, i }))
     .filter(({ i, word }) => {
@@ -78,15 +83,21 @@ export function generateFillBlank(
       return true;
     });
 
-  // Shuffle and pick up to (numBlanks - 1) extra blanks
+  // Shuffle and pick extras — one fewer slot when we have a forced target blank
+  const extraSlots = targetIndex !== -1 ? numBlanks - 1 : numBlanks;
   const shuffled = [...candidates].sort(() => Math.random() - 0.5);
-  const extra = shuffled.slice(0, numBlanks - 1);
+  const extra = shuffled.slice(0, extraSlots);
 
   // Collect all blank positions sorted by appearance in text
   const blankPositions = [
-    { ...tokens[targetIndex], i: targetIndex },
+    ...(targetIndex !== -1 ? [{ ...tokens[targetIndex], i: targetIndex }] : []),
     ...extra,
   ].sort((a, b) => a.start - b.start);
+
+  // If we couldn't find any blanks at all, return the full paragraph with no inputs
+  if (blankPositions.length === 0) {
+    return { type: 'fill_blank', displayText: paragraph, blanks: [] };
+  }
 
   // Build display text with {{N}} placeholders
   let displayText = '';
