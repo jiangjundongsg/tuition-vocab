@@ -21,8 +21,7 @@ const teacherNav = [
   { href: '/',            label: 'Home' },
   { href: '/practice',   label: 'Practice' },
   { href: '/wrong-bank', label: 'Tricky Words' },
-  { href: '/words',      label: 'SQL & Manage' },
-  { href: '/upload',     label: 'Upload' },
+  { href: '/words',      label: 'Management Tools' },
 ];
 
 export default function ChildHeader() {

@@ -2,10 +2,10 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import TeacherSQLPortal from '@/components/TeacherSQLPortal';
-import TeacherConfig from '@/components/TeacherConfig';
 import TeacherUserManager from '@/components/TeacherUserManager';
+import WordUploader from '@/components/WordUploader';
+import PhotoUploader from '@/components/PhotoUploader';
 
 interface Word {
   id: number;
@@ -24,9 +24,12 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   unknown: 'bg-slate-100 text-slate-500',
 };
 
+type Tab = 'sql' | 'words' | 'users' | 'upload';
+
 export default function WordsPage() {
   const router = useRouter();
-  const [tab, setTab] = useState<'words' | 'sql' | 'config' | 'users'>('sql');
+  const [tab, setTab] = useState<Tab>('sql');
+  const [uploadSubTab, setUploadSubTab] = useState<'csv' | 'photo'>('csv');
   const [words, setWords] = useState<Word[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -113,21 +116,20 @@ export default function WordsPage() {
     ? words.filter((w) => w.lesson_number === filterLesson)
     : words;
 
+  const TABS: { key: Tab; label: string }[] = [
+    { key: 'sql',    label: 'SQL Query' },
+    { key: 'words',  label: 'Word List' },
+    { key: 'users',  label: 'Users' },
+    { key: 'upload', label: 'Upload' },
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Manage Words</h1>
-          <p className="text-slate-500 text-sm mt-1">{words.length} words in database</p>
-        </div>
-        <Link
-          href="/upload"
-          className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
-        >
-          + Upload Words
-        </Link>
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Management Tools</h1>
+        <p className="text-slate-500 text-sm mt-1">{words.length} words in database</p>
       </div>
 
       {error && (
@@ -138,12 +140,7 @@ export default function WordsPage() {
 
       {/* Tabs */}
       <div className="flex flex-wrap border-b border-slate-200 gap-x-1">
-        {([
-          { key: 'sql',    label: 'SQL Query' },
-          { key: 'words',  label: 'Word List' },
-          { key: 'users',  label: 'Users' },
-          { key: 'config', label: 'Settings' },
-        ] as const).map(({ key, label }) => (
+        {TABS.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
@@ -158,19 +155,92 @@ export default function WordsPage() {
         ))}
       </div>
 
-      {tab === 'sql' ? (
+      {/* ── SQL Query ── */}
+      {tab === 'sql' && (
         <div className="bg-white rounded-2xl border border-slate-100 p-5">
           <TeacherSQLPortal />
         </div>
-      ) : tab === 'config' ? (
-        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-          <TeacherConfig />
+      )}
+
+      {/* ── Users ── */}
+      {tab === 'users' && (
+        <TeacherUserManager />
+      )}
+
+      {/* ── Upload ── */}
+      {tab === 'upload' && (
+        <div className="space-y-6">
+          {/* Upload sub-tabs */}
+          <div className="flex border-b border-slate-200">
+            {(['csv', 'photo'] as const).map((st) => (
+              <button
+                key={st}
+                onClick={() => setUploadSubTab(st)}
+                className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
+                  uploadSubTab === st
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                {st === 'csv' ? 'CSV / Text' : '📷 Photo'}
+              </button>
+            ))}
+          </div>
+
+          {uploadSubTab === 'csv' ? (
+            <>
+              <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+                <WordUploader />
+              </div>
+              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Format Guide (CSV)</p>
+                <div className="space-y-3 text-sm text-slate-500">
+                  {[
+                    { code: '1A,curious',     desc: 'Lesson 1A, word "curious"' },
+                    { code: '2B,magnificent', desc: 'Lesson 2B, word "magnificent"' },
+                    { code: 'ambitious',      desc: 'No lesson number — word only' },
+                  ].map(({ code, desc }) => (
+                    <div key={code} className="flex gap-3 items-center">
+                      <code className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-mono text-slate-700 shrink-0">
+                        {code}
+                      </code>
+                      <span className="text-slate-400 text-xs">{desc}</span>
+                    </div>
+                  ))}
+                  <p className="text-xs text-slate-400 pt-1">
+                    Lesson number can be any text (e.g. 1A, 2B, Unit3). Difficulty is scored automatically.
+                  </p>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+                <PhotoUploader />
+              </div>
+              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">How it works</p>
+                <div className="space-y-2.5 text-xs text-slate-500">
+                  {[
+                    'Take a photo of a printed or handwritten word list.',
+                    'Upload the photo — Claude AI will extract the vocabulary words.',
+                    "Words are automatically assigned to today's lesson (date in yyyymmdd format).",
+                    'Difficulty is scored automatically based on word frequency data.',
+                  ].map((step, i) => (
+                    <div key={i} className="flex gap-3">
+                      <span className="text-indigo-400 font-bold shrink-0">{String(i + 1).padStart(2, '0')}</span>
+                      <span>{step}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
-      ) : tab === 'users' ? (
-        <div className="space-y-2">
-          <TeacherUserManager />
-        </div>
-      ) : (
+      )}
+
+      {/* ── Word List ── */}
+      {tab === 'words' && (
         <>
           {/* Lesson filter */}
           {lessonNumbers.length > 0 && (
@@ -209,9 +279,12 @@ export default function WordsPage() {
           ) : filtered.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
               <p className="font-semibold text-slate-700 mb-1">No words yet.</p>
-              <Link href="/upload" className="text-indigo-600 font-semibold text-sm hover:underline mt-1 inline-block">
+              <button
+                onClick={() => setTab('upload')}
+                className="text-indigo-600 font-semibold text-sm hover:underline mt-1 inline-block"
+              >
                 Upload a word list →
-              </Link>
+              </button>
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
