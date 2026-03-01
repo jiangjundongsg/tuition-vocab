@@ -1,10 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { makeUtterance, cancelAndSpeak } from '@/lib/tts';
 
-// Split text into word/whitespace tokens, recording the char offset of each token.
-// The charIndex from SpeechSynthesisUtterance.onboundary matches these offsets.
 function tokenize(text: string) {
   const tokens: Array<{ text: string; isWord: boolean; start: number }> = [];
   const re = /\S+|\s+/g;
@@ -27,10 +25,6 @@ interface Props {
   className?: string;
 }
 
-/**
- * Renders text with a small speaker button. While speaking, each word is
- * highlighted in yellow using the SpeechSynthesis onboundary event.
- */
 export default function SpeakableText({
   text,
   rate = 0.9,
@@ -38,14 +32,21 @@ export default function SpeakableText({
 }: Props) {
   const [speaking, setSpeaking] = useState(false);
   const [highlightStart, setHighlightStart] = useState(-1);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const tokens = useMemo(() => tokenize(text), [text]);
+
+  function clearTimers() {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+  }
 
   function handleSpeak() {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
     if (speaking) {
       window.speechSynthesis.cancel();
+      clearTimers();
       setSpeaking(false);
       setHighlightStart(-1);
       return;
@@ -53,10 +54,22 @@ export default function SpeakableText({
 
     const utt = makeUtterance(text, rate);
 
+    // Timer-based highlighting — works on every play regardless of browser onboundary support.
+    // Calibration: ~13.5 chars/sec at rate=1.0 (≈135 WPM × 6 chars/word ÷ 60).
+    utt.onstart = () => {
+      clearTimers();
+      const msPerChar = 1000 / (rate * 13.5);
+      timers.current = tokens
+        .filter((t) => t.isWord)
+        .map((tok) => setTimeout(() => setHighlightStart(tok.start), tok.start * msPerChar));
+    };
+
+    // onboundary gives more accurate timing when the browser supports it.
     utt.onboundary = (e) => {
       if (e.name === 'word') setHighlightStart(e.charIndex);
     };
-    const done = () => { setSpeaking(false); setHighlightStart(-1); };
+
+    const done = () => { clearTimers(); setSpeaking(false); setHighlightStart(-1); };
     utt.onend = done;
     utt.onerror = done;
 
@@ -67,7 +80,6 @@ export default function SpeakableText({
 
   return (
     <div className="flex items-start gap-2">
-      {/* Text with per-word highlight spans */}
       <span className={`flex-1 ${className}`}>
         {tokens.map((tok, i) =>
           tok.isWord ? (
@@ -87,7 +99,6 @@ export default function SpeakableText({
         )}
       </span>
 
-      {/* Speak / stop button */}
       <button
         onClick={handleSpeak}
         title={speaking ? 'Stop reading' : 'Read aloud'}

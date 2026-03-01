@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import SessionMCQ from './SessionMCQ';
 import FillBlankExercise from './FillBlankExercise';
 import { WordQuestions } from '@/lib/claude';
@@ -63,6 +63,7 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
   const [refreshing, setRefreshing] = useState(false);
   const [readingPassage, setReadingPassage] = useState(false);
   const [passageHighlight, setPassageHighlight] = useState(-1);
+  const passageTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const passageTokens = useMemo(() => {
     const tokens: Array<{ text: string; isWord: boolean; start: number }> = [];
@@ -104,6 +105,7 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
       if (!res.ok) throw new Error('Refresh failed');
       const newData = await res.json();
       window.speechSynthesis?.cancel();
+      clearPassageTimers();
       setData({
         wordSetId: newData.wordSetId,
         word: data.word,
@@ -124,19 +126,35 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
     }
   }
 
+  function clearPassageTimers() {
+    passageTimers.current.forEach(clearTimeout);
+    passageTimers.current = [];
+  }
+
   function readPassage() {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
     if (readingPassage) {
       window.speechSynthesis.cancel();
+      clearPassageTimers();
       setReadingPassage(false);
       setPassageHighlight(-1);
       return;
     }
     const utterance = makeUtterance(data.paragraph, 0.85);
+
+    utterance.onstart = () => {
+      clearPassageTimers();
+      const msPerChar = 1000 / (0.85 * 13.5);
+      passageTimers.current = passageTokens
+        .filter((t) => t.isWord)
+        .map((tok) => setTimeout(() => setPassageHighlight(tok.start), tok.start * msPerChar));
+    };
+
     utterance.onboundary = (e) => {
       if (e.name === 'word') setPassageHighlight(e.charIndex);
     };
-    const done = () => { setReadingPassage(false); setPassageHighlight(-1); };
+
+    const done = () => { clearPassageTimers(); setReadingPassage(false); setPassageHighlight(-1); };
     utterance.onend = done;
     utterance.onerror = done;
     setReadingPassage(true);
