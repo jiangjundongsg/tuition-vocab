@@ -122,11 +122,8 @@ export async function initDb() {
     sql`UPDATE words SET difficulty = 'low'  WHERE difficulty = 'hard'`.catch(() => {}),
   ]);
 
-  // Clear incompatible cached data
-  await Promise.all([
-    sql`DELETE FROM word_sets WHERE word_id IS NULL`.catch(() => {}),
-    sql`DELETE FROM wrong_bank`.catch(() => {}),
-  ]);
+  // Clear incompatible cached data (word_sets rows with no word_id only)
+  await sql`DELETE FROM word_sets WHERE word_id IS NULL`.catch(() => {});
 
   // Drop obsolete columns
   await sql`ALTER TABLE wrong_bank DROP COLUMN IF EXISTS session_id`.catch(() => {});
