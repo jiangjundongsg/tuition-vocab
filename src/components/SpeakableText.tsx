@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { makeUtterance } from '@/lib/tts';
 
 // Split text into word/whitespace tokens, recording the char offset of each token.
 // The charIndex from SpeechSynthesisUtterance.onboundary matches these offsets.
@@ -51,9 +52,7 @@ export default function SpeakableText({
     }
 
     window.speechSynthesis.cancel();
-    const utt = new SpeechSynthesisUtterance(text);
-    utt.rate = rate;
-    utt.lang = 'en-US';
+    const utt = makeUtterance(text, rate);
 
     utt.onboundary = (e) => {
       if (e.name === 'word') setHighlightStart(e.charIndex);

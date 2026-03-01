@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import SpeakableText from './SpeakableText';
+import { makeUtterance } from '@/lib/tts';
 
 // Generic MCQ question renderer
 interface QuestionForMCQ {
@@ -43,9 +44,7 @@ export default function SessionMCQ({ questionKey, data, submitted, selectedAnswe
     }
 
     window.speechSynthesis.cancel();
-    const utt = new SpeechSynthesisUtterance(option);
-    utt.rate = 0.9;
-    utt.lang = 'en-US';
+    const utt = makeUtterance(option, 0.9);
     const done = () => setSpeakingOption(null);
     utt.onend = done;
     utt.onerror = done;

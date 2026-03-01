@@ -5,6 +5,7 @@ import SessionMCQ from './SessionMCQ';
 import FillBlankExercise from './FillBlankExercise';
 import { WordQuestions } from '@/lib/claude';
 import { FillBlankQuestion } from '@/lib/fillblank';
+import { makeUtterance } from '@/lib/tts';
 
 // ── Speak word button ────────────────────────────────────────────────────────
 
@@ -14,9 +15,7 @@ function SpeakButton({ word }: { word: string }) {
   function speak() {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(word);
-    utterance.rate = 0.8;
-    utterance.lang = 'en-US';
+    const utterance = makeUtterance(word, 0.8);
     setSpeaking(true);
     utterance.onend = () => setSpeaking(false);
     utterance.onerror = () => setSpeaking(false);
@@ -134,9 +133,7 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
       return;
     }
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(data.paragraph);
-    utterance.rate = 0.85;
-    utterance.lang = 'en-US';
+    const utterance = makeUtterance(data.paragraph, 0.85);
     utterance.onboundary = (e) => {
       if (e.name === 'word') setPassageHighlight(e.charIndex);
     };
