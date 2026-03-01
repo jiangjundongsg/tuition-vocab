@@ -37,7 +37,6 @@ export default function PracticePage() {
       .catch(() => {});
   }, [authChecked]);
 
-  // When a lesson is selected, fetch its words and start immediately
   useEffect(() => {
     if (!selectedLesson) return;
     setLoadingWords(true);
@@ -68,9 +67,13 @@ export default function PracticePage() {
 
   if (!authChecked) {
     return (
-      <div className="animate-pulse space-y-4">
-        <div className="h-8 bg-slate-100 rounded w-40" />
-        <div className="h-32 bg-slate-100 rounded-2xl" />
+      <div className="space-y-5">
+        <div className="h-8 bg-slate-100 rounded-xl w-32 animate-pulse" />
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="h-14 bg-slate-100 rounded-2xl animate-pulse" style={{ animationDelay: `${i * 60}ms` }} />
+          ))}
+        </div>
       </div>
     );
   }
@@ -93,43 +96,62 @@ export default function PracticePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+
+      {/* Header */}
       <div>
-        <h1 className="text-3xl text-slate-900">Practice</h1>
-        <p className="text-slate-400 mt-1 text-sm">
-          Choose a lesson from the list below to begin practising.
-        </p>
+        <h1 className="text-3xl font-semibold text-slate-900">Practice</h1>
+        <p className="text-slate-400 mt-1 text-sm">Choose a lesson below to begin practising.</p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 p-6 space-y-5 shadow-sm">
+      {/* Lesson picker */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5">
         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Select a Lesson</p>
 
         {lessons.length === 0 ? (
-          <p className="text-sm text-slate-400">
-            No lessons available yet.{' '}
-            <a href="/upload" className="text-indigo-600 hover:underline font-semibold">
-              Upload a word list →
-            </a>
-          </p>
+          <div className="text-center py-8 space-y-2">
+            <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-3">
+              <svg className="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <p className="text-sm text-slate-500 font-medium">No lessons yet</p>
+            <p className="text-sm text-slate-400">
+              Ask your teacher to{' '}
+              <a href="/upload" className="text-indigo-600 hover:underline font-semibold">
+                upload a word list
+              </a>
+            </p>
+          </div>
         ) : (
-          <div className="space-y-3">
-            <select
-              value={selectedLesson}
-              onChange={(e) => setSelectedLesson(e.target.value)}
-              disabled={loadingWords}
-              className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 bg-white focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 disabled:opacity-60 transition-colors shadow-sm appearance-none cursor-pointer"
-              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '16px', paddingRight: '40px' }}
-            >
-              <option value="">— Choose a lesson —</option>
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
               {lessons.map((lesson) => (
-                <option key={lesson} value={lesson}>
-                  Lesson {lesson}
-                </option>
+                <button
+                  key={lesson}
+                  onClick={() => setSelectedLesson(lesson)}
+                  disabled={loadingWords}
+                  className={`
+                    relative group flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-2xl border text-sm font-semibold transition-all duration-150 disabled:opacity-50
+                    ${selectedLesson === lesson
+                      ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-200'
+                      : 'bg-white border-slate-200 text-slate-700 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 hover:-translate-y-0.5 hover:shadow-sm'
+                    }
+                  `}
+                >
+                  <svg
+                    className={`w-4 h-4 ${selectedLesson === lesson ? 'text-indigo-200' : 'text-slate-300 group-hover:text-indigo-400'}`}
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                  <span className="text-xs leading-tight text-center">Lesson<br />{lesson}</span>
+                </button>
               ))}
-            </select>
+            </div>
 
             {loadingWords && (
-              <div className="flex items-center gap-2 text-sm text-slate-400 px-1">
+              <div className="flex items-center gap-2 text-sm text-slate-400 px-1 pt-1">
                 <span className="w-4 h-4 border-2 border-indigo-300 border-t-transparent rounded-full animate-spin" />
                 Loading lesson words…
               </div>
