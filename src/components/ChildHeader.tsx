@@ -33,13 +33,13 @@ export default function ChildHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
+    setLoadingUser(true);
     fetch('/api/auth/me')
       .then((r) => r.json())
       .then((d) => setUser(d.user ?? null))
       .catch(() => setUser(null))
       .finally(() => setLoadingUser(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [pathname]);
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' });
