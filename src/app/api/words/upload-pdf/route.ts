@@ -54,6 +54,8 @@ export async function POST(req: NextRequest) {
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1000,
+      system: `You are a primary school English teacher assistant. Your only job is to identify vocabulary study words from uploaded documents.
+Output ONLY a plain word list — one word per line, lowercase. No sentences, no explanations, no extra text. Never reproduce paragraphs or passages.`,
       messages: [
         {
           role: 'user',
@@ -69,9 +71,9 @@ export async function POST(req: NextRequest) {
             } as any,
             {
               type: 'text',
-              text: `Extract all vocabulary words from this document. These are English words that primary school students need to learn.
+              text: `Look at this document and identify words that appear to be vocabulary study words for primary school students (ages 7–12).
 
-Return ONLY a plain list of words, one word per line, in lowercase, with no numbers, no punctuation, no explanations, no extra text.
+Output ONLY the vocabulary words, one per line, lowercase. Do not quote or reproduce any sentences or passages from the document.
 
 Example output:
 curious
@@ -141,6 +143,14 @@ ambitious`,
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error('PDF upload error:', message);
+
+    // Content filtering: PDF likely contains a full copyrighted story/passage
+    if (message.includes('content filtering')) {
+      return NextResponse.json({
+        error: 'The PDF content was blocked by content filtering. Please upload a word-list PDF rather than a full story or textbook passage.',
+      }, { status: 400 });
+    }
+
     return NextResponse.json({ error: `Upload failed: ${message}` }, { status: 500 });
   }
 }
