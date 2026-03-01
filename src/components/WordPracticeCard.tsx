@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import SessionMCQ from './SessionMCQ';
 import FillBlankExercise from './FillBlankExercise';
 import { WordQuestions } from '@/lib/claude';
@@ -63,6 +63,17 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
   const [correctMap, setCorrectMap] = useState<Record<string, boolean>>({});
   const [refreshing, setRefreshing] = useState(false);
   const [readingPassage, setReadingPassage] = useState(false);
+  const [passageHighlight, setPassageHighlight] = useState(-1);
+
+  const passageTokens = useMemo(() => {
+    const tokens: Array<{ text: string; isWord: boolean; start: number }> = [];
+    const re = /\S+|\s+/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(data.paragraph)) !== null) {
+      tokens.push({ text: m[0], isWord: /\S/.test(m[0]), start: m.index });
+    }
+    return tokens;
+  }, [data.paragraph]);
 
   const compKeys = data.questions.comp.map((_, i) => `comp_${i}`);
   const allKeys = ['mcq', ...compKeys, 'fill_blank'];
@@ -93,6 +104,7 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
       const res = await fetch(`/api/practice/${wordId}/refresh`, { method: 'POST' });
       if (!res.ok) throw new Error('Refresh failed');
       const newData = await res.json();
+      window.speechSynthesis?.cancel();
       setData({
         wordSetId: newData.wordSetId,
         word: data.word,
@@ -100,10 +112,12 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
         questions: newData.questions,
         fillBlank: newData.fillBlank,
       });
-      // Reset all answers so student starts fresh with the new passage
+      // Reset all answers and speech state for the new passage
       setSubmitted({});
       setAnswers({});
       setCorrectMap({});
+      setReadingPassage(false);
+      setPassageHighlight(-1);
     } catch {
       // silently ignore — leave current passage
     } finally {
@@ -116,15 +130,21 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
     if (readingPassage) {
       window.speechSynthesis.cancel();
       setReadingPassage(false);
+      setPassageHighlight(-1);
       return;
     }
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(data.paragraph);
     utterance.rate = 0.85;
     utterance.lang = 'en-US';
+    utterance.onboundary = (e) => {
+      if (e.name === 'word') setPassageHighlight(e.charIndex);
+    };
+    const done = () => { setReadingPassage(false); setPassageHighlight(-1); };
+    utterance.onend = done;
+    utterance.onerror = done;
     setReadingPassage(true);
-    utterance.onend = () => setReadingPassage(false);
-    utterance.onerror = () => setReadingPassage(false);
+    setPassageHighlight(-1);
     window.speechSynthesis.speak(utterance);
   }
 
@@ -180,7 +200,24 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
             </button>
           </div>
         </div>
-        <p className="text-sm text-slate-700 leading-relaxed">{data.paragraph}</p>
+        <p className="text-sm text-slate-700 leading-relaxed">
+          {passageTokens.map((tok, i) =>
+            tok.isWord ? (
+              <mark
+                key={i}
+                style={{
+                  background: passageHighlight === tok.start ? '#fef08a' : 'transparent',
+                  borderRadius: '3px',
+                  padding: '0 1px',
+                }}
+              >
+                {tok.text}
+              </mark>
+            ) : (
+              <span key={i}>{tok.text}</span>
+            )
+          )}
+        </p>
       </div>
 
       {/* Questions */}

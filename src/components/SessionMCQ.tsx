@@ -1,5 +1,7 @@
 'use client';
 
+import SpeakableText from './SpeakableText';
+
 // Generic MCQ question renderer
 interface QuestionForMCQ {
   type: 'mcq' | 'true_false';  // true_false kept for type safety but MCQ is always used
@@ -23,7 +25,7 @@ export default function SessionMCQ({ questionKey, data, submitted, selectedAnswe
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-medium text-slate-800 leading-relaxed">{data.question}</p>
+      <SpeakableText text={data.question} />
 
       <div className={`grid gap-2 ${isTF ? 'grid-cols-2' : 'grid-cols-1'}`}>
         {options.map((option, i) => {
