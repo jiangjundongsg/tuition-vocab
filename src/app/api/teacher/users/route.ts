@@ -12,7 +12,7 @@ export async function GET() {
     }
 
     const rows = await sql`
-      SELECT id, email, display_name, role, age, passage_source,
+      SELECT id, email, display_name, role, age, last_lesson, passage_source,
              num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type,
              created_at
       FROM users ORDER BY created_at ASC
@@ -25,6 +25,7 @@ export async function GET() {
         displayName: r.display_name as string | null,
         role: r.role as string,
         age: r.age != null ? Number(r.age) : null,
+        lastLesson: r.last_lesson as string | null,
         passageSource: (r.passage_source as string) || 'TextBook_Harry_Portter',
         numComprehension: Number(r.num_comprehension) || 2,
         numBlanks:        Number(r.num_blanks) || 5,

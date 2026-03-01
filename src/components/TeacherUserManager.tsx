@@ -8,6 +8,7 @@ interface UserRow {
   displayName: string | null;
   role: string;
   age: number | null;
+  lastLesson: string | null;
   passageSource: string;
   numComprehension: number;
   numBlanks: number;
@@ -128,6 +129,7 @@ export default function TeacherUserManager() {
               <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">User</th>
               <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Role</th>
               <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Age</th>
+              <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Last Lesson</th>
               <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Passage Source</th>
               <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Q Config</th>
               <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
@@ -140,7 +142,7 @@ export default function TeacherUserManager() {
                   {editingId === u.id ? (
                     /* ── Edit row ── */
                     <>
-                      <td className="px-4 py-3" colSpan={6}>
+                      <td className="px-4 py-3" colSpan={7}>
                         <div className="space-y-4">
                           {/* Basic fields */}
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -242,6 +244,11 @@ export default function TeacherUserManager() {
                         </span>
                       </td>
                       <td className="px-3 py-2.5 text-center text-xs text-slate-500">{u.age ?? '—'}</td>
+                      <td className="px-3 py-2.5 text-center hidden sm:table-cell">
+                        {u.lastLesson
+                          ? <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100">{u.lastLesson}</span>
+                          : <span className="text-xs text-slate-400">—</span>}
+                      </td>
                       <td className="px-3 py-2.5 text-xs text-slate-500 font-mono hidden md:table-cell truncate max-w-[120px]">
                         {u.passageSource}
                       </td>
@@ -266,7 +273,7 @@ export default function TeacherUserManager() {
                 {/* Expanded config row */}
                 {expandedConfig === u.id && editingId !== u.id && (
                   <tr key={`${u.id}-config`} className="bg-slate-50">
-                    <td colSpan={6} className="px-4 py-3">
+                    <td colSpan={7} className="px-4 py-3">
                       <div className="flex flex-wrap gap-4 text-xs text-slate-600">
                         <span><span className="font-semibold text-slate-400">Comp. Qs:</span> {u.numComprehension}</span>
                         <span><span className="font-semibold text-slate-400">Fill blanks:</span> {u.numBlanks}</span>

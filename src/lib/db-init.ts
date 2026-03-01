@@ -82,6 +82,7 @@ export async function initDb() {
   await Promise.all([
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'student'`.catch(() => {}),
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER`.catch(() => {}),
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_lesson TEXT`.catch(() => {}),
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS passage_source TEXT NOT NULL DEFAULT 'TextBook_Harry_Portter'`.catch(() => {}),
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS num_comprehension INTEGER NOT NULL DEFAULT 2`.catch(() => {}),
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS num_blanks INTEGER NOT NULL DEFAULT 5`.catch(() => {}),

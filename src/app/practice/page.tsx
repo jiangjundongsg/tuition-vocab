@@ -13,6 +13,7 @@ export default function PracticePage() {
   const router = useRouter();
   const [lessons, setLessons] = useState<string[]>([]);
   const [selectedLesson, setSelectedLesson] = useState<string>('');
+  const [lastLesson, setLastLesson] = useState<string | null>(null);
   const [words, setWords] = useState<WordInfo[]>([]);
   const [loadingWords, setLoadingWords] = useState(false);
   const [practicing, setPracticing] = useState(false);
@@ -24,7 +25,10 @@ export default function PracticePage() {
       .then((r) => r.json())
       .then((d) => {
         if (!d.user) router.replace('/login?message=login-required');
-        else setAuthChecked(true);
+        else {
+          setLastLesson(d.user.lastLesson ?? null);
+          setAuthChecked(true);
+        }
       })
       .catch(() => router.replace('/login?message=login-required'));
   }, [router]);
@@ -43,6 +47,12 @@ export default function PracticePage() {
     setError('');
     setWords([]);
     setPracticing(false);
+    // Persist the selected lesson as the user's last tried lesson
+    fetch('/api/practice/last-lesson', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lesson: selectedLesson }),
+    }).then(() => setLastLesson(selectedLesson)).catch(() => {});
     fetch(`/api/words?lesson=${encodeURIComponent(selectedLesson)}`)
       .then((r) => r.json())
       .then((d) => {
@@ -126,28 +136,39 @@ export default function PracticePage() {
         ) : (
           <div className="space-y-4">
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-              {lessons.map((lesson) => (
-                <button
-                  key={lesson}
-                  onClick={() => setSelectedLesson(lesson)}
-                  disabled={loadingWords}
-                  className={`
-                    relative group flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-2xl border text-sm font-semibold transition-all duration-150 disabled:opacity-50
-                    ${selectedLesson === lesson
-                      ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-200'
-                      : 'bg-white border-slate-200 text-slate-700 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 hover:-translate-y-0.5 hover:shadow-sm'
-                    }
-                  `}
-                >
-                  <svg
-                    className={`w-4 h-4 ${selectedLesson === lesson ? 'text-indigo-200' : 'text-slate-300 group-hover:text-indigo-400'}`}
-                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              {lessons.map((lesson) => {
+                const isSelected = selectedLesson === lesson;
+                const isLast = !isSelected && lastLesson === lesson;
+                return (
+                  <button
+                    key={lesson}
+                    onClick={() => setSelectedLesson(lesson)}
+                    disabled={loadingWords}
+                    className={`
+                      relative group flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-2xl border text-sm font-semibold transition-all duration-150 disabled:opacity-50
+                      ${isSelected
+                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-200'
+                        : isLast
+                        ? 'bg-indigo-50 border-indigo-300 text-indigo-700 hover:border-indigo-400 hover:-translate-y-0.5 hover:shadow-sm'
+                        : 'bg-white border-slate-200 text-slate-700 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 hover:-translate-y-0.5 hover:shadow-sm'
+                      }
+                    `}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
-                  <span className="text-xs leading-tight text-center">Lesson<br />{lesson}</span>
-                </button>
-              ))}
+                    <svg
+                      className={`w-4 h-4 ${isSelected ? 'text-indigo-200' : isLast ? 'text-indigo-400' : 'text-slate-300 group-hover:text-indigo-400'}`}
+                      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    <span className="text-xs leading-tight text-center">Lesson<br />{lesson}</span>
+                    {isLast && (
+                      <span className="absolute -top-1.5 -right-1.5 bg-indigo-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                        Last
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
             {loadingWords && (
