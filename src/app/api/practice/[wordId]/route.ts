@@ -44,6 +44,13 @@ export async function GET(
     const zipfMax      = user.blankZipfMax;
     const wordCount    = user.passageWordCount;
 
+    // Fetch word first — needed for fill-blank generation on both cache-hit and fresh paths
+    const wordRows = await sql`SELECT id, word FROM words WHERE id = ${wordId} LIMIT 1`;
+    if (wordRows.length === 0) {
+      return NextResponse.json({ error: 'Word not found' }, { status: 404 });
+    }
+    const word = wordRows[0].word as string;
+
     // Check cache — only use if question count matches user's config
     const cached = await sql`
       SELECT id, paragraph_text, questions_json, fill_blank_json
@@ -54,7 +61,7 @@ export async function GET(
       const cachedQ = JSON.parse(cached[0].questions_json as string);
       const cachedCompCount = Array.isArray(cachedQ?.comp) ? cachedQ.comp.length : 0;
       if (cachedCompCount === numComp) {
-        const fillBlank = generateFillBlank(cached[0].paragraph_text as string, '', numBlanks, zipfMax);
+        const fillBlank = generateFillBlank(cached[0].paragraph_text as string, word, numBlanks, zipfMax);
         return NextResponse.json({
           wordSetId: Number(cached[0].id),
           paragraph: cached[0].paragraph_text as string,
@@ -63,13 +70,6 @@ export async function GET(
         });
       }
     }
-
-    // Fetch word
-    const wordRows = await sql`SELECT id, word FROM words WHERE id = ${wordId} LIMIT 1`;
-    if (wordRows.length === 0) {
-      return NextResponse.json({ error: 'Word not found' }, { status: 404 });
-    }
-    const word = wordRows[0].word as string;
 
     // Find paragraph
     let paragraph = findParagraphForWord(word, passageSource);
