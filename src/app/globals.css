@@ -31,10 +31,12 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Subtle dot-grid background — monotone grey */
+/* Very light graph-paper grid background */
 body {
-  background-color: #f1f5f9;
-  background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
-  background-size: 22px 22px;
+  background-color: #f8fafc;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.18) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.18) 1px, transparent 1px);
+  background-size: 28px 28px;
   background-attachment: fixed;
 }
