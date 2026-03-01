@@ -102,7 +102,7 @@ export default function FillBlankExercise({ questionKey, data, submitted, onAnsw
                   onChange={(e) => setInput(id, e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && check()}
                   disabled={isChecked || submitted}
-                  placeholder="___"
+                  placeholder=""
                   style={{
                     border: 'none',
                     borderBottom: `2px solid ${borderColor}`,

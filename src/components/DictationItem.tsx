@@ -16,6 +16,11 @@ export default function DictationItem({ wordIndex, word, meaning, questionKey, s
   const [typed, setTyped] = useState('');
   const [speaking, setSpeaking] = useState(false);
 
+  // Replace the target word with "it" in the meaning so it doesn't give away the answer
+  const safeMeaning = meaning
+    ? meaning.replace(new RegExp(`\\b${word}\\b`, 'gi'), 'it')
+    : undefined;
+
   function speak() {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
@@ -39,9 +44,9 @@ export default function DictationItem({ wordIndex, word, meaning, questionKey, s
       isCorrect ? 'border-emerald-300 bg-emerald-50/50' :
       'border-red-300 bg-red-50/50'
     } p-4`}>
-      {meaning && (
+      {safeMeaning && (
         <p className="text-xs text-slate-500 italic mb-2 ml-10">
-          Meaning: {meaning}
+          Meaning: {safeMeaning}
         </p>
       )}
       <div className="flex items-center gap-3 mb-3">

@@ -122,6 +122,14 @@ Return ONLY the paragraph text — no title, no explanation, no extra text.`,
   return content.text.trim();
 }
 
+// ── Shuffle MCQ options while keeping the answer field in sync ───────────────
+
+function shuffleMCQ<T extends { options?: string[]; answer: string }>(q: T): T {
+  if (!q.options || q.options.length <= 1) return q;
+  const shuffled = [...q.options].sort(() => Math.random() - 0.5);
+  return { ...q, options: shuffled };
+}
+
 // ── Generate questions ────────────────────────────────────────────────────────
 
 export async function generateWordQuestions(
@@ -150,6 +158,10 @@ Return ONLY valid JSON — no markdown fences, no extra text.`,
   if (!Array.isArray(parsed.comp)) {
     parsed.comp = [parsed.comp as unknown as CompQuestionData];
   }
+
+  // Shuffle options so the correct answer isn't always option A
+  parsed.mcq = shuffleMCQ(parsed.mcq);
+  parsed.comp = parsed.comp.map(shuffleMCQ);
 
   return parsed;
 }
