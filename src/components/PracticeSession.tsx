@@ -256,24 +256,19 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
               onAnswer={(_, ans, correct) => handleRepracticeAnswer(item.id, ans, correct)}
             />
           )}
-          {wsData && item.questionKey === 'comp_0' && (
-            <SessionMCQ
-              questionKey={`repractice_${item.id}_comp0`}
-              data={wsData.questions.comp[0]}
-              submitted={isSubmitted}
-              selectedAnswer={repracticeAnswers[item.id] ?? ''}
-              onAnswer={(_, ans, correct) => handleRepracticeAnswer(item.id, ans, correct)}
-            />
-          )}
-          {wsData && item.questionKey === 'comp_1' && (
-            <SessionMCQ
-              questionKey={`repractice_${item.id}_comp1`}
-              data={wsData.questions.comp[1]}
-              submitted={isSubmitted}
-              selectedAnswer={repracticeAnswers[item.id] ?? ''}
-              onAnswer={(_, ans, correct) => handleRepracticeAnswer(item.id, ans, correct)}
-            />
-          )}
+          {wsData && item.questionKey.startsWith('comp_') && (() => {
+            const idx = parseInt(item.questionKey.split('_')[1] ?? '0');
+            const compQ = wsData.questions.comp[idx];
+            return compQ ? (
+              <SessionMCQ
+                questionKey={`repractice_${item.id}_comp${idx}`}
+                data={compQ}
+                submitted={isSubmitted}
+                selectedAnswer={repracticeAnswers[item.id] ?? ''}
+                onAnswer={(_, ans, correct) => handleRepracticeAnswer(item.id, ans, correct)}
+              />
+            ) : null;
+          })()}
           {wsData && item.questionKey === 'fill_blank' && (
             <FillBlankExercise
               questionKey={`repractice_${item.id}_fill`}

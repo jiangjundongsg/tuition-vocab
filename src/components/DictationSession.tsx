@@ -43,6 +43,9 @@ export default function DictationSession({ words, lessonNumber, onDone }: Props)
   const [repracticeCorrect, setRepracticeCorrect] = useState<Record<number, boolean>>({});
   const [repracticeAnswers, setRepracticeAnswers] = useState<Record<number, string>>({});
 
+  // Pending dictation answers awaiting word set load (wordId → answer info)
+  const [pendingDictation, setPendingDictation] = useState<Record<number, { isCorrect: boolean; word: string }>>({});
+
   function loadWordSet(wordId: number, wordLabel: string) {
     setWordSets((prev) => ({ ...prev, [wordId]: 'loading' }));
     fetch(`/api/practice/${wordId}`)
@@ -83,6 +86,32 @@ export default function DictationSession({ words, lessonNumber, onDone }: Props)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, repracticeIndex, wrongItems]);
 
+  // Flush pending dictation answers once word sets finish loading
+  useEffect(() => {
+    const pending = Object.entries(pendingDictation);
+    if (pending.length === 0) return;
+    const flushed: number[] = [];
+    for (const [wordIdStr, { isCorrect, word }] of pending) {
+      const wordId = Number(wordIdStr);
+      const ws = wordSets[wordId];
+      if (!ws || ws === 'loading' || ws === 'error') continue;
+      flushed.push(wordId);
+      fetch('/api/questions/answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wordSetId: ws.wordSetId, questionKey: 'dictation', isCorrect, correctAnswer: word }),
+      }).catch(() => {});
+    }
+    if (flushed.length > 0) {
+      setPendingDictation((p) => {
+        const next = { ...p };
+        flushed.forEach((id) => delete next[id]);
+        return next;
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wordSets]);
+
   const recordDictation = useCallback(
     async (questionKey: string, typed: string, isCorrect: boolean) => {
       if (dictationSubmitted[questionKey]) return;
@@ -93,7 +122,11 @@ export default function DictationSession({ words, lessonNumber, onDone }: Props)
       const wordInfo = words[idx];
       if (!wordInfo) return;
       const ws = wordSets[wordInfo.id];
-      if (!ws || ws === 'loading' || ws === 'error') return;
+      if (!ws || ws === 'loading' || ws === 'error') {
+        // Word set not ready yet — buffer and send once it loads
+        setPendingDictation((p) => ({ ...p, [wordInfo.id]: { isCorrect, word: wordInfo.word } }));
+        return;
+      }
 
       try {
         await fetch('/api/questions/answer', {
@@ -217,12 +250,13 @@ export default function DictationSession({ words, lessonNumber, onDone }: Props)
           {wsData && item.questionKey === 'mcq' && (
             <SessionMCQ questionKey={`rp_${item.id}_mcq`} data={wsData.questions.mcq} submitted={isSubmitted} selectedAnswer={repracticeAnswers[item.id] ?? ''} onAnswer={(_, a, c) => handleRepracticeAnswer(item.id, a, c)} />
           )}
-          {wsData && item.questionKey === 'comp_0' && (
-            <SessionMCQ questionKey={`rp_${item.id}_c0`} data={wsData.questions.comp[0]} submitted={isSubmitted} selectedAnswer={repracticeAnswers[item.id] ?? ''} onAnswer={(_, a, c) => handleRepracticeAnswer(item.id, a, c)} />
-          )}
-          {wsData && item.questionKey === 'comp_1' && (
-            <SessionMCQ questionKey={`rp_${item.id}_c1`} data={wsData.questions.comp[1]} submitted={isSubmitted} selectedAnswer={repracticeAnswers[item.id] ?? ''} onAnswer={(_, a, c) => handleRepracticeAnswer(item.id, a, c)} />
-          )}
+          {wsData && item.questionKey.startsWith('comp_') && (() => {
+            const idx = parseInt(item.questionKey.split('_')[1] ?? '0');
+            const compQ = wsData.questions.comp[idx];
+            return compQ ? (
+              <SessionMCQ questionKey={`rp_${item.id}_comp${idx}`} data={compQ} submitted={isSubmitted} selectedAnswer={repracticeAnswers[item.id] ?? ''} onAnswer={(_, a, c) => handleRepracticeAnswer(item.id, a, c)} />
+            ) : null;
+          })()}
           {wsData && item.questionKey === 'fill_blank' && (
             <FillBlankExercise questionKey={`rp_${item.id}_fill`} data={wsData.fillBlank} submitted={isSubmitted} onAnswer={(_, a, c) => handleRepracticeAnswer(item.id, a, c)} />
           )}
