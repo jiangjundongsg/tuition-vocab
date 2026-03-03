@@ -95,6 +95,9 @@ export async function initDb() {
     sql`ALTER TABLE wrong_bank ADD COLUMN IF NOT EXISTS user_id INTEGER`.catch(() => {}),
     sql`ALTER TABLE wrong_bank ADD COLUMN IF NOT EXISTS word_set_id INTEGER`.catch(() => {}),
     sql`ALTER TABLE wrong_bank ADD COLUMN IF NOT EXISTS correct_answer TEXT NOT NULL DEFAULT ''`.catch(() => {}),
+    // Drop NOT NULL from legacy columns that our INSERTs no longer provide
+    sql`ALTER TABLE wrong_bank ALTER COLUMN question_id DROP NOT NULL`.catch(() => {}),
+    sql`ALTER TABLE wrong_bank ALTER COLUMN correct_answer DROP NOT NULL`.catch(() => {}),
     sql`ALTER TABLE words DROP CONSTRAINT IF EXISTS words_difficulty_check`.catch(() => {}),
     // Expand question_config table with new columns
     sql`ALTER TABLE question_config ADD COLUMN IF NOT EXISTS num_blanks INTEGER NOT NULL DEFAULT 5`.catch(() => {}),
