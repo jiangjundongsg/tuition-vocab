@@ -100,12 +100,18 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
       }
 
       try {
-        await fetch('/api/questions/answer', {
+        const res = await fetch('/api/questions/answer', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ wordSetId: data.wordSetId, questionKey, isCorrect, correctAnswer }),
         });
-      } catch { /* silent */ }
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          console.error('[wrong-bank] answer API error', res.status, errBody);
+        }
+      } catch (e) {
+        console.error('[wrong-bank] answer API network error', e);
+      }
     },
     [data, submitted]
   );

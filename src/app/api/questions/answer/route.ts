@@ -20,8 +20,11 @@ export async function POST(req: NextRequest) {
     };
 
     if (!wordSetId || !questionKey) {
+      console.error('[answer] missing fields:', { wordSetId, questionKey, isCorrect });
       return NextResponse.json({ error: 'wordSetId and questionKey are required' }, { status: 400 });
     }
+
+    console.log('[answer] recording:', { userId: user.id, wordSetId, questionKey, isCorrect });
 
     if (isCorrect) {
       // Correct answer: decrement count, then remove if it hits 0
@@ -67,6 +70,7 @@ export async function POST(req: NextRequest) {
           INSERT INTO wrong_bank (user_id, word_set_id, question_key, wrong_count, last_wrong_at)
           VALUES (${user.id}, ${wordSetId}, ${questionKey}, 1, NOW())
         `;
+        console.log('[answer] inserted wrong_bank row for', { userId: user.id, wordSetId, questionKey });
         // Best-effort: set correct_answer only if column exists
         await sql`
           UPDATE wrong_bank SET correct_answer = ${correctAnswer ?? ''}

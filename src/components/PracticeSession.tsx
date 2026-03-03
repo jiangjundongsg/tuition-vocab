@@ -110,7 +110,7 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
       if (!ws || ws === 'loading' || ws === 'error') return;
 
       try {
-        await fetch('/api/questions/answer', {
+        const res = await fetch('/api/questions/answer', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -120,7 +120,13 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
             correctAnswer: wordInfo.word,
           }),
         });
-      } catch { /* silent */ }
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          console.error('[wrong-bank] dictation answer API error', res.status, errBody);
+        }
+      } catch (e) {
+        console.error('[wrong-bank] dictation answer API network error', e);
+      }
     },
     [dictationSubmitted, wordSets, words]
   );
