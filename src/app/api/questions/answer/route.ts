@@ -53,18 +53,27 @@ export async function POST(req: NextRequest) {
       if (existing.length > 0) {
         await sql`
           UPDATE wrong_bank
-          SET wrong_count    = wrong_count + 1,
-              last_wrong_at  = NOW(),
-              correct_answer = ${correctAnswer ?? ''}
+          SET wrong_count   = wrong_count + 1,
+              last_wrong_at = NOW()
           WHERE id = ${Number(existing[0].id)}
         `;
+        // Best-effort: update correct_answer only if column exists
+        await sql`
+          UPDATE wrong_bank SET correct_answer = ${correctAnswer ?? ''}
+          WHERE id = ${Number(existing[0].id)}
+        `.catch(() => {});
       } else {
         await sql`
-          INSERT INTO wrong_bank
-            (user_id, word_set_id, question_key, wrong_count, last_wrong_at, correct_answer)
-          VALUES
-            (${user.id}, ${wordSetId}, ${questionKey}, 1, NOW(), ${correctAnswer ?? ''})
+          INSERT INTO wrong_bank (user_id, word_set_id, question_key, wrong_count, last_wrong_at)
+          VALUES (${user.id}, ${wordSetId}, ${questionKey}, 1, NOW())
         `;
+        // Best-effort: set correct_answer only if column exists
+        await sql`
+          UPDATE wrong_bank SET correct_answer = ${correctAnswer ?? ''}
+          WHERE user_id = ${user.id}
+            AND word_set_id = ${wordSetId}
+            AND question_key = ${questionKey}
+        `.catch(() => {});
       }
     }
 

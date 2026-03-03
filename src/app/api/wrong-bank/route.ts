@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     if (lesson) {
       rows = await sql`
         SELECT wb.id, wb.word_set_id, wb.question_key, wb.wrong_count, wb.last_wrong_at,
-               wb.correct_answer, ws.word_id, w.word, w.lesson_number
+               ws.word_id, w.word, w.lesson_number
         FROM wrong_bank wb
         JOIN word_sets ws ON wb.word_set_id = ws.id
         JOIN words w ON ws.word_id = w.id
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
     } else {
       rows = await sql`
         SELECT wb.id, wb.word_set_id, wb.question_key, wb.wrong_count, wb.last_wrong_at,
-               wb.correct_answer, ws.word_id, w.word, w.lesson_number
+               ws.word_id, w.word, w.lesson_number
         FROM wrong_bank wb
         JOIN word_sets ws ON wb.word_set_id = ws.id
         JOIN words w ON ws.word_id = w.id
