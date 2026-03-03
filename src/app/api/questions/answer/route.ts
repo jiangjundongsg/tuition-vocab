@@ -24,30 +24,48 @@ export async function POST(req: NextRequest) {
     }
 
     if (isCorrect) {
+      // Correct answer: decrement count, then remove if it hits 0
       await sql`
         UPDATE wrong_bank SET wrong_count = wrong_count - 1
-        WHERE user_id = ${user.id}
+        WHERE user_id    = ${user.id}
           AND word_set_id = ${wordSetId}
           AND question_key = ${questionKey}
       `;
       await sql`
         DELETE FROM wrong_bank
-        WHERE user_id = ${user.id}
+        WHERE user_id    = ${user.id}
           AND word_set_id = ${wordSetId}
           AND question_key = ${questionKey}
           AND wrong_count <= 0
       `;
     } else {
-      await sql`
-        INSERT INTO wrong_bank (user_id, word_set_id, question_key, wrong_count, last_wrong_at, correct_answer)
-        VALUES (${user.id}, ${wordSetId}, ${questionKey}, 1, NOW(), ${correctAnswer ?? ''})
-        ON CONFLICT (user_id, word_set_id, question_key)
-          WHERE user_id IS NOT NULL AND word_set_id IS NOT NULL
-        DO UPDATE SET
-          wrong_count    = wrong_bank.wrong_count + 1,
-          last_wrong_at  = NOW(),
-          correct_answer = EXCLUDED.correct_answer
+      // Wrong answer: upsert without relying on the partial unique index.
+      // SELECT first, then INSERT or UPDATE — avoids ON CONFLICT partial-index
+      // inference which fails silently when the index is missing.
+      const existing = await sql`
+        SELECT id FROM wrong_bank
+        WHERE user_id    = ${user.id}
+          AND word_set_id = ${wordSetId}
+          AND question_key = ${questionKey}
+        LIMIT 1
       `;
+
+      if (existing.length > 0) {
+        await sql`
+          UPDATE wrong_bank
+          SET wrong_count    = wrong_count + 1,
+              last_wrong_at  = NOW(),
+              correct_answer = ${correctAnswer ?? ''}
+          WHERE id = ${Number(existing[0].id)}
+        `;
+      } else {
+        await sql`
+          INSERT INTO wrong_bank
+            (user_id, word_set_id, question_key, wrong_count, last_wrong_at, correct_answer)
+          VALUES
+            (${user.id}, ${wordSetId}, ${questionKey}, 1, NOW(), ${correctAnswer ?? ''})
+        `;
+      }
     }
 
     return NextResponse.json({

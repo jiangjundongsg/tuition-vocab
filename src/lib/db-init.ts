@@ -136,11 +136,12 @@ export async function initDb() {
   // Drop obsolete tables
   await sql`DROP TABLE IF EXISTS sessions`.catch(() => {});
 
-  // Drop old indexes before creating new ones
+  // Drop old indexes before creating new ones (including old partial index)
   await Promise.all([
     sql`DROP INDEX IF EXISTS idx_wb_session_wordset`.catch(() => {}),
     sql`DROP INDEX IF EXISTS idx_wb_user_wordset`.catch(() => {}),
     sql`DROP INDEX IF EXISTS idx_wrong_bank_user`.catch(() => {}),
+    sql`DROP INDEX IF EXISTS idx_wb_user_wordset_key`.catch(() => {}),
   ]);
 
   // Create indexes
@@ -149,10 +150,11 @@ export async function initDb() {
       CREATE UNIQUE INDEX IF NOT EXISTS idx_word_sets_word_id
       ON word_sets(word_id)
     `.catch(() => {}),
+    // Plain (non-partial) unique index so wrong_bank upserts work without
+    // the fragile ON CONFLICT partial-index inference syntax.
     sql`
       CREATE UNIQUE INDEX IF NOT EXISTS idx_wb_user_wordset_key
       ON wrong_bank(user_id, word_set_id, question_key)
-      WHERE user_id IS NOT NULL AND word_set_id IS NOT NULL
     `.catch(() => {}),
   ]);
 
@@ -200,6 +202,29 @@ export async function initDb() {
   `.catch(() => []);
   if (m6.length > 0) {
     await sql`DELETE FROM word_sets`.catch(() => {});
+  }
+
+  // v3.7: Fix wrong-bank partial-index bug — deduplicate rows, then rebuild
+  // plain (non-partial) unique index so upserts work without ON CONFLICT inference.
+  const m7 = await sql`
+    INSERT INTO schema_migrations (version) VALUES ('v3.7-wrong-bank-index-fix')
+    ON CONFLICT (version) DO NOTHING
+    RETURNING version
+  `.catch(() => []);
+  if (m7.length > 0) {
+    // Remove duplicate (user_id, word_set_id, question_key) rows — keep the
+    // row with the highest wrong_count (most canonical state).
+    await sql`
+      DELETE FROM wrong_bank
+      WHERE id NOT IN (
+        SELECT DISTINCT ON (user_id, word_set_id, question_key) id
+        FROM wrong_bank
+        WHERE user_id IS NOT NULL AND word_set_id IS NOT NULL
+        ORDER BY user_id, word_set_id, question_key, wrong_count DESC, id DESC
+      )
+      AND user_id IS NOT NULL
+      AND word_set_id IS NOT NULL
+    `.catch(() => {});
   }
 
   global.__vocabDbInitialized = true;
