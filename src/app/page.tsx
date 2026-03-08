@@ -1,6 +1,7 @@
 import Link from 'next/link';
+import { getCurrentUser } from '@/lib/auth';
 
-const features = [
+const studentFeatures = [
   {
     href: '/practice',
     icon: (
@@ -28,17 +29,59 @@ const features = [
     glow: 'group-hover:from-rose-50/60',
   },
   {
+    href: '/dictation',
+    icon: (
+      <svg className="w-5 h-5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+      </svg>
+    ),
+    title: 'Dictation',
+    desc: 'Listen to each word spoken aloud and type it correctly to complete the lesson.',
+    iconBg: 'bg-sky-50 ring-1 ring-sky-100',
+    hover: 'hover:border-sky-200/80',
+    glow: 'group-hover:from-sky-50/60',
+  },
+];
+
+const teacherFeatures = [
+  {
+    href: '/words',
+    icon: (
+      <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+      </svg>
+    ),
+    title: 'Upload Words',
+    desc: 'Upload a CSV, photo, or PDF word list and assign it to one or more students.',
+    iconBg: 'bg-indigo-50 ring-1 ring-indigo-100',
+    hover: 'hover:border-indigo-200/80',
+    glow: 'group-hover:from-indigo-50/60',
+  },
+  {
     href: '/words',
     icon: (
       <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>
     ),
-    title: 'Teacher Tools',
-    desc: 'Upload word lists, manage your database, and run SQL queries on your data.',
+    title: 'Manage Users',
+    desc: 'Edit student profiles, configure question types, and manage accounts.',
     iconBg: 'bg-emerald-50 ring-1 ring-emerald-100',
     hover: 'hover:border-emerald-200/80',
     glow: 'group-hover:from-emerald-50/60',
+  },
+  {
+    href: '/words',
+    icon: (
+      <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7zm0 5h16" />
+      </svg>
+    ),
+    title: 'SQL Portal',
+    desc: 'Run SELECT, INSERT, UPDATE, DELETE queries directly on the database.',
+    iconBg: 'bg-amber-50 ring-1 ring-amber-100',
+    hover: 'hover:border-amber-200/80',
+    glow: 'group-hover:from-amber-50/60',
   },
 ];
 
@@ -50,7 +93,11 @@ const steps = [
   { n: 5, text: 'After all words, complete a dictation exercise. Wrong answers are re-tested inline before the session ends', dot: 'bg-emerald-500' },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const user = await getCurrentUser();
+  const isTeacher = user?.role === 'teacher' || user?.role === 'admin';
+  const features = isTeacher ? teacherFeatures : studentFeatures;
+
   return (
     <div className="space-y-20">
 
@@ -63,20 +110,21 @@ export default function HomePage() {
         <div className="relative space-y-6">
           <div className="inline-flex items-center gap-2 bg-white/70 backdrop-blur-sm border border-indigo-100 rounded-full px-3.5 py-1.5 text-xs font-semibold text-indigo-600 shadow-sm">
             <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-            English Vocabulary Practice
+            {isTeacher ? 'Teacher Dashboard' : 'English Vocabulary Practice'}
           </div>
 
           <h1 className="max-w-2xl text-5xl sm:text-6xl text-slate-900 leading-[1.06]">
             <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-500 bg-clip-text text-transparent">
-              Build your
+              {isTeacher ? 'Manage your' : 'Build your'}
             </span>
             <br />
-            vocabulary
+            {isTeacher ? 'students' : 'vocabulary'}
           </h1>
 
           <p className="text-lg text-slate-500 leading-relaxed font-light">
-            Practice with reading passages, AI-generated questions, fill-in-the-blank
-            exercises, and dictation — all designed for primary school students.
+            {isTeacher
+              ? 'Upload word lists, configure question types per student, and monitor progress through the SQL portal.'
+              : 'Practice with reading passages, AI-generated questions, fill-in-the-blank exercises, and dictation — all designed for primary school students.'}
           </p>
         </div>
       </div>
@@ -92,7 +140,7 @@ export default function HomePage() {
         <div className="grid sm:grid-cols-3 gap-4">
           {features.map(({ href, icon, title, desc, iconBg, hover, glow }) => (
             <Link
-              key={href}
+              key={title}
               href={href}
               className={`group relative bg-white rounded-2xl p-6 border border-slate-100 ${hover} hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 overflow-hidden`}
             >
@@ -109,30 +157,30 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* How it works */}
-      <div className="space-y-6 pb-4">
-        <div className="flex items-center gap-4">
-          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-200 to-slate-200" />
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest shrink-0">How it works</p>
-          <div className="h-px flex-1 bg-gradient-to-l from-transparent via-slate-200 to-slate-200" />
-        </div>
+      {/* How it works — students and logged-out only */}
+      {!isTeacher && (
+        <div className="space-y-6 pb-4">
+          <div className="flex items-center gap-4">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-200 to-slate-200" />
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest shrink-0">How it works</p>
+            <div className="h-px flex-1 bg-gradient-to-l from-transparent via-slate-200 to-slate-200" />
+          </div>
 
-        <div className="relative pl-10">
-          {/* Vertical connector */}
-          <div className="absolute left-3 top-3 bottom-3 w-px bg-gradient-to-b from-indigo-200 via-violet-200 via-sky-200 to-emerald-200" />
-
-          <div className="space-y-7">
-            {steps.map(({ n, text, dot }) => (
-              <div key={n} className="relative flex items-start gap-0">
-                <div className={`absolute -left-10 w-6 h-6 rounded-full ${dot} flex items-center justify-center text-[10px] font-bold text-white shadow-sm ring-2 ring-white`}>
-                  {n}
+          <div className="relative pl-10">
+            <div className="absolute left-3 top-3 bottom-3 w-px bg-gradient-to-b from-indigo-200 via-violet-200 via-sky-200 to-emerald-200" />
+            <div className="space-y-7">
+              {steps.map(({ n, text, dot }) => (
+                <div key={n} className="relative flex items-start gap-0">
+                  <div className={`absolute -left-10 w-6 h-6 rounded-full ${dot} flex items-center justify-center text-[10px] font-bold text-white shadow-sm ring-2 ring-white`}>
+                    {n}
+                  </div>
+                  <p className="text-sm text-slate-600 leading-relaxed">{text}</p>
                 </div>
-                <p className="text-sm text-slate-600 leading-relaxed">{text}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
     </div>
   );

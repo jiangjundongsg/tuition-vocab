@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 
 interface UserRow {
   id: number;
@@ -15,6 +15,11 @@ interface UserRow {
   blankZipfMax: number;
   passageWordCount: number;
   compQuestionType: string;
+  enableMcqMeaning: boolean;
+  enableMcqSynonym: boolean;
+  enableMcqAntonym: boolean;
+  enableComprehension: boolean;
+  enableFillBlank: boolean;
 }
 
 interface EditState {
@@ -27,6 +32,11 @@ interface EditState {
   blankZipfMax: string;
   passageWordCount: string;
   compQuestionType: string;
+  enableMcqMeaning: boolean;
+  enableMcqSynonym: boolean;
+  enableMcqAntonym: boolean;
+  enableComprehension: boolean;
+  enableFillBlank: boolean;
 }
 
 const ROLE_COLORS: Record<string, string> = {
@@ -49,10 +59,13 @@ export default function TeacherUserManager() {
     displayName: '', age: '', passageSource: '', password: '',
     numComprehension: '2', numBlanks: '5', blankZipfMax: '4.2',
     passageWordCount: '150', compQuestionType: 'mcq',
+    enableMcqMeaning: true, enableMcqSynonym: false, enableMcqAntonym: false,
+    enableComprehension: true, enableFillBlank: true,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [expandedConfig, setExpandedConfig] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   useEffect(() => {
     fetch('/api/teacher/users')
@@ -66,15 +79,20 @@ export default function TeacherUserManager() {
     setEditingId(u.id);
     setExpandedConfig(null);
     setEditState({
-      displayName:      u.displayName ?? '',
-      age:              u.age != null ? String(u.age) : '',
-      passageSource:    u.passageSource,
-      password:         '',
-      numComprehension: String(u.numComprehension),
-      numBlanks:        String(u.numBlanks),
-      blankZipfMax:     String(u.blankZipfMax),
-      passageWordCount: String(u.passageWordCount),
-      compQuestionType: u.compQuestionType,
+      displayName:       u.displayName ?? '',
+      age:               u.age != null ? String(u.age) : '',
+      passageSource:     u.passageSource,
+      password:          '',
+      numComprehension:  String(u.numComprehension),
+      numBlanks:         String(u.numBlanks),
+      blankZipfMax:      String(u.blankZipfMax),
+      passageWordCount:  String(u.passageWordCount),
+      compQuestionType:  u.compQuestionType,
+      enableMcqMeaning:  u.enableMcqMeaning,
+      enableMcqSynonym:  u.enableMcqSynonym,
+      enableMcqAntonym:  u.enableMcqAntonym,
+      enableComprehension: u.enableComprehension,
+      enableFillBlank:   u.enableFillBlank,
     });
     setError('');
   }
@@ -84,14 +102,19 @@ export default function TeacherUserManager() {
     setError('');
     try {
       const body: Record<string, unknown> = {
-        displayName:      editState.displayName,
-        age:              editState.age ? parseInt(editState.age) : null,
-        passageSource:    editState.passageSource || 'TextBook_Harry_Portter',
-        numComprehension: parseInt(editState.numComprehension) || 2,
-        numBlanks:        parseInt(editState.numBlanks) || 5,
-        blankZipfMax:     parseFloat(editState.blankZipfMax) || 4.2,
-        passageWordCount: parseInt(editState.passageWordCount) || 150,
-        compQuestionType: editState.compQuestionType,
+        displayName:       editState.displayName,
+        age:               editState.age ? parseInt(editState.age) : null,
+        passageSource:     editState.passageSource || 'TextBook_Harry_Portter',
+        numComprehension:  parseInt(editState.numComprehension) || 2,
+        numBlanks:         parseInt(editState.numBlanks) || 5,
+        blankZipfMax:      parseFloat(editState.blankZipfMax) || 4.2,
+        passageWordCount:  parseInt(editState.passageWordCount) || 150,
+        compQuestionType:  editState.compQuestionType,
+        enableMcqMeaning:  editState.enableMcqMeaning,
+        enableMcqSynonym:  editState.enableMcqSynonym,
+        enableMcqAntonym:  editState.enableMcqAntonym,
+        enableComprehension: editState.enableComprehension,
+        enableFillBlank:   editState.enableFillBlank,
       };
       if (editState.password) body.password = editState.password;
 
@@ -109,6 +132,20 @@ export default function TeacherUserManager() {
       setError(err instanceof Error ? err.message : 'Save failed');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function deleteUser(id: number) {
+    if (!confirm('Delete this user and all their data? This cannot be undone.')) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/teacher/users/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Delete failed');
+      setUsers((prev) => prev.filter((u) => u.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Delete failed');
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -137,8 +174,8 @@ export default function TeacherUserManager() {
           </thead>
           <tbody className="divide-y divide-slate-50">
             {users.map((u) => (
-              <>
-                <tr key={u.id} className="hover:bg-slate-50 transition-colors">
+              <Fragment key={u.id}>
+                <tr className="hover:bg-slate-50 transition-colors">
                   {editingId === u.id ? (
                     /* ── Edit row ── */
                     <>
@@ -163,6 +200,30 @@ export default function TeacherUserManager() {
                               <input value={editState.passageSource}
                                 onChange={(e) => setEditState((s) => ({ ...s, passageSource: e.target.value }))}
                                 placeholder="TextBook_Harry_Portter" className={inputClass} />
+                            </div>
+                          </div>
+
+                          {/* Question type toggles */}
+                          <div>
+                            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Enabled Question Types</p>
+                            <div className="flex flex-wrap gap-3">
+                              {[
+                                { key: 'enableMcqMeaning',   label: 'Meaning MCQ' },
+                                { key: 'enableMcqSynonym',   label: 'Synonym MCQ' },
+                                { key: 'enableMcqAntonym',   label: 'Antonym MCQ' },
+                                { key: 'enableComprehension',label: 'Comprehension' },
+                                { key: 'enableFillBlank',    label: 'Fill Blank' },
+                              ].map(({ key, label }) => (
+                                <label key={key} className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer select-none">
+                                  <input
+                                    type="checkbox"
+                                    checked={editState[key as keyof EditState] as boolean}
+                                    onChange={(e) => setEditState((s) => ({ ...s, [key]: e.target.checked }))}
+                                    className="w-3.5 h-3.5 rounded accent-indigo-600"
+                                  />
+                                  {label}
+                                </label>
+                              ))}
                             </div>
                           </div>
 
@@ -261,10 +322,21 @@ export default function TeacherUserManager() {
                         </button>
                       </td>
                       <td className="px-4 py-2.5 text-right">
-                        <button onClick={() => startEdit(u)}
-                          className="text-xs font-semibold text-indigo-600 hover:text-indigo-900 transition-colors">
-                          Edit
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => startEdit(u)}
+                            className="text-xs font-semibold text-indigo-600 hover:text-indigo-900 transition-colors">
+                            Edit
+                          </button>
+                          {u.role === 'student' && (
+                            <button
+                              onClick={() => deleteUser(u.id)}
+                              disabled={deletingId === u.id}
+                              className="text-xs font-semibold text-red-400 hover:text-red-700 transition-colors disabled:opacity-50"
+                            >
+                              {deletingId === u.id ? '…' : 'Delete'}
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </>
                   )}
@@ -272,7 +344,7 @@ export default function TeacherUserManager() {
 
                 {/* Expanded config row */}
                 {expandedConfig === u.id && editingId !== u.id && (
-                  <tr key={`${u.id}-config`} className="bg-slate-50">
+                  <tr className="bg-slate-50">
                     <td colSpan={7} className="px-4 py-3">
                       <div className="flex flex-wrap gap-4 text-xs text-slate-600">
                         <span><span className="font-semibold text-slate-400">Comp. Qs:</span> {u.numComprehension}</span>
@@ -280,11 +352,16 @@ export default function TeacherUserManager() {
                         <span><span className="font-semibold text-slate-400">Blank Zipf max:</span> {u.blankZipfMax}</span>
                         <span><span className="font-semibold text-slate-400">Passage words:</span> {u.passageWordCount}</span>
                         <span><span className="font-semibold text-slate-400">Q type:</span> {u.compQuestionType}</span>
+                        <span><span className="font-semibold text-slate-400">Meaning:</span> {u.enableMcqMeaning ? 'on' : 'off'}</span>
+                        <span><span className="font-semibold text-slate-400">Synonym:</span> {u.enableMcqSynonym ? 'on' : 'off'}</span>
+                        <span><span className="font-semibold text-slate-400">Antonym:</span> {u.enableMcqAntonym ? 'on' : 'off'}</span>
+                        <span><span className="font-semibold text-slate-400">Comprehension:</span> {u.enableComprehension ? 'on' : 'off'}</span>
+                        <span><span className="font-semibold text-slate-400">Fill blank:</span> {u.enableFillBlank ? 'on' : 'off'}</span>
                       </div>
                     </td>
                   </tr>
                 )}
-              </>
+              </Fragment>
             ))}
           </tbody>
         </table>

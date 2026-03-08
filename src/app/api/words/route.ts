@@ -6,32 +6,57 @@ import { getCurrentUser } from '@/lib/auth';
 export async function GET(req: NextRequest) {
   try {
     await initDb();
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const { searchParams } = new URL(req.url);
-    const lesson = searchParams.get('lesson');
+    const userIdParam = searchParams.get('userId');
 
     let rows;
-    if (lesson) {
-      rows = await sql`
-        SELECT id, word, zipf_score, difficulty, lesson_number, created_at
-        FROM words
-        WHERE lesson_number = ${lesson}
-        ORDER BY word ASC
-      `;
+    if (user.role === 'teacher' || user.role === 'admin') {
+      if (userIdParam) {
+        const uid = parseInt(userIdParam);
+        rows = await sql`
+          SELECT id, word, user_id, zipf_score, difficulty, lesson_number, created_at
+          FROM words WHERE user_id = ${uid}
+          ORDER BY lesson_number ASC NULLS LAST, word ASC
+        `;
+      } else {
+        rows = await sql`
+          SELECT id, word, user_id, zipf_score, difficulty, lesson_number, created_at
+          FROM words ORDER BY lesson_number ASC NULLS LAST, word ASC
+        `;
+      }
     } else {
+      // Student: only their own words
       rows = await sql`
-        SELECT id, word, zipf_score, difficulty, lesson_number, created_at
-        FROM words
+        SELECT id, word, user_id, zipf_score, difficulty, lesson_number, created_at
+        FROM words WHERE user_id = ${user.id}
         ORDER BY lesson_number ASC NULLS LAST, word ASC
       `;
     }
 
-    // Distinct lesson numbers for filter UI
-    const lessonRows = await sql`
-      SELECT DISTINCT lesson_number
-      FROM words
-      WHERE lesson_number IS NOT NULL
-      ORDER BY lesson_number ASC
-    `;
+    let lessonRows;
+    if (user.role === 'student') {
+      lessonRows = await sql`
+        SELECT DISTINCT lesson_number FROM words
+        WHERE lesson_number IS NOT NULL AND user_id = ${user.id}
+        ORDER BY lesson_number ASC
+      `;
+    } else if (userIdParam) {
+      const lessonFilterId = parseInt(userIdParam);
+      lessonRows = await sql`
+        SELECT DISTINCT lesson_number FROM words
+        WHERE lesson_number IS NOT NULL AND user_id = ${lessonFilterId}
+        ORDER BY lesson_number ASC
+      `;
+    } else {
+      lessonRows = await sql`
+        SELECT DISTINCT lesson_number FROM words
+        WHERE lesson_number IS NOT NULL
+        ORDER BY lesson_number ASC
+      `;
+    }
     const lessonNumbers = lessonRows.map((r) => r.lesson_number as string);
 
     return NextResponse.json({ words: rows, lessonNumbers });
@@ -44,7 +69,6 @@ export async function GET(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     await initDb();
-
     const user = await getCurrentUser();
     if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
       return NextResponse.json({ error: 'Teacher access required' }, { status: 403 });
