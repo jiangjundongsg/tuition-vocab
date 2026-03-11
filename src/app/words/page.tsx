@@ -288,7 +288,7 @@ export default function WordsPage() {
                       : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-300'
                   }`}
                 >
-                  Lesson {n}
+                  {n}
                 </button>
               ))}
             </div>
@@ -372,7 +372,7 @@ export default function WordsPage() {
                         <>
                           <td className="px-5 py-2.5 font-semibold text-slate-800">{word.word}</td>
                           <td className="px-4 py-2.5 text-center text-slate-400 text-xs">
-                            {word.lesson_number !== null ? `Lesson ${word.lesson_number}` : '—'}
+                            {word.lesson_number ?? '—'}
                           </td>
                           <td className="px-4 py-2.5 text-center">
                             <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
