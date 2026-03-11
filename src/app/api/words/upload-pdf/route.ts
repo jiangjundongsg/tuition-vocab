@@ -85,8 +85,7 @@ Output ONLY a plain word list — one word per line, lowercase. No sentences, no
 
     for (const targetUser of userRows) {
       const targetId = Number(targetUser.id);
-      const displayName = (targetUser.display_name as string) || String(targetId);
-      const lessonNumber = `${displayName} ${todayYYMMDD()}`;
+      const lessonNumber = `${targetId}${todayYYMMDD()}`;
 
       for (const { word, zipf, difficulty } of scored) {
         try {

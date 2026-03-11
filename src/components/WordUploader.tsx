@@ -70,7 +70,7 @@ export default function WordUploader() {
           type="text"
           value={lessonLabel}
           onChange={(e) => setLessonLabel(e.target.value)}
-          placeholder="e.g. Lesson 1A (defaults to student name + date)"
+          placeholder="e.g. Lesson 1A (defaults to userID + date, e.g. 3260311)"
           className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100"
         />
       </div>
