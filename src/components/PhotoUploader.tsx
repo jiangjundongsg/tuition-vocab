@@ -1,24 +1,18 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
+import StudentSelector from './StudentSelector';
 
 interface UploadResult {
   inserted: number;
   skipped: number;
-  lessonNumber: string;
-  words: Array<{ word: string; zipf: number | null; difficulty: string; lessonNumber: string }>;
+  words: string[];
 }
-
-const DIFFICULTY_COLORS: Record<string, string> = {
-  high:    'bg-emerald-50 text-emerald-700 border-emerald-200',
-  medium:  'bg-amber-50 text-amber-700 border-amber-200',
-  low:     'bg-red-50 text-red-700 border-red-200',
-  unknown: 'bg-slate-50 text-slate-500 border-slate-200',
-};
 
 export default function PhotoUploader() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [targetUserIds, setTargetUserIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<UploadResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,17 +36,27 @@ export default function PhotoUploader() {
 
   async function handleUpload() {
     if (!file || loading) return;
+    if (targetUserIds.length === 0) {
+      setError('Please select at least one student.');
+      return;
+    }
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const formData = new FormData();
-      formData.append('image', file);
+      // Convert file to base64
+      const bytes = await file.arrayBuffer();
+      const base64 = Buffer.from(bytes).toString('base64');
 
       const res = await fetch('/api/words/upload-photo', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image: base64,
+          mediaType: file.type,
+          targetUserIds,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Upload failed');
@@ -68,6 +72,9 @@ export default function PhotoUploader() {
 
   return (
     <div className="space-y-5">
+      {/* Student selector */}
+      <StudentSelector selectedIds={targetUserIds} onChange={setTargetUserIds} />
+
       {/* Drop zone */}
       <div
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
@@ -112,7 +119,7 @@ export default function PhotoUploader() {
       {file && (
         <button
           onClick={handleUpload}
-          disabled={loading}
+          disabled={loading || targetUserIds.length === 0}
           className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
         >
           {loading ? (
@@ -139,21 +146,21 @@ export default function PhotoUploader() {
       )}
 
       {result && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-3">
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-2">
           <p className="font-semibold text-emerald-800 text-sm">
             {result.inserted} word{result.inserted !== 1 ? 's' : ''} extracted &amp; uploaded
             {result.skipped > 0 && (
               <span className="text-emerald-600 font-normal"> · {result.skipped} skipped</span>
             )}
-            <span className="text-emerald-600 font-normal"> · Lesson {result.lessonNumber}</span>
+          </p>
+          <p className="text-xs text-emerald-600">
+            Assigned to {targetUserIds.length} student{targetUserIds.length !== 1 ? 's' : ''}
           </p>
           <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
-            {result.words.map(({ word, difficulty }) => (
+            {result.words.map((word) => (
               <span
                 key={word}
-                className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${
-                  DIFFICULTY_COLORS[difficulty] ?? DIFFICULTY_COLORS.unknown
-                }`}
+                className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border bg-white border-slate-200 text-slate-600"
               >
                 {word}
               </span>

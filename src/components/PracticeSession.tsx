@@ -19,7 +19,6 @@ interface WrongBankItem {
   lessonNumber: string | null;
   questionKey: string;
   typeLabel: string;
-  correctAnswer: string;
   wrongCount: number;
 }
 
@@ -117,7 +116,6 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
             wordSetId: ws.wordSetId,
             questionKey: 'dictation',
             isCorrect,
-            correctAnswer: wordInfo.word,
           }),
         });
         if (!res.ok) {
@@ -214,6 +212,11 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
     const isSubmitted = !!repracticeSubmitted[item.id];
     const isCorrect = !!repracticeCorrect[item.id];
 
+    // Derive the meaning explanation for dictation hint
+    const meaningExplanation = wsData?.questions.meaning?.explanation
+      ?? wsData?.questions.synonym?.explanation
+      ?? undefined;
+
     return (
       <div className="space-y-4">
         {/* Header */}
@@ -252,11 +255,29 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
             </p>
           )}
 
-          {/* The specific question */}
-          {wsData && item.questionKey === 'mcq' && (
+          {/* The specific question — handle all v4.0 question types */}
+          {wsData && item.questionKey === 'meaning' && wsData.questions.meaning && (
             <SessionMCQ
-              questionKey={`repractice_${item.id}_mcq`}
-              data={wsData.questions.mcq}
+              questionKey={`repractice_${item.id}_meaning`}
+              data={wsData.questions.meaning}
+              submitted={isSubmitted}
+              selectedAnswer={repracticeAnswers[item.id] ?? ''}
+              onAnswer={(_, ans, correct) => handleRepracticeAnswer(item.id, ans, correct)}
+            />
+          )}
+          {wsData && item.questionKey === 'synonym' && wsData.questions.synonym && (
+            <SessionMCQ
+              questionKey={`repractice_${item.id}_synonym`}
+              data={wsData.questions.synonym}
+              submitted={isSubmitted}
+              selectedAnswer={repracticeAnswers[item.id] ?? ''}
+              onAnswer={(_, ans, correct) => handleRepracticeAnswer(item.id, ans, correct)}
+            />
+          )}
+          {wsData && item.questionKey === 'antonym' && wsData.questions.antonym && (
+            <SessionMCQ
+              questionKey={`repractice_${item.id}_antonym`}
+              data={wsData.questions.antonym}
               submitted={isSubmitted}
               selectedAnswer={repracticeAnswers[item.id] ?? ''}
               onAnswer={(_, ans, correct) => handleRepracticeAnswer(item.id, ans, correct)}
@@ -264,7 +285,7 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
           )}
           {wsData && item.questionKey.startsWith('comp_') && (() => {
             const idx = parseInt(item.questionKey.split('_')[1] ?? '0');
-            const compQ = wsData.questions.comp[idx];
+            const compQ = wsData.questions.comprehension?.[idx];
             return compQ ? (
               <SessionMCQ
                 questionKey={`repractice_${item.id}_comp${idx}`}
@@ -275,7 +296,7 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
               />
             ) : null;
           })()}
-          {wsData && item.questionKey === 'fill_blank' && (
+          {wsData && item.questionKey === 'fill_blank' && wsData.fillBlank && (
             <FillBlankExercise
               questionKey={`repractice_${item.id}_fill`}
               data={wsData.fillBlank}
@@ -287,7 +308,7 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
             <DictationItem
               wordIndex={repracticeIndex}
               word={item.word}
-              meaning={wsData?.questions.mcq.explanation}
+              meaning={meaningExplanation}
               questionKey={`repractice_${item.id}_dict`}
               submitted={isSubmitted}
               isCorrect={isCorrect}
@@ -334,7 +355,7 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
           {words.map((w, i) => {
             const ws = wordSets[w.id];
             const meaning = ws && ws !== 'loading' && ws !== 'error'
-              ? ws.questions.mcq.explanation
+              ? (ws.questions.meaning?.explanation ?? ws.questions.synonym?.explanation ?? undefined)
               : undefined;
             return (
               <DictationItem

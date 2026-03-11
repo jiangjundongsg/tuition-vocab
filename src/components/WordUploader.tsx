@@ -1,22 +1,17 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import StudentSelector from './StudentSelector';
 
 interface UploadResult {
   inserted: number;
   skipped: number;
-  words: Array<{ word: string; zipf: number | null; difficulty: string; lessonNumber: string | null }>;
 }
-
-const DIFFICULTY_COLORS: Record<string, string> = {
-  high:    'bg-emerald-50 text-emerald-700 border-emerald-200',
-  medium:  'bg-amber-50 text-amber-700 border-amber-200',
-  low:     'bg-red-50 text-red-700 border-red-200',
-  unknown: 'bg-slate-50 text-slate-500 border-slate-200',
-};
 
 export default function WordUploader() {
   const [text, setText] = useState('');
+  const [targetUserIds, setTargetUserIds] = useState<number[]>([]);
+  const [lessonLabel, setLessonLabel] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<UploadResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -24,19 +19,27 @@ export default function WordUploader() {
 
   const handleUpload = async () => {
     if (!text.trim()) return;
+    if (targetUserIds.length === 0) {
+      setError('Please select at least one student.');
+      return;
+    }
     setLoading(true);
     setError(null);
     setResult(null);
     try {
+      const body: Record<string, unknown> = { words: text, targetUserIds };
+      if (lessonLabel.trim()) body.lessonNumber = lessonLabel.trim();
+
       const res = await fetch('/api/words/upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ words: text }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Upload failed');
       setResult(data as UploadResult);
       setText('');
+      setLessonLabel('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
@@ -57,6 +60,21 @@ export default function WordUploader() {
 
   return (
     <div className="space-y-5">
+      {/* Student selector */}
+      <StudentSelector selectedIds={targetUserIds} onChange={setTargetUserIds} />
+
+      {/* Lesson label */}
+      <div>
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Lesson Label (optional)</p>
+        <input
+          type="text"
+          value={lessonLabel}
+          onChange={(e) => setLessonLabel(e.target.value)}
+          placeholder="e.g. Lesson 1A (defaults to student name + date)"
+          className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100"
+        />
+      </div>
+
       <div
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
@@ -71,7 +89,7 @@ export default function WordUploader() {
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={"1A,curious\n1A,ambitious\n1A,magnificent\n2B,eloquent\n\n(Format: lesson_number,word)"}
+          placeholder={"curious\nambitious\nmagnificent\neloquent\n\n(One word per line)"}
           rows={8}
           className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 resize-none bg-white"
         />
@@ -79,7 +97,7 @@ export default function WordUploader() {
 
       <button
         onClick={handleUpload}
-        disabled={loading || !text.trim()}
+        disabled={loading || !text.trim() || targetUserIds.length === 0}
         className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
       >
         {loading ? (
@@ -97,28 +115,16 @@ export default function WordUploader() {
       )}
 
       {result && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-3">
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-1">
           <p className="font-semibold text-emerald-800 text-sm">
             {result.inserted} word{result.inserted !== 1 ? 's' : ''} uploaded successfully
             {result.skipped > 0 && (
-              <span className="text-emerald-600 font-normal"> · {result.skipped} skipped</span>
+              <span className="text-emerald-600 font-normal"> · {result.skipped} skipped (duplicates)</span>
             )}
           </p>
-          <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
-            {result.words.map(({ word, difficulty, lessonNumber }) => (
-              <span
-                key={word}
-                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border ${
-                  DIFFICULTY_COLORS[difficulty] ?? DIFFICULTY_COLORS.unknown
-                }`}
-              >
-                {lessonNumber !== null && (
-                  <span className="opacity-50">L{lessonNumber}</span>
-                )}
-                {word}
-              </span>
-            ))}
-          </div>
+          <p className="text-xs text-emerald-600">
+            Words assigned to {targetUserIds.length} student{targetUserIds.length !== 1 ? 's' : ''}
+          </p>
         </div>
       )}
     </div>

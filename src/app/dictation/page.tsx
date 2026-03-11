@@ -31,7 +31,7 @@ export default function DictationPage() {
 
   useEffect(() => {
     if (!authChecked) return;
-    fetch('/api/lessons')
+    fetch('/api/dictation/lessons')
       .then((r) => r.json())
       .then((d) => setLessons(d.lessons ?? []))
       .catch(() => {});
@@ -43,7 +43,7 @@ export default function DictationPage() {
     setError('');
     setWords([]);
     setPracticing(false);
-    fetch(`/api/words?lesson=${encodeURIComponent(selectedLesson)}`)
+    fetch(`/api/dictation/${encodeURIComponent(selectedLesson)}`)
       .then((r) => r.json())
       .then((d) => {
         const wordList = (d.words ?? []) as Array<{ id: number; word: string }>;
@@ -145,7 +145,7 @@ export default function DictationPage() {
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.536 8.464a5 5 0 010 7.072M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253" />
                   </svg>
-                  <span className="text-xs leading-tight text-center">Lesson<br />{lesson}</span>
+                  <span className="text-xs leading-tight text-center">{lesson}</span>
                 </button>
               ))}
             </div>

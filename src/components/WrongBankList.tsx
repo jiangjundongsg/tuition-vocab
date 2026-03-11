@@ -5,7 +5,6 @@ interface WrongBankItem {
   word: string;
   lessonNumber: string | null;
   typeLabel: string;
-  correctAnswer: string;
   wrongCount: number;
   lastWrongAt: string;
 }
@@ -37,7 +36,7 @@ export default function WrongBankList({ items }: Props) {
             <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Word</th>
             <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Lesson</th>
             <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Question Type</th>
-            <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Correct Answer</th>
+
             <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Times Wrong</th>
             <th className="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Last Wrong</th>
           </tr>
@@ -50,9 +49,7 @@ export default function WrongBankList({ items }: Props) {
                 {item.lessonNumber ? `Lesson ${item.lessonNumber}` : '—'}
               </td>
               <td className="px-4 py-3 text-slate-500 text-xs">{item.typeLabel}</td>
-              <td className="px-4 py-3 text-slate-700 text-xs font-medium hidden md:table-cell max-w-[180px] truncate" title={item.correctAnswer || undefined}>
-                {item.correctAnswer || <span className="text-slate-300">—</span>}
-              </td>
+
               <td className="px-4 py-3 text-center">
                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-600 font-bold text-xs">
                   {item.wrongCount}

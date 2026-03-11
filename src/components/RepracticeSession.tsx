@@ -14,7 +14,6 @@ interface WrongBankItem {
   lessonNumber: string | null;
   questionKey: string;
   typeLabel: string;
-  correctAnswer: string;
   wrongCount: number;
 }
 
@@ -111,6 +110,10 @@ export default function RepracticeSession({ items, lessonLabel, onDone }: Props)
   const isCorrect = !!correct[item.id];
   const progress = ((currentIndex + (isSubmitted ? 1 : 0)) / items.length) * 100;
 
+  const meaningExplanation = wsData?.questions.meaning?.explanation
+    ?? wsData?.questions.synonym?.explanation
+    ?? undefined;
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -170,11 +173,33 @@ export default function RepracticeSession({ items, lessonLabel, onDone }: Props)
           <p className="text-sm text-red-500">Could not load question. Please try again.</p>
         )}
 
-        {/* MCQ */}
-        {wsData && item.questionKey === 'mcq' && (
+        {/* Meaning MCQ */}
+        {wsData && item.questionKey === 'meaning' && wsData.questions.meaning && (
           <SessionMCQ
-            questionKey={`wb_${item.id}_mcq`}
-            data={wsData.questions.mcq}
+            questionKey={`wb_${item.id}_meaning`}
+            data={wsData.questions.meaning}
+            submitted={isSubmitted}
+            selectedAnswer={answers[item.id] ?? ''}
+            onAnswer={(_, ans, c) => handleAnswer(item.id, ans, c)}
+          />
+        )}
+
+        {/* Synonym MCQ */}
+        {wsData && item.questionKey === 'synonym' && wsData.questions.synonym && (
+          <SessionMCQ
+            questionKey={`wb_${item.id}_synonym`}
+            data={wsData.questions.synonym}
+            submitted={isSubmitted}
+            selectedAnswer={answers[item.id] ?? ''}
+            onAnswer={(_, ans, c) => handleAnswer(item.id, ans, c)}
+          />
+        )}
+
+        {/* Antonym MCQ */}
+        {wsData && item.questionKey === 'antonym' && wsData.questions.antonym && (
+          <SessionMCQ
+            questionKey={`wb_${item.id}_antonym`}
+            data={wsData.questions.antonym}
             submitted={isSubmitted}
             selectedAnswer={answers[item.id] ?? ''}
             onAnswer={(_, ans, c) => handleAnswer(item.id, ans, c)}
@@ -184,7 +209,7 @@ export default function RepracticeSession({ items, lessonLabel, onDone }: Props)
         {/* Comprehension (comp_0, comp_1, …) */}
         {wsData && item.questionKey.startsWith('comp_') && (() => {
           const idx = parseInt(item.questionKey.split('_')[1] ?? '0');
-          const compQ = wsData.questions.comp[idx];
+          const compQ = wsData.questions.comprehension?.[idx];
           return compQ ? (
             <SessionMCQ
               questionKey={`wb_${item.id}_comp${idx}`}
@@ -197,7 +222,7 @@ export default function RepracticeSession({ items, lessonLabel, onDone }: Props)
         })()}
 
         {/* Fill in the blank */}
-        {wsData && item.questionKey === 'fill_blank' && (
+        {wsData && item.questionKey === 'fill_blank' && wsData.fillBlank && (
           <FillBlankExercise
             questionKey={`wb_${item.id}_fill`}
             data={wsData.fillBlank}
@@ -211,7 +236,7 @@ export default function RepracticeSession({ items, lessonLabel, onDone }: Props)
           <DictationItem
             wordIndex={currentIndex}
             word={item.word}
-            meaning={wsData?.questions.mcq.explanation}
+            meaning={meaningExplanation}
             questionKey={`wb_${item.id}_dict`}
             submitted={isSubmitted}
             isCorrect={isCorrect}

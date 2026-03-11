@@ -14,6 +14,8 @@ export async function GET() {
     const rows = await sql`
       SELECT id, email, display_name, role, age, last_lesson, passage_source,
              num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type,
+             enable_mcq_meaning, enable_mcq_synonym, enable_mcq_antonym,
+             enable_comprehension, enable_fill_blank,
              created_at
       FROM users ORDER BY created_at ASC
     `;
@@ -28,10 +30,15 @@ export async function GET() {
         lastLesson: r.last_lesson as string | null,
         passageSource: (r.passage_source as string) || 'TextBook_Harry_Portter',
         numComprehension: Number(r.num_comprehension) || 2,
-        numBlanks:        Number(r.num_blanks) || 5,
-        blankZipfMax:     Number(r.blank_zipf_max) || 4.2,
+        numBlanks: Number(r.num_blanks) || 5,
+        blankZipfMax: Number(r.blank_zipf_max) || 4.2,
         passageWordCount: Number(r.passage_word_count) || 150,
         compQuestionType: (r.comp_question_type as string) || 'mcq',
+        enableMcqMeaning: r.enable_mcq_meaning !== false,
+        enableMcqSynonym: r.enable_mcq_synonym === true,
+        enableMcqAntonym: r.enable_mcq_antonym === true,
+        enableComprehension: r.enable_comprehension !== false,
+        enableFillBlank: r.enable_fill_blank !== false,
         createdAt: r.created_at as string,
       })),
     });

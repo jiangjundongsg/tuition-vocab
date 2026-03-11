@@ -2,13 +2,11 @@ import Anthropic from '@anthropic-ai/sdk';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// ── Question data types ──────────────────────────────────────────────────────
-
 export interface MCQData {
   type: 'mcq';
   question: string;
-  options: string[]; // exactly 4
-  answer: string;    // one of the options
+  options: string[];
+  answer: string;
   explanation: string;
 }
 
@@ -21,86 +19,30 @@ export interface CompQuestionData {
 }
 
 export interface WordQuestions {
-  mcq: MCQData;
-  comp: CompQuestionData[];  // length = numComp (default 2)
+  meaning?: MCQData;
+  synonym?: MCQData;
+  antonym?: MCQData;
+  comprehension?: CompQuestionData[];
+}
+
+export interface QuestionConfig {
+  age: number;
+  numComprehension: number;
+  compQuestionType: string;
+  enableMcqMeaning: boolean;
+  enableMcqSynonym: boolean;
+  enableMcqAntonym: boolean;
+  enableComprehension: boolean;
+  passageWordCount: number;
 }
 
 export type CompQuestionType = 'mcq' | 'true_false' | 'mixed';
 
-// ── Prompt builder ────────────────────────────────────────────────────────────
-
-function buildPrompt(
-  word: string,
-  paragraph: string,
-  age: number,
-  numComp: number,
-  compType: CompQuestionType = 'mcq',
-): string {
-  const isTF = compType === 'true_false';
-  const isMixed = compType === 'mixed';
-
-  const compJson = Array.from({ length: numComp }, (_, i) => {
-    const useTF = isTF || (isMixed && i % 2 === 1);
-    return useTF
-      ? `
-    {
-      "type": "mcq",
-      "question": "Statement about the paragraph (evaluate as true or false)",
-      "options": ["True", "False"],
-      "answer": "True",
-      "explanation": "Short explanation why this is true or false"
-    }`
-      : `
-    {
-      "type": "mcq",
-      "question": "Comprehension question ${i + 1} about the paragraph?",
-      "options": ["correct answer phrase", "wrong phrase 1", "wrong phrase 2", "wrong phrase 3"],
-      "answer": "correct answer phrase",
-      "explanation": "Short explanation referencing the paragraph"
-    }`;
-  }).join(',');
-
-  const compTypeInstruction = isTF
-    ? `Each comprehension question must be a TRUE/FALSE statement about the paragraph. Options must be exactly ["True", "False"].`
-    : isMixed
-    ? `Mix the comprehension question types: alternate between 4-option MCQ and True/False (options: ["True", "False"]).`
-    : `Each comprehension question must have exactly 4 options, all as complete descriptive phrases.`;
-
-  const optionRules = isTF
-    ? `- True/False questions: options must be exactly ["True", "False"]\n- Make each statement clearly verifiable from the paragraph`
-    : isMixed
-    ? `- For MCQ: every option must be a complete descriptive phrase (at least 5 words)\n- For True/False: options must be exactly ["True", "False"]`
-    : `- Every option must be a complete descriptive phrase or sentence (at least 5 words)\n- Options should be plausible and similar in length`;
-
-  return `Paragraph: "${paragraph}"
-Target word: "${word}"
-Student age: ${age} years old
-
-Create EXACTLY ${1 + numComp} questions suitable for a ${age}-year-old child:
-1. One MCQ testing the meaning of "${word}" as used in the paragraph (4 options)
-${Array.from({ length: numComp }, (_, i) => `${i + 2}. One comprehension question about the paragraph`).join('\n')}
-
-Comprehension question type: ${compTypeInstruction}
-
-Rules for ALL options:
-${optionRules}
-- Vocabulary and sentence complexity should suit a ${age}-year-old reader
-
-Return ONLY this exact JSON:
-{
-  "mcq": {
-    "type": "mcq",
-    "question": "What does '${word}' mean in the paragraph?",
-    "options": ["correct meaning phrase", "wrong phrase 1", "wrong phrase 2", "wrong phrase 3"],
-    "answer": "correct meaning phrase",
-    "explanation": "Child-friendly explanation (1–2 sentences)"
-  },
-  "comp": [${compJson}
-  ]
-}`;
+function shuffleMCQ<T extends { options?: string[]; answer: string }>(q: T): T {
+  if (!q.options || q.options.length <= 1) return q;
+  const shuffled = [...q.options].sort(() => Math.random() - 0.5);
+  return { ...q, options: shuffled };
 }
-
-// ── Generate paragraph (fallback when word not in textbook) ──────────────────
 
 export async function generateParagraph(word: string, age = 10, wordCount = 150): Promise<string> {
   const minWords = Math.max(50, wordCount - 25);
@@ -116,36 +58,113 @@ Return ONLY the paragraph text — no title, no explanation, no extra text.`,
       content: `Write a paragraph of ${minWords}–${maxWords} words that uses the word "${word}" naturally in context. The paragraph should be appropriate for a ${age}-year-old child, tell a simple story or describe a situation, and make the meaning of "${word}" clear from context.`,
     }],
   });
-
   const content = message.content[0];
   if (content.type !== 'text') throw new Error('Unexpected response type from Claude');
   return content.text.trim();
 }
 
-// ── Shuffle MCQ options while keeping the answer field in sync ───────────────
-
-function shuffleMCQ<T extends { options?: string[]; answer: string }>(q: T): T {
-  if (!q.options || q.options.length <= 1) return q;
-  const shuffled = [...q.options].sort(() => Math.random() - 0.5);
-  return { ...q, options: shuffled };
-}
-
-// ── Generate questions ────────────────────────────────────────────────────────
-
 export async function generateWordQuestions(
   word: string,
   paragraph: string,
-  age = 10,
-  numComp = 2,
-  compType: CompQuestionType = 'mcq',
+  config: QuestionConfig,
 ): Promise<WordQuestions> {
+  const {
+    age,
+    numComprehension,
+    compQuestionType,
+    enableMcqMeaning,
+    enableMcqSynonym,
+    enableMcqAntonym,
+    enableComprehension,
+  } = config;
+
+  const compType = compQuestionType as CompQuestionType;
+  const isTF = compType === 'true_false';
+  const isMixed = compType === 'mixed';
+
+  // Build JSON schema for requested question types
+  const parts: string[] = [];
+
+  if (enableMcqMeaning) {
+    parts.push(`  "meaning": {
+    "type": "mcq",
+    "question": "What does '${word}' mean in the paragraph?",
+    "options": ["correct meaning phrase", "wrong phrase 1", "wrong phrase 2", "wrong phrase 3"],
+    "answer": "correct meaning phrase",
+    "explanation": "Child-friendly explanation (1–2 sentences)"
+  }`);
+  }
+
+  if (enableMcqSynonym) {
+    parts.push(`  "synonym": {
+    "type": "mcq",
+    "question": "Which word has a similar meaning to '${word}'?",
+    "options": ["correct synonym", "wrong word 1", "wrong word 2", "wrong word 3"],
+    "answer": "correct synonym",
+    "explanation": "Brief explanation of why these words are similar"
+  }`);
+  }
+
+  if (enableMcqAntonym) {
+    parts.push(`  "antonym": {
+    "type": "mcq",
+    "question": "Which word has the opposite meaning to '${word}'?",
+    "options": ["correct antonym", "wrong word 1", "wrong word 2", "wrong word 3"],
+    "answer": "correct antonym",
+    "explanation": "Brief explanation of why these words are opposites"
+  }`);
+  }
+
+  if (enableComprehension && numComprehension > 0) {
+    const compItems = Array.from({ length: numComprehension }, (_, i) => {
+      const useTF = isTF || (isMixed && i % 2 === 1);
+      return useTF
+        ? `    {
+      "type": "mcq",
+      "question": "True or false statement about the paragraph",
+      "options": ["True", "False"],
+      "answer": "True",
+      "explanation": "Short explanation"
+    }`
+        : `    {
+      "type": "mcq",
+      "question": "Comprehension question ${i + 1} about the paragraph?",
+      "options": ["correct answer phrase", "wrong phrase 1", "wrong phrase 2", "wrong phrase 3"],
+      "answer": "correct answer phrase",
+      "explanation": "Short explanation referencing the paragraph"
+    }`;
+    }).join(',\n');
+    parts.push(`  "comprehension": [\n${compItems}\n  ]`);
+  }
+
+  const compTypeInstruction = isTF
+    ? `Each comprehension question must be a TRUE/FALSE statement. Options: ["True", "False"].`
+    : isMixed
+    ? `Mix comprehension types: alternate between 4-option MCQ and True/False.`
+    : `Each comprehension question must have exactly 4 options as complete descriptive phrases.`;
+
+  const prompt = `Paragraph: "${paragraph}"
+Target word: "${word}"
+Student age: ${age} years old
+
+Generate ONLY the following question types for a ${age}-year-old:
+${enableMcqMeaning ? `- "meaning": MCQ testing the word's meaning as used in the paragraph (4 options, each a complete phrase)` : ''}
+${enableMcqSynonym ? `- "synonym": MCQ asking for a word with similar meaning to '${word}' (4 single-word options)` : ''}
+${enableMcqAntonym ? `- "antonym": MCQ asking for a word with opposite meaning to '${word}' (4 single-word options)` : ''}
+${enableComprehension && numComprehension > 0 ? `- "comprehension": ${numComprehension} question(s) about the passage. ${compTypeInstruction}` : ''}
+
+Return ONLY this exact JSON (include only the keys listed above):
+{
+${parts.join(',\n')}
+}`;
+
   const message = await client.messages.create({
     model: 'claude-haiku-4-5',
-    max_tokens: 1200,
+    max_tokens: 1500,
     system: `You are an experienced primary school English teacher for students aged 7–12.
-You create clear, child-friendly, educational questions.
+Create clear, child-friendly, educational questions.
 Return ONLY valid JSON — no markdown fences, no extra text.`,
-    messages: [{ role: 'user', content: buildPrompt(word, paragraph, age, numComp, compType) }],
+    messages: [{ role: 'user', content: prompt }],
   });
 
   const content = message.content[0];
@@ -154,19 +173,14 @@ Return ONLY valid JSON — no markdown fences, no extra text.`,
   const text = content.text.replace(/^```json\n?|\n?```$/g, '').trim();
   const parsed = JSON.parse(text) as WordQuestions;
 
-  // Ensure comp is always an array
-  if (!Array.isArray(parsed.comp)) {
-    parsed.comp = [parsed.comp as unknown as CompQuestionData];
-  }
-
-  // Shuffle options so the correct answer isn't always option A
-  parsed.mcq = shuffleMCQ(parsed.mcq);
-  parsed.comp = parsed.comp.map(shuffleMCQ);
+  // Shuffle options so correct answer isn't always first
+  if (parsed.meaning) parsed.meaning = shuffleMCQ(parsed.meaning);
+  if (parsed.synonym) parsed.synonym = shuffleMCQ(parsed.synonym);
+  if (parsed.antonym) parsed.antonym = shuffleMCQ(parsed.antonym);
+  if (parsed.comprehension) parsed.comprehension = parsed.comprehension.map(shuffleMCQ);
 
   return parsed;
 }
-
-// ── Extract words from image (teacher photo upload) ──────────────────────────
 
 export async function extractWordsFromImage(
   base64: string,

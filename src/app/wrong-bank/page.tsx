@@ -13,7 +13,6 @@ interface WrongItem {
   lessonNumber: string | null;
   questionKey: string;
   typeLabel: string;
-  correctAnswer: string;
   wrongCount: number;
   lastWrongAt: string;
 }

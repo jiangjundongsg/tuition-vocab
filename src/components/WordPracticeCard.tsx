@@ -44,7 +44,7 @@ export interface WordSetData {
   word: string;
   paragraph: string;
   questions: WordQuestions;
-  fillBlank: FillBlankQuestion;
+  fillBlank: FillBlankQuestion | null;
 }
 
 interface Props {
@@ -76,10 +76,16 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
     return tokens;
   }, [data.paragraph]);
 
-  const compKeys = data.questions.comp.map((_, i) => `comp_${i}`);
-  const allKeys = ['mcq', ...compKeys, 'fill_blank'];
-  const totalQ = allKeys.length;
-  const allAnswered = Object.keys(submitted).length >= totalQ;
+  // Build dynamic question keys from what's available in the data
+  const questionKeys = [
+    ...(data.questions.meaning ? ['meaning'] : []),
+    ...(data.questions.synonym ? ['synonym'] : []),
+    ...(data.questions.antonym ? ['antonym'] : []),
+    ...(data.questions.comprehension ? data.questions.comprehension.map((_, i) => `comp_${i}`) : []),
+    ...(data.fillBlank ? ['fill_blank'] : []),
+  ];
+  const totalQ = questionKeys.length;
+  const allAnswered = questionKeys.every((k) => submitted[k]);
 
   const recordAnswer = useCallback(
     async (questionKey: string, answer: string, isCorrect: boolean) => {
@@ -88,22 +94,11 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
       setAnswers((a) => ({ ...a, [questionKey]: answer }));
       setCorrectMap((c) => ({ ...c, [questionKey]: isCorrect }));
 
-      // Derive correct answer for wrong-bank storage
-      let correctAnswer = '';
-      if (questionKey === 'mcq') {
-        correctAnswer = data.questions.mcq.answer;
-      } else if (questionKey.startsWith('comp_')) {
-        const idx = parseInt(questionKey.split('_')[1] ?? '0');
-        correctAnswer = data.questions.comp[idx]?.answer ?? '';
-      } else if (questionKey === 'fill_blank') {
-        correctAnswer = data.fillBlank.blanks.map((b) => b.original).join(', ');
-      }
-
       try {
         const res = await fetch('/api/questions/answer', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ wordSetId: data.wordSetId, questionKey, isCorrect, correctAnswer }),
+          body: JSON.stringify({ wordSetId: data.wordSetId, questionKey, isCorrect }),
         });
         if (!res.ok) {
           const errBody = await res.json().catch(() => ({}));
@@ -194,6 +189,9 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
   const correctCount = Object.values(correctMap).filter(Boolean).length;
   const isLast = wordIndex === totalWords - 1;
 
+  // Build question number counter
+  let qNum = 0;
+
   return (
     <div className="space-y-5">
       {/* Word header */}
@@ -265,23 +263,59 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
 
       {/* Questions */}
       <div className="space-y-4">
-        {/* Q1: Word Meaning MCQ */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-          <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-3">Q1 — Word Meaning</p>
-          <SessionMCQ
-            questionKey="mcq"
-            data={data.questions.mcq}
-            submitted={!!submitted['mcq']}
-            selectedAnswer={answers['mcq'] ?? ''}
-            onAnswer={recordAnswer}
-          />
-        </div>
+        {/* Word Meaning MCQ */}
+        {data.questions.meaning && (
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+            <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-3">
+              Q{++qNum} — Word Meaning
+            </p>
+            <SessionMCQ
+              questionKey="meaning"
+              data={data.questions.meaning}
+              submitted={!!submitted['meaning']}
+              selectedAnswer={answers['meaning'] ?? ''}
+              onAnswer={recordAnswer}
+            />
+          </div>
+        )}
+
+        {/* Synonym MCQ */}
+        {data.questions.synonym && (
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+            <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-3">
+              Q{++qNum} — Synonym
+            </p>
+            <SessionMCQ
+              questionKey="synonym"
+              data={data.questions.synonym}
+              submitted={!!submitted['synonym']}
+              selectedAnswer={answers['synonym'] ?? ''}
+              onAnswer={recordAnswer}
+            />
+          </div>
+        )}
+
+        {/* Antonym MCQ */}
+        {data.questions.antonym && (
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+            <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-3">
+              Q{++qNum} — Antonym
+            </p>
+            <SessionMCQ
+              questionKey="antonym"
+              data={data.questions.antonym}
+              submitted={!!submitted['antonym']}
+              selectedAnswer={answers['antonym'] ?? ''}
+              onAnswer={recordAnswer}
+            />
+          </div>
+        )}
 
         {/* Comprehension questions (variable count) */}
-        {data.questions.comp.map((compQ, i) => (
+        {data.questions.comprehension?.map((compQ, i) => (
           <div key={i} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
             <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-3">
-              Q{i + 2} — Comprehension
+              Q{++qNum} — Comprehension
             </p>
             <SessionMCQ
               questionKey={`comp_${i}`}
@@ -294,21 +328,23 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
         ))}
 
         {/* Fill in the Blank */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-          <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-3">
-            Q{data.questions.comp.length + 2} — Fill in the Blank
-          </p>
-          <FillBlankExercise
-            questionKey="fill_blank"
-            data={data.fillBlank}
-            submitted={!!submitted['fill_blank']}
-            onAnswer={recordAnswer}
-          />
-        </div>
+        {data.fillBlank && (
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+            <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-3">
+              Q{++qNum} — Fill in the Blank
+            </p>
+            <FillBlankExercise
+              questionKey="fill_blank"
+              data={data.fillBlank}
+              submitted={!!submitted['fill_blank']}
+              onAnswer={recordAnswer}
+            />
+          </div>
+        )}
       </div>
 
       {/* Score + Next button */}
-      {allAnswered && (
+      {allAnswered && totalQ > 0 && (
         <div className="bg-slate-50 rounded-2xl border border-slate-100 p-4 flex items-center justify-between">
           <span className="text-sm text-slate-600">
             Score:{' '}

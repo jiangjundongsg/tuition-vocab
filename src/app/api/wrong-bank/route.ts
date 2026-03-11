@@ -5,9 +5,12 @@ import { getCurrentUser } from '@/lib/auth';
 
 function decodeQuestionKey(key: string): string {
   switch (key) {
-    case 'mcq':        return 'Word Meaning (MCQ)';
+    case 'meaning':    return 'Word Meaning (MCQ)';
+    case 'synonym':    return 'Synonym (MCQ)';
+    case 'antonym':    return 'Antonym (MCQ)';
     case 'comp_0':     return 'Comprehension Q1';
     case 'comp_1':     return 'Comprehension Q2';
+    case 'comp_2':     return 'Comprehension Q3';
     case 'fill_blank': return 'Fill in the Blank';
     case 'dictation':  return 'Dictation';
     default:           return key;
@@ -60,7 +63,6 @@ export async function GET(req: NextRequest) {
       lessonNumber: row.lesson_number as string | null,
       questionKey: row.question_key as string,
       typeLabel: decodeQuestionKey(row.question_key as string),
-      correctAnswer: (row.correct_answer as string) || '',
       wrongCount: Number(row.wrong_count),
       lastWrongAt: row.last_wrong_at,
     }));

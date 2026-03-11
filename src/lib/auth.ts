@@ -17,6 +17,11 @@ export interface AuthUser {
   blankZipfMax: number;
   passageWordCount: number;
   compQuestionType: string;
+  enableMcqMeaning: boolean;
+  enableMcqSynonym: boolean;
+  enableMcqAntonym: boolean;
+  enableComprehension: boolean;
+  enableFillBlank: boolean;
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
@@ -30,25 +35,33 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 
     const rows = await sql`
       SELECT id, email, display_name, role, age, last_lesson, passage_source,
-             num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type
+             num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type,
+             enable_mcq_meaning, enable_mcq_synonym, enable_mcq_antonym,
+             enable_comprehension, enable_fill_blank
       FROM users WHERE id = ${userId}
     `;
 
     if (rows.length === 0) return null;
+    const r = rows[0];
 
     return {
-      id: Number(rows[0].id),
-      email: rows[0].email as string,
-      displayName: rows[0].display_name as string | null,
-      role: (rows[0].role as string) ?? 'student',
-      age: rows[0].age != null ? Number(rows[0].age) : null,
-      lastLesson: rows[0].last_lesson as string | null,
-      passageSource: (rows[0].passage_source as string) || 'TextBook_Harry_Portter',
-      numComprehension: Number(rows[0].num_comprehension) || 2,
-      numBlanks: Number(rows[0].num_blanks) || 5,
-      blankZipfMax: Number(rows[0].blank_zipf_max) || 4.2,
-      passageWordCount: Number(rows[0].passage_word_count) || 150,
-      compQuestionType: (rows[0].comp_question_type as string) || 'mcq',
+      id: Number(r.id),
+      email: r.email as string,
+      displayName: r.display_name as string | null,
+      role: (r.role as string) ?? 'student',
+      age: r.age != null ? Number(r.age) : null,
+      lastLesson: r.last_lesson as string | null,
+      passageSource: (r.passage_source as string) || 'TextBook_Harry_Portter',
+      numComprehension: Number(r.num_comprehension) || 2,
+      numBlanks: Number(r.num_blanks) || 5,
+      blankZipfMax: Number(r.blank_zipf_max) || 4.2,
+      passageWordCount: Number(r.passage_word_count) || 150,
+      compQuestionType: (r.comp_question_type as string) || 'mcq',
+      enableMcqMeaning: r.enable_mcq_meaning !== false,
+      enableMcqSynonym: r.enable_mcq_synonym === true,
+      enableMcqAntonym: r.enable_mcq_antonym === true,
+      enableComprehension: r.enable_comprehension !== false,
+      enableFillBlank: r.enable_fill_blank !== false,
     };
   } catch {
     return null;
