@@ -15,7 +15,7 @@ Teachers and management tabs are hidden from students.
 ### Lesson Selection
 - Student picks a lesson from the lesson picker.
 - Only lessons containing words assigned to that student (`user_id`) are shown.
-- Lessons are identified by `lesson_number` (a text label, e.g. `"20240101"` or `"Lesson 3"`).
+- Lessons are identified by `lesson_number` (a text label, e.g. `"JohnSmith260311"`).
 - The most recent picked lesson is marked in the lesson picker page.
 
 ### Session Flow

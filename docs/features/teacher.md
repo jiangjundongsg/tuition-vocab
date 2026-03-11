@@ -28,7 +28,7 @@ The teacher management page contains four sections (tabs):
 
 ### Upload — CSV (`WordUploader`)
 - Input format: one word per line
-- Lesson numbers are default as the student's user ID + Date ("Jiang Xin Qi 251231). Date is in the format of YYMMDD
+- Lesson tag defaults to `<displayName><YYMMDD>` (spaces stripped, e.g. `"JiangXinQi260311"`). Date is in YYMMDD format.
 - **Student selector** at the top — teacher can select one or multiple target students to upload words to.
 - Words are inserted for each selected student — if N students are selected and M words are uploaded, N×M word rows are created in total (one per student-word combination).
 - Duplicate words for the same student are silently skipped (UNIQUE on `(user_id, word)`).
@@ -36,7 +36,7 @@ The teacher management page contains four sections (tabs):
 ### Upload — Photo (`PhotoUploader`)
 - Teacher uploads a photo of a word list (handwritten or printed).
 - Claude Vision extracts words from the image.
-- Lesson label defaults to be user ID + date same as for Upload — CSV (`WordUploader`).
+- Lesson tag defaults to `<displayName><YYMMDD>`, same as CSV upload.
 - **Student selector ** — same as CSV upload.
 
 ### Upload — PDF (`PDFUploader`)

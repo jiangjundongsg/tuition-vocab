@@ -38,7 +38,7 @@ Clears `vocab_user_id` cookie. No body required.
 
 ### `GET /api/words`
 Returns word list.
-- **Student**: automatically filters `WHERE user_id = currentUser.id`.
+- **Student**: automatically filters `WHERE user_id = currentUser.id`; accepts `?lesson=<tag>` to return only words from that lesson.
 - **Teacher**: accepts `?userId=<id>` to filter by student; omit to see all words.
 
 **Response**
@@ -76,12 +76,13 @@ Teacher only. Upload words from CSV text for a specific student.
 **Body**
 ```json
 {
-  "words": "20240101 benevolent\n20240101 tenacious\n20240108 ephemeral",
-  "targetUserId": 42
+  "words": "benevolent\ntenacious\nephemeral",
+  "targetUserIds": [42],
+  "lessonNumber": "JohnSmith260311"
 }
 ```
 
-Format: `<lessonLabel> <word>` — one per line. Lesson label is optional (defaults to `"0"`).
+One word per line. `lessonNumber` is optional — defaults to `<displayName><YYMMDD>` (spaces stripped, e.g. `"JohnSmith260311"`).
 **Response** `200 { "inserted": 3, "skipped": 0 }`
 
 ---
@@ -93,11 +94,12 @@ Teacher only. Upload a photo; Claude Vision extracts words.
 ```json
 {
   "image": "<base64-encoded image>",
-  "targetUserId": 42
+  "mediaType": "image/jpeg",
+  "targetUserIds": [42]
 }
 ```
 
-Lesson label defaults to today's date (`yyyymmdd`).
+Lesson label defaults to `<displayName><YYMMDD>` (e.g. `"JohnSmith260311"`).
 **Response** `200 { "inserted": N, "words": ["word1", ...] }`
 
 ---
@@ -105,7 +107,9 @@ Lesson label defaults to today's date (`yyyymmdd`).
 ### `POST /api/words/upload-pdf`
 Teacher only. Upload a PDF; words are extracted from text content.
 
-**Body** `{ "pdf": "<base64-encoded PDF>", "targetUserId": 42 }`
+**Body** `{ "pdf": "<base64-encoded PDF>", "targetUserIds": [42] }`
+
+Lesson label defaults to `<displayName><YYMMDD>` (e.g. `"JohnSmith260311"`).
 **Response** `200 { "inserted": N, "words": [...] }`
 
 ---
