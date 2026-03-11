@@ -136,7 +136,7 @@ wrong_bank (id, user_id INTEGER, word_set_id INTEGER, question_key TEXT,
 - DB rows typed as `Record<string, unknown>` — always cast: `Number(row.id)`, `row.field as string`
 - `next.config.ts` uses `turbopack: {}` — no webpack config
 - `word_sets` caches questions per `(user_id, word_id)` — two students on the same word get separate caches
-- Upload lesson label defaults to `<userId><YYMMDD>` (e.g. `"3260311"` for user 3 on 26-03-11)
+- Upload lesson label defaults to `<displayName><YYMMDD>` (spaces stripped, e.g. `"JohnSmith260311"`)
 - Wrong count decrements on correct re-practice; row deleted when count reaches 0
 - DDL is blocked in SQL portal; only SELECT / INSERT / UPDATE / DELETE allowed
 

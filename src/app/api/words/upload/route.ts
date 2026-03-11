@@ -62,7 +62,8 @@ export async function POST(req: NextRequest) {
 
     for (const targetUser of userRows) {
       const targetId = Number(targetUser.id);
-      const lessonNumber = lessonOverride || `${targetId}${todayYYMMDD()}`;
+      const displayName = ((targetUser.display_name as string) || String(targetId)).replace(/\s+/g, '');
+      const lessonNumber = lessonOverride || `${displayName}${todayYYMMDD()}`;
 
       for (const { word, zipf, difficulty } of scored) {
         try {
