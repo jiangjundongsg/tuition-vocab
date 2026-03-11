@@ -11,6 +11,7 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const userIdParam = searchParams.get('userId');
+    const lessonParam = searchParams.get('lesson');
 
     let rows;
     if (user.role === 'teacher' || user.role === 'admin') {
@@ -28,12 +29,20 @@ export async function GET(req: NextRequest) {
         `;
       }
     } else {
-      // Student: only their own words
-      rows = await sql`
-        SELECT id, word, user_id, zipf_score, difficulty, lesson_number, created_at
-        FROM words WHERE user_id = ${user.id}
-        ORDER BY lesson_number ASC NULLS LAST, word ASC
-      `;
+      // Student: only their own words, optionally filtered by lesson
+      if (lessonParam) {
+        rows = await sql`
+          SELECT id, word, user_id, zipf_score, difficulty, lesson_number, created_at
+          FROM words WHERE user_id = ${user.id} AND lesson_number = ${lessonParam}
+          ORDER BY word ASC
+        `;
+      } else {
+        rows = await sql`
+          SELECT id, word, user_id, zipf_score, difficulty, lesson_number, created_at
+          FROM words WHERE user_id = ${user.id}
+          ORDER BY lesson_number ASC NULLS LAST, word ASC
+        `;
+      }
     }
 
     let lessonRows;
