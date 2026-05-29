@@ -10,6 +10,7 @@ export interface AuthUser {
   role: string; // 'student' | 'teacher' | 'admin'
   age: number | null;
   lastLesson: string | null;
+  lastDictationLesson: string | null;
   passageSource: string;
   // Per-user question config
   numComprehension: number;
@@ -34,7 +35,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     if (isNaN(userId)) return null;
 
     const rows = await sql`
-      SELECT id, email, display_name, role, age, last_lesson, passage_source,
+      SELECT id, email, display_name, role, age, last_lesson, last_dictation_lesson, passage_source,
              num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type,
              enable_mcq_meaning, enable_mcq_synonym, enable_mcq_antonym,
              enable_comprehension, enable_fill_blank
@@ -51,6 +52,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       role: (r.role as string) ?? 'student',
       age: r.age != null ? Number(r.age) : null,
       lastLesson: r.last_lesson as string | null,
+      lastDictationLesson: r.last_dictation_lesson as string | null,
       passageSource: (r.passage_source as string) || 'TextBook_Harry_Portter',
       numComprehension: Number(r.num_comprehension) || 2,
       numBlanks: Number(r.num_blanks) || 5,

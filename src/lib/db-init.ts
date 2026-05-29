@@ -83,6 +83,7 @@ export async function initDb() {
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS enable_comprehension BOOLEAN NOT NULL DEFAULT true`.catch(() => {}),
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS enable_fill_blank    BOOLEAN NOT NULL DEFAULT true`.catch(() => {}),
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_lesson TEXT`.catch(() => {}),
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_dictation_lesson TEXT`.catch(() => {}),
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS passage_source TEXT NOT NULL DEFAULT 'TextBook_Harry_Portter'`.catch(() => {}),
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS passage_word_count INTEGER NOT NULL DEFAULT 150`.catch(() => {}),
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS comp_question_type TEXT NOT NULL DEFAULT 'mcq'`.catch(() => {}),

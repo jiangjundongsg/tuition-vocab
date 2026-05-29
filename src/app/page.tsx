@@ -102,10 +102,25 @@ export default async function HomePage() {
     <div className="space-y-20">
 
       {/* Hero */}
-      <div className="relative -mx-4 sm:-mx-6 px-8 sm:px-14 pt-16 pb-14 rounded-3xl overflow-hidden bg-gradient-to-br from-indigo-50 via-violet-50/80 to-sky-50">
+      <div className="relative -mx-4 sm:-mx-6 px-8 sm:px-14 pt-16 pb-14 rounded-3xl overflow-hidden bg-gradient-to-br from-orange-50 via-violet-50/70 to-sky-50">
         <div className="absolute top-0 right-0 w-80 h-80 bg-violet-200 rounded-full opacity-20 blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-sky-200 rounded-full opacity-20 blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
-        <div className="absolute top-1/3 right-1/3 w-56 h-56 bg-indigo-100 rounded-full opacity-30 blur-2xl pointer-events-none" />
+        <div className="absolute top-1/3 right-1/3 w-56 h-56 bg-amber-100 rounded-full opacity-30 blur-2xl pointer-events-none" />
+
+        {/* Decorative sparkles — subtle, fade into background */}
+        {!isTeacher && (
+          <>
+            <svg className="absolute top-8 right-12 w-5 h-5 text-amber-300/70 pointer-events-none" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+            </svg>
+            <svg className="absolute bottom-12 right-32 w-3 h-3 text-violet-300/70 pointer-events-none" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+            </svg>
+            <svg className="absolute top-1/2 right-6 w-4 h-4 text-sky-300/60 pointer-events-none" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+            </svg>
+          </>
+        )}
 
         <div className="relative space-y-6">
           <div className="inline-flex items-center gap-2 bg-white/70 backdrop-blur-sm border border-indigo-100 rounded-full px-3.5 py-1.5 text-xs font-semibold text-indigo-600 shadow-sm">
@@ -132,9 +147,14 @@ export default async function HomePage() {
       {/* Feature grid */}
       <div className="space-y-5">
         <div className="flex items-center gap-4">
-          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-200 to-slate-200" />
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest shrink-0">What&apos;s inside</p>
-          <div className="h-px flex-1 bg-gradient-to-l from-transparent via-slate-200 to-slate-200" />
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-100 to-amber-100" />
+          <p className="flex items-center gap-1.5 text-xs font-bold text-slate-400 uppercase tracking-widest shrink-0">
+            <svg className="w-2.5 h-2.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+            </svg>
+            What&apos;s inside
+          </p>
+          <div className="h-px flex-1 bg-gradient-to-l from-transparent via-amber-100 to-amber-100" />
         </div>
 
         <div className="grid sm:grid-cols-3 gap-4">
@@ -161,9 +181,14 @@ export default async function HomePage() {
       {!isTeacher && (
         <div className="space-y-6 pb-4">
           <div className="flex items-center gap-4">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-200 to-slate-200" />
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest shrink-0">How it works</p>
-            <div className="h-px flex-1 bg-gradient-to-l from-transparent via-slate-200 to-slate-200" />
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-100 to-amber-100" />
+            <p className="flex items-center gap-1.5 text-xs font-bold text-slate-400 uppercase tracking-widest shrink-0">
+              <svg className="w-2.5 h-2.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+              </svg>
+              How it works
+            </p>
+            <div className="h-px flex-1 bg-gradient-to-l from-transparent via-amber-100 to-amber-100" />
           </div>
 
           <div className="relative pl-10">

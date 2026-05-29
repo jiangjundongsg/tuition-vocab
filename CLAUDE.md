@@ -22,7 +22,13 @@ npx tsc --noEmit   # type check only
 - **Frontend**: React 19, Next.js 16 (App Router, Turbopack)
 - **Styling**: Tailwind CSS v4, Nunito / Nunito Sans (Google Fonts)
 - **Database**: Neon PostgreSQL (serverless) via `@neondatabase/serverless`
-- **AI**: Anthropic Claude Haiku (`claude-haiku-4-5`) via `@anthropic-ai/sdk`
+- **AI**: Anthropic Claude Opus (`claude-opus-4-8`) for passage + question generation; Sonnet 4.6 for PDF word extraction — via `@anthropic-ai/sdk`~The following packages have unmet dependencies:
+ rocm-hip-runtime : Depends: rocminfo (= 1.0.0.60300-39~24.04) but 5.7.1-3build1 is to be installed
+ rocm-hip-runtime-dev : Depends: rocm-cmake (= 0.14.0.60300-39~24.04) but 6.0.0-1 is to be installed
+                        Depends: hipcc (= 1.1.1.60300-39~24.04) but 5.7.1-3 is to be installed
+ rocm-utils : Depends: rocminfo (= 1.0.0.60300-39~24.04) but 5.7.1-3build1 is to be installed
+              Depends: rocm-cmake (= 0.14.0.60300-39~24.04) but 6.0.0-1 is to be installed
+E: Unable to correct problems, you have held broken packages.
 - **Auth**: Cookie-based (`vocab_user_id`), passwords hashed with `bcryptjs`
 - **Language**: TypeScript (strict)
 
