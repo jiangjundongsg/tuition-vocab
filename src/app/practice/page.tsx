@@ -15,6 +15,7 @@ export default function PracticePage() {
   const [lessons, setLessons] = useState<string[]>([]);
   const [selectedLesson, setSelectedLesson] = useState<string>('');
   const [lastLesson, setLastLesson] = useState<string | null>(null);
+  const [isStaff, setIsStaff] = useState(false);
   const [words, setWords] = useState<WordInfo[]>([]);
   const [loadingWords, setLoadingWords] = useState(false);
   const [practicing, setPracticing] = useState(false);
@@ -28,6 +29,7 @@ export default function PracticePage() {
         if (!d.user) router.replace('/login?message=login-required');
         else {
           setLastLesson(d.user.lastLesson ?? null);
+          setIsStaff(d.user.role === 'teacher' || d.user.role === 'admin');
           setAuthChecked(true);
         }
       })
@@ -101,7 +103,7 @@ export default function PracticePage() {
           </svg>
           Back to lesson selection
         </button>
-        <PracticeSession words={words} lessonNumber={selectedLesson} onDone={handleDone} />
+        <PracticeSession words={words} lessonNumber={selectedLesson} onDone={handleDone} isStaff={isStaff} />
       </div>
     );
   }

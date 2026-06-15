@@ -26,11 +26,12 @@ interface Props {
   words: WordInfo[];
   lessonNumber: string;
   onDone?: () => void;
+  isStaff?: boolean;
 }
 
 type Phase = 'words' | 'dictation' | 'repractice' | 'done';
 
-export default function PracticeSession({ words, lessonNumber, onDone }: Props) {
+export default function PracticeSession({ words, lessonNumber, onDone, isStaff = false }: Props) {
   const [phase, setPhase] = useState<Phase>('words');
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [wordSets, setWordSets] = useState<Record<number, WordSetData | 'loading' | 'error'>>({});
@@ -416,7 +417,8 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
       ) : currentWordSet === 'error' ? (
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-5 py-4 text-sm">
           <p className="font-semibold mb-1">Could not load questions for &ldquo;{currentWord?.word}&rdquo;</p>
-          {currentWord && errorDetails[currentWord.id] && (
+          <p className="mb-1 text-red-600/90">We couldn&rsquo;t load this word right now. Skip it and try again later.</p>
+          {isStaff && currentWord && errorDetails[currentWord.id] && (
             <pre className="mt-1 mb-1 whitespace-pre-wrap break-words text-xs text-red-600/90 font-mono">
               {errorDetails[currentWord.id]}
             </pre>
