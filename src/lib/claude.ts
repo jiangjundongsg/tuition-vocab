@@ -44,6 +44,28 @@ function shuffleMCQ<T extends { options?: string[]; answer: string }>(q: T): T {
   return { ...q, options: shuffled };
 }
 
+// Pull the text out of a Claude response. The first content block isn't always
+// the text block, so search for it rather than assuming index 0.
+export function responseText(message: Anthropic.Message): string {
+  const block = message.content.find((b) => b.type === 'text');
+  if (!block || block.type !== 'text') {
+    throw new Error('Claude response contained no text block');
+  }
+  return block.text;
+}
+
+// Extract a JSON object from a model response, tolerating markdown fences and
+// any preamble/trailing prose the model may add around the JSON.
+export function parseJsonObject(raw: string): unknown {
+  const cleaned = raw.replace(/```json\s*|\s*```/g, '');
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+  if (start === -1 || end === -1 || end < start) {
+    throw new Error(`No JSON object in Claude response: ${raw.slice(0, 200)}`);
+  }
+  return JSON.parse(cleaned.slice(start, end + 1));
+}
+
 export async function generateParagraph(word: string, age = 10, wordCount = 150): Promise<string> {
   const minWords = Math.max(50, wordCount - 25);
   const maxWords = wordCount + 25;
@@ -58,9 +80,7 @@ Return ONLY the paragraph text — no title, no explanation, no extra text.`,
       content: `Write a paragraph of ${minWords}–${maxWords} words that uses the word "${word}" naturally in context. The paragraph should be appropriate for a ${age}-year-old child, tell a simple story or describe a situation, and make the meaning of "${word}" clear from context.`,
     }],
   });
-  const content = message.content[0];
-  if (content.type !== 'text') throw new Error('Unexpected response type from Claude');
-  return content.text.trim();
+  return responseText(message).trim();
 }
 
 export async function generateWordQuestions(
@@ -163,15 +183,12 @@ ${parts.join(',\n')}
     max_tokens: 1500,
     system: `You are an experienced primary school English teacher for students aged 7–12.
 Create clear, child-friendly, educational questions.
-Return ONLY valid JSON — no markdown fences, no extra text.`,
+Return ONLY valid JSON — no markdown fences, no extra text.
+Do not add any explanation, reasoning, or preamble before or after the JSON object.`,
     messages: [{ role: 'user', content: prompt }],
   });
 
-  const content = message.content[0];
-  if (content.type !== 'text') throw new Error('Unexpected response type from Claude');
-
-  const text = content.text.replace(/^```json\n?|\n?```$/g, '').trim();
-  const parsed = JSON.parse(text) as WordQuestions;
+  const parsed = parseJsonObject(responseText(message)) as WordQuestions;
 
   // Shuffle options so correct answer isn't always first
   if (parsed.meaning) parsed.meaning = shuffleMCQ(parsed.meaning);
@@ -206,10 +223,14 @@ Return ONLY a plain list of words, one word per line, in lowercase, no numbers, 
     }],
   });
 
-  const content = message.content[0];
-  if (content.type !== 'text') return [];
+  let text: string;
+  try {
+    text = responseText(message);
+  } catch {
+    return [];
+  }
 
-  return content.text
+  return text
     .split('\n')
     .map((w) => w.trim().toLowerCase().replace(/[^a-z'-]/g, ''))
     .filter((w) => w.length > 1);
