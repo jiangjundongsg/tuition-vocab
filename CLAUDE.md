@@ -22,7 +22,7 @@ npx tsc --noEmit   # type check only
 - **Frontend**: React 19, Next.js 16 (App Router, Turbopack)
 - **Styling**: Tailwind CSS v4, Nunito / Nunito Sans (Google Fonts)
 - **Database**: Neon PostgreSQL (serverless) via `@neondatabase/serverless`
-- **AI**: Anthropic Claude Haiku 4.5 (`claude-haiku-4-5`) for passage + question generation (cost-driven, high-volume per-word path); Opus 4.8 for photo word extraction — via `@anthropic-ai/sdk`~The following packages have unmet dependencies:
+- **AI**: Anthropic Claude Opus 4.8 (`claude-opus-4-8`) for passage + question generation and photo word extraction — via `@anthropic-ai/sdk`~The following packages have unmet dependencies:
  rocm-hip-runtime : Depends: rocminfo (= 1.0.0.60300-39~24.04) but 5.7.1-3build1 is to be installed
  rocm-hip-runtime-dev : Depends: rocm-cmake (= 0.14.0.60300-39~24.04) but 6.0.0-1 is to be installed
                         Depends: hipcc (= 1.1.1.60300-39~24.04) but 5.7.1-3 is to be installed
