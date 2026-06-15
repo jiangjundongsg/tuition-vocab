@@ -70,7 +70,7 @@ export async function generateParagraph(word: string, age = 10, wordCount = 150)
   const minWords = Math.max(50, wordCount - 25);
   const maxWords = wordCount + 25;
   const message = await client.messages.create({
-    model: 'claude-opus-4-8',
+    model: 'claude-haiku-4-5',
     max_tokens: Math.max(400, wordCount * 2),
     system: `You are an experienced primary school English teacher.
 Write clear, child-friendly paragraphs.
@@ -179,7 +179,7 @@ ${parts.join(',\n')}
 }`;
 
   const message = await client.messages.create({
-    model: 'claude-opus-4-8',
+    model: 'claude-haiku-4-5',
     max_tokens: 4000,
     system: `You are an experienced primary school English teacher for students aged 7–12.
 Create clear, child-friendly, educational questions.
