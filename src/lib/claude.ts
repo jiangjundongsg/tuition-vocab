@@ -180,7 +180,7 @@ ${parts.join(',\n')}
 
   const message = await client.messages.create({
     model: 'claude-opus-4-8',
-    max_tokens: 1500,
+    max_tokens: 4000,
     system: `You are an experienced primary school English teacher for students aged 7–12.
 Create clear, child-friendly, educational questions.
 Return ONLY valid JSON — no markdown fences, no extra text.

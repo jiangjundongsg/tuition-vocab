@@ -34,6 +34,7 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
   const [phase, setPhase] = useState<Phase>('words');
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [wordSets, setWordSets] = useState<Record<number, WordSetData | 'loading' | 'error'>>({});
+  const [errorDetails, setErrorDetails] = useState<Record<number, string>>({});
   const [dictationSubmitted, setDictationSubmitted] = useState<Record<string, boolean>>({});
   const [dictationCorrect, setDictationCorrect] = useState<Record<string, boolean>>({});
 
@@ -51,7 +52,7 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
     fetch(`/api/practice/${wordId}`)
       .then((r) => r.json())
       .then((data) => {
-        if (data.error) throw new Error(data.error);
+        if (data.error) throw new Error(data.detail || data.error);
         setWordSets((prev) => ({
           ...prev,
           [wordId]: {
@@ -63,8 +64,10 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
           } as WordSetData,
         }));
       })
-      .catch(() => {
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
         setWordSets((prev) => ({ ...prev, [wordId]: 'error' }));
+        setErrorDetails((prev) => ({ ...prev, [wordId]: msg }));
       });
   }
 
@@ -413,6 +416,11 @@ export default function PracticeSession({ words, lessonNumber, onDone }: Props) 
       ) : currentWordSet === 'error' ? (
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-5 py-4 text-sm">
           <p className="font-semibold mb-1">Could not load questions for &ldquo;{currentWord?.word}&rdquo;</p>
+          {currentWord && errorDetails[currentWord.id] && (
+            <pre className="mt-1 mb-1 whitespace-pre-wrap break-words text-xs text-red-600/90 font-mono">
+              {errorDetails[currentWord.id]}
+            </pre>
+          )}
           <button
             onClick={handleWordComplete}
             className="mt-3 bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors"
