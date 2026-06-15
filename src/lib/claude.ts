@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { normalizeWordEntry } from '@/lib/wordfreq';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -215,9 +216,9 @@ export async function extractWordsFromImage(
         },
         {
           type: 'text',
-          text: `Extract all vocabulary words from this image. These are English words that primary school students need to learn.
+          text: `Extract all vocabulary words from this image. These are English words and phrases that primary school students need to learn.
 
-Return ONLY a plain list of words, one word per line, in lowercase, no numbers, no punctuation, no explanations.`,
+Return ONLY a plain list, one word or phrase per line, in lowercase, no numbers, no explanations. Keep multi-word phrases (e.g. "ice cream", "give up") together on a single line.`,
         },
       ],
     }],
@@ -232,6 +233,6 @@ Return ONLY a plain list of words, one word per line, in lowercase, no numbers, 
 
   return text
     .split('\n')
-    .map((w) => w.trim().toLowerCase().replace(/[^a-z'-]/g, ''))
+    .map((w) => normalizeWordEntry(w))
     .filter((w) => w.length > 1);
 }

@@ -89,7 +89,7 @@ export default function WordUploader() {
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={"curious\nambitious\nmagnificent\neloquent\n\n(One word per line)"}
+          placeholder={"curious\nambitious\nice cream\ngive up\n\n(One word or phrase per line)"}
           rows={8}
           className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 resize-none bg-white"
         />

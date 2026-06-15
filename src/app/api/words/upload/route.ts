@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { initDb } from '@/lib/db-init';
 import { getCurrentUser } from '@/lib/auth';
-import { scoreWords } from '@/lib/wordfreq';
+import { scoreWords, normalizeWordEntry } from '@/lib/wordfreq';
 
 function todayYYMMDD(): string {
   const now = new Date();
@@ -40,13 +40,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No valid target users found' }, { status: 400 });
     }
 
-    // Parse word list: one word per line (optionally prefixed with lesson label)
+    // Parse word list: one word or phrase per line
     const lines = wordList.split(/\n/);
     const wordEntries: Array<{ word: string; lessonNumber: string | null }> = [];
     for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed) continue;
-      const word = trimmed.toLowerCase().replace(/[^a-z'-]/g, '');
+      const word = normalizeWordEntry(line);
       if (word.length > 1) wordEntries.push({ word, lessonNumber: null });
     }
 

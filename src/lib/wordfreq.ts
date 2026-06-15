@@ -44,6 +44,17 @@ export function getDifficulty(word: string): { zipf: number | null; difficulty: 
   return { zipf, difficulty };
 }
 
+// Normalize a raw vocab entry: lowercase; keep letters, apostrophes, hyphens,
+// and internal spaces so multi-word phrases ("ice cream", "give up") survive;
+// collapse runs of whitespace and trim.
+export function normalizeWordEntry(raw: string): string {
+  return raw
+    .toLowerCase()
+    .replace(/[^a-z'\- ]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export function scoreWords(words: string[]): Array<{
   word: string;
   zipf: number | null;

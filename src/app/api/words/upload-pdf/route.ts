@@ -3,7 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import sql from '@/lib/db';
 import { initDb } from '@/lib/db-init';
 import { getCurrentUser } from '@/lib/auth';
-import { scoreWords } from '@/lib/wordfreq';
+import { scoreWords, normalizeWordEntry } from '@/lib/wordfreq';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const MAX_PDF_BYTES = 32 * 1024 * 1024;
@@ -40,8 +40,8 @@ export async function POST(req: NextRequest) {
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1000,
-      system: `You are a primary school English teacher assistant. Your only job is to identify vocabulary study words.
-Output ONLY a plain word list — one word per line, lowercase. No sentences, no explanations, no extra text.`,
+      system: `You are a primary school English teacher assistant. Your only job is to identify vocabulary study words and phrases.
+Output ONLY a plain list — one word or phrase per line, lowercase. Keep multi-word phrases (e.g. "ice cream", "give up") together on one line. No sentences, no explanations, no extra text.`,
       messages: [{
         role: 'user',
         content: [
@@ -52,7 +52,7 @@ Output ONLY a plain word list — one word per line, lowercase. No sentences, no
           } as any,
           {
             type: 'text',
-            text: `Extract vocabulary study words for primary school students (ages 7–12). Output only words, one per line, lowercase.`,
+            text: `Extract vocabulary study words and phrases for primary school students (ages 7–12). Output only words/phrases, one per line, lowercase. Keep multi-word phrases together on one line.`,
           },
         ],
       }],
@@ -65,7 +65,7 @@ Output ONLY a plain word list — one word per line, lowercase. No sentences, no
 
     const extractedWords = content.text
       .split('\n')
-      .map((w) => w.trim().toLowerCase().replace(/[^a-z'-]/g, ''))
+      .map((w) => normalizeWordEntry(w))
       .filter((w) => w.length > 1);
 
     if (extractedWords.length === 0) {
