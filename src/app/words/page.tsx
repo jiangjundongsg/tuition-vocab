@@ -25,11 +25,11 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   unknown: 'bg-slate-100 text-slate-500',
 };
 
-type Tab = 'sql' | 'words' | 'users' | 'upload';
+type Tab = 'users' | 'words' | 'upload' | 'sql';
 
 export default function WordsPage() {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>('sql');
+  const [tab, setTab] = useState<Tab>('users');
   const [uploadSubTab, setUploadSubTab] = useState<'csv' | 'photo' | 'pdf'>('csv');
   const [words, setWords] = useState<Word[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,6 +41,9 @@ export default function WordsPage() {
   const [filterLesson, setFilterLesson] = useState<string | null>(null);
   const [lessonNumbers, setLessonNumbers] = useState<string[]>([]);
   const [error, setError] = useState('');
+  const [wordSearch, setWordSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const PER_PAGE = 50;
 
   const fetchWords = useCallback(async () => {
     setLoading(true);
@@ -113,15 +116,17 @@ export default function WordsPage() {
     }
   }
 
-  const filtered = filterLesson !== null
-    ? words.filter((w) => w.lesson_number === filterLesson)
-    : words;
+  const filtered = words
+    .filter(w => !filterLesson || w.lesson_number === filterLesson)
+    .filter(w => !wordSearch || w.word.toLowerCase().includes(wordSearch.toLowerCase()));
+  const totalPages = Math.ceil(filtered.length / PER_PAGE);
+  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
-  const TABS: { key: Tab; label: string }[] = [
-    { key: 'sql',    label: 'SQL Query' },
-    { key: 'words',  label: 'Word List' },
-    { key: 'users',  label: 'Users' },
-    { key: 'upload', label: 'Upload' },
+  const TABS: { key: Tab; label: string; icon: string }[] = [
+    { key: 'users',  label: 'Users',  icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
+    { key: 'words',  label: 'Words',  icon: 'M7 4h10M7 8h10M7 12h4M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
+    { key: 'upload', label: 'Upload', icon: 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12' },
+    { key: 'sql',    label: 'SQL',    icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4' },
   ];
 
   return (
@@ -141,16 +146,19 @@ export default function WordsPage() {
 
       {/* Tabs */}
       <div className="flex flex-wrap border-b border-slate-200 gap-x-1">
-        {TABS.map(({ key, label }) => (
+        {TABS.map(({ key, label, icon }) => (
           <button
             key={key}
-            onClick={() => setTab(key)}
-            className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
+            onClick={() => { setTab(key); setPage(1); }}
+            className={`flex items-center gap-1.5 px-5 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
               tab === key
                 ? 'border-indigo-600 text-indigo-600'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={icon} />
+            </svg>
             {label}
           </button>
         ))}
@@ -265,6 +273,20 @@ export default function WordsPage() {
       {/* ── Word List ── */}
       {tab === 'words' && (
         <>
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-3 mb-3">
+            <input
+              type="text"
+              value={wordSearch}
+              onChange={(e) => { setWordSearch(e.target.value); setPage(1); }}
+              placeholder="Search words…"
+              className="border border-slate-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-indigo-400 bg-white w-40"
+            />
+            <span className="text-xs text-slate-400">
+              {filtered.length} word{filtered.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+
           {/* Lesson filter */}
           {lessonNumbers.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -322,7 +344,7 @@ export default function WordsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {filtered.map((word) => (
+                  {paginated.map((word) => (
                     <tr key={word.id} className="hover:bg-slate-50 transition-colors">
                       {editingId === word.id ? (
                         <>
@@ -407,6 +429,23 @@ export default function WordsPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && !loading && (
+            <div className="flex items-center justify-between pt-2">
+              <span className="text-xs text-slate-400">Page {page} of {totalPages}</span>
+              <div className="flex gap-1">
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                  className="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                  ← Prev
+                </button>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                  className="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                  Next →
+                </button>
+              </div>
             </div>
           )}
         </>

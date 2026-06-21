@@ -12,7 +12,13 @@ interface UploadResult {
 export default function PhotoUploader() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [targetUserIds, setTargetUserIds] = useState<number[]>([]);
+  const [targetUserIds, setTargetUserIds] = useState<number[]>(() => {
+    try { return JSON.parse(localStorage.getItem('lastStudentIds') || '[]'); } catch { return []; }
+  });
+  function handleStudentChange(ids: number[]) {
+    setTargetUserIds(ids);
+    try { localStorage.setItem('lastStudentIds', JSON.stringify(ids)); } catch {}
+  }
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<UploadResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +79,7 @@ export default function PhotoUploader() {
   return (
     <div className="space-y-5">
       {/* Student selector */}
-      <StudentSelector selectedIds={targetUserIds} onChange={setTargetUserIds} />
+      <StudentSelector selectedIds={targetUserIds} onChange={handleStudentChange} />
 
       {/* Drop zone */}
       <div

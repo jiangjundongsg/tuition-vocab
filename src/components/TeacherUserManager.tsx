@@ -41,6 +41,13 @@ interface EditState {
   enableSentenceWriting: boolean;
 }
 
+interface LessonProgressItem {
+  lesson: string;
+  practice: boolean;
+  dictation: boolean;
+  tricky: boolean;
+}
+
 const ROLE_COLORS: Record<string, string> = {
   teacher: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
   admin:   'bg-red-50 text-red-700 ring-1 ring-red-200',
@@ -53,10 +60,33 @@ const COMP_TYPE_OPTIONS = [
   { value: 'mixed',      label: 'Mixed' },
 ];
 
+const QUESTION_KEYS = [
+  { key: 'enableMcqMeaning',     label: 'Meaning MCQ' },
+  { key: 'enableMcqSynonym',     label: 'Synonym MCQ' },
+  { key: 'enableMcqAntonym',     label: 'Antonym MCQ' },
+  { key: 'enableComprehension',  label: 'Comprehension' },
+  { key: 'enableFillBlank',      label: 'Fill Blank' },
+  { key: 'enableSentenceWriting',label: 'Sentence Writing' },
+] as const;
+
+const Q_CONFIG_LABELS: Record<string, string> = {
+  numComprehension: 'Comp. Qs',
+  numBlanks: 'Fill blanks',
+  blankZipfMax: 'Zipf max',
+  passageWordCount: 'Words',
+  compQuestionType: 'Q type',
+  enableMcqMeaning: 'Meaning',
+  enableMcqSynonym: 'Synonym',
+  enableMcqAntonym: 'Antonym',
+  enableComprehension: 'Comprehension',
+  enableFillBlank: 'Fill blank',
+  enableSentenceWriting: 'Sentence writing',
+};
+
 export default function TeacherUserManager() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [modalUser, setModalUser] = useState<UserRow | null>(null);
   const [editState, setEditState] = useState<EditState>({
     displayName: '', age: '', passageSource: '', password: '',
     numComprehension: '2', numBlanks: '5', blankZipfMax: '4.2',
@@ -68,6 +98,8 @@ export default function TeacherUserManager() {
   const [error, setError] = useState('');
   const [expandedConfig, setExpandedConfig] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [studentProgress, setStudentProgress] = useState<LessonProgressItem[]>([]);
+  const [progressLoading, setProgressLoading] = useState(false);
 
   useEffect(() => {
     fetch('/api/teacher/users')
@@ -77,8 +109,18 @@ export default function TeacherUserManager() {
       .finally(() => setLoading(false));
   }, []);
 
-  function startEdit(u: UserRow) {
-    setEditingId(u.id);
+  /* Esc to close modal */
+  useEffect(() => {
+    if (!modalUser) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setModalUser(null);
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [modalUser]);
+
+  function openModal(u: UserRow) {
+    setModalUser(u);
     setExpandedConfig(null);
     setEditState({
       displayName:       u.displayName ?? '',
@@ -98,6 +140,10 @@ export default function TeacherUserManager() {
       enableSentenceWriting: u.enableSentenceWriting,
     });
     setError('');
+  }
+
+  function closeModal() {
+    setModalUser(null);
   }
 
   async function saveEdit(id: number) {
@@ -131,7 +177,7 @@ export default function TeacherUserManager() {
       if (!res.ok) throw new Error(data.error || 'Save failed');
 
       setUsers((prev) => prev.map((u) => u.id === id ? { ...u, ...data.user } : u));
-      setEditingId(null);
+      setModalUser(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');
     } finally {
@@ -153,11 +199,54 @@ export default function TeacherUserManager() {
     }
   }
 
+  async function toggleExpand(userId: number) {
+    if (expandedConfig === userId) {
+      setExpandedConfig(null);
+      setStudentProgress([]);
+      return;
+    }
+    setExpandedConfig(userId);
+    setProgressLoading(true);
+    setStudentProgress([]);
+    try {
+      const res = await fetch(`/api/teacher/users/${userId}/progress`);
+      const data = await res.json();
+      setStudentProgress(data.progress ?? []);
+    } catch {
+      setStudentProgress([]);
+    } finally {
+      setProgressLoading(false);
+    }
+  }
+
+  function progressDone(item: LessonProgressItem) {
+    return [item.practice, item.dictation, item.tricky].filter(Boolean).length;
+  }
+
+  function progressBadge(item: LessonProgressItem) {
+    const done = progressDone(item);
+    if (done === 3) return 'bg-slate-200 text-slate-400 line-through ring-1 ring-slate-200';
+    if (done === 2) return 'bg-purple-50 text-purple-700 ring-1 ring-purple-300';
+    if (done === 1) return 'bg-amber-50 text-amber-700 ring-1 ring-amber-300';
+    return 'bg-white text-slate-400 ring-1 ring-slate-200';
+  }
+
+  function formatQConfigValue(u: UserRow, key: string): string {
+    if (key === 'compQuestionType') return u.compQuestionType;
+    const boolKeys = ['enableMcqMeaning','enableMcqSynonym','enableMcqAntonym','enableComprehension','enableFillBlank','enableSentenceWriting'];
+    if (boolKeys.includes(key)) return (u as any)[key] ? 'on' : 'off';
+    return String((u as any)[key]);
+  }
+
+
   const inputClass = "border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 bg-white w-full";
 
   if (loading) {
     return <div className="animate-pulse space-y-2">{[1,2,3].map(i => <div key={i} className="h-12 bg-slate-100 rounded-xl" />)}</div>;
   }
+
+  const Q_SUMMARY_KEYS = ['numComprehension','numBlanks','blankZipfMax','passageWordCount','compQuestionType'];
+
 
   return (
     <div className="space-y-4">
@@ -171,8 +260,7 @@ export default function TeacherUserManager() {
               <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Role</th>
               <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Age</th>
               <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Last Lesson</th>
-              <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Passage Source</th>
-              <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Q Config</th>
+              <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Progress</th>
               <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
             </tr>
           </thead>
@@ -180,189 +268,94 @@ export default function TeacherUserManager() {
             {users.map((u) => (
               <Fragment key={u.id}>
                 <tr className="hover:bg-slate-50 transition-colors">
-                  {editingId === u.id ? (
-                    /* ── Edit row ── */
-                    <>
-                      <td className="px-4 py-3" colSpan={7}>
-                        <div className="space-y-4">
-                          {/* Basic fields */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <div>
-                              <p className="text-xs text-slate-400 mb-1">Display name</p>
-                              <input value={editState.displayName}
-                                onChange={(e) => setEditState((s) => ({ ...s, displayName: e.target.value }))}
-                                placeholder="Display name" className={inputClass} />
-                            </div>
-                            <div>
-                              <p className="text-xs text-slate-400 mb-1">Age</p>
-                              <input type="number" min={5} max={18} value={editState.age}
-                                onChange={(e) => setEditState((s) => ({ ...s, age: e.target.value }))}
-                                placeholder="Age" className={inputClass} />
-                            </div>
-                            <div className="col-span-2">
-                              <p className="text-xs text-slate-400 mb-1">Passage source</p>
-                              <input value={editState.passageSource}
-                                onChange={(e) => setEditState((s) => ({ ...s, passageSource: e.target.value }))}
-                                placeholder="TextBook_Harry_Portter" className={inputClass} />
-                            </div>
-                          </div>
-
-                          {/* Question type toggles */}
-                          <div>
-                            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Enabled Question Types</p>
-                            <div className="flex flex-wrap gap-3">
-                              {[
-                                { key: 'enableMcqMeaning',   label: 'Meaning MCQ' },
-                                { key: 'enableMcqSynonym',   label: 'Synonym MCQ' },
-                                { key: 'enableMcqAntonym',   label: 'Antonym MCQ' },
-                                { key: 'enableComprehension',label: 'Comprehension' },
-                                { key: 'enableFillBlank',    label: 'Fill Blank' },
-                                { key: 'enableSentenceWriting', label: 'Sentence Writing' },
-                              ].map(({ key, label }) => (
-                                <label key={key} className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer select-none">
-                                  <input
-                                    type="checkbox"
-                                    checked={editState[key as keyof EditState] as boolean}
-                                    onChange={(e) => setEditState((s) => ({ ...s, [key]: e.target.checked }))}
-                                    className="w-3.5 h-3.5 rounded accent-indigo-600"
-                                  />
-                                  {label}
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Question config fields */}
-                          <div>
-                            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Question Settings</p>
-                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                              <div>
-                                <p className="text-xs text-slate-400 mb-1">Comp. questions</p>
-                                <input type="number" min={1} max={4} value={editState.numComprehension}
-                                  onChange={(e) => setEditState((s) => ({ ...s, numComprehension: e.target.value }))}
-                                  className={inputClass} />
-                              </div>
-                              <div>
-                                <p className="text-xs text-slate-400 mb-1">Fill blanks</p>
-                                <input type="number" min={1} max={10} value={editState.numBlanks}
-                                  onChange={(e) => setEditState((s) => ({ ...s, numBlanks: e.target.value }))}
-                                  className={inputClass} />
-                              </div>
-                              <div>
-                                <p className="text-xs text-slate-400 mb-1">Blank Zipf max</p>
-                                <input type="number" min={2} max={7} step={0.1} value={editState.blankZipfMax}
-                                  onChange={(e) => setEditState((s) => ({ ...s, blankZipfMax: e.target.value }))}
-                                  className={inputClass} />
-                              </div>
-                              <div>
-                                <p className="text-xs text-slate-400 mb-1">Passage words</p>
-                                <input type="number" min={50} max={400} step={10} value={editState.passageWordCount}
-                                  onChange={(e) => setEditState((s) => ({ ...s, passageWordCount: e.target.value }))}
-                                  className={inputClass} />
-                              </div>
-                              <div>
-                                <p className="text-xs text-slate-400 mb-1">Q type</p>
-                                <select value={editState.compQuestionType}
-                                  onChange={(e) => setEditState((s) => ({ ...s, compQuestionType: e.target.value }))}
-                                  className={inputClass}>
-                                  {COMP_TYPE_OPTIONS.map((o) => (
-                                    <option key={o.value} value={o.value}>{o.label}</option>
-                                  ))}
-                                </select>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Password */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                              <p className="text-xs text-slate-400 mb-1">New password (leave blank to keep)</p>
-                              <input type="password" value={editState.password}
-                                onChange={(e) => setEditState((s) => ({ ...s, password: e.target.value }))}
-                                placeholder="New password" className={inputClass} />
-                            </div>
-                          </div>
-
-                          {/* Actions */}
-                          <div className="flex gap-2">
-                            <button onClick={() => saveEdit(u.id)} disabled={saving}
-                              className="text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-1.5 rounded-lg transition-colors disabled:opacity-60">
-                              {saving ? 'Saving…' : 'Save'}
-                            </button>
-                            <button onClick={() => setEditingId(null)}
-                              className="text-xs font-semibold text-slate-400 hover:text-slate-700 px-3 py-1.5 transition-colors">
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      </td>
-                    </>
-                  ) : (
-                    /* ── Read row ── */
-                    <>
-                      <td className="px-4 py-2.5">
-                        <p className="font-semibold text-slate-800 text-sm">{u.displayName ?? '—'}</p>
-                        <p className="text-xs text-slate-400">{u.email}</p>
-                      </td>
-                      <td className="px-3 py-2.5 text-center">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${ROLE_COLORS[u.role] ?? ROLE_COLORS.student}`}>
-                          {u.role}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5 text-center text-xs text-slate-500">{u.age ?? '—'}</td>
-                      <td className="px-3 py-2.5 text-center hidden sm:table-cell">
-                        {u.lastLesson
-                          ? <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100">{u.lastLesson}</span>
-                          : <span className="text-xs text-slate-400">—</span>}
-                      </td>
-                      <td className="px-3 py-2.5 text-xs text-slate-500 font-mono hidden md:table-cell truncate max-w-[120px]">
-                        {u.passageSource}
-                      </td>
-                      <td className="px-3 py-2.5 text-center hidden lg:table-cell">
+                  <td className="px-4 py-2.5">
+                    <p className="font-semibold text-slate-800 text-sm">{u.displayName ?? '\u2014'}</p>
+                    <p className="text-xs text-slate-400">{u.email}</p>
+                  </td>
+                  <td className="px-3 py-2.5 text-center">
+                    <span className={'px-2 py-0.5 rounded-full text-xs font-semibold ' + (ROLE_COLORS[u.role] ?? ROLE_COLORS.student)}>
+                      {u.role}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 text-center text-xs text-slate-500">{u.age ?? '\u2014'}</td>
+                  <td className="px-3 py-2.5 text-center hidden sm:table-cell">
+                    {u.lastLesson
+                      ? <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100">{u.lastLesson}</span>
+                      : <span className="text-xs text-slate-400">\u2014</span>}
+                  </td>
+                  <td className="px-3 py-2.5 text-center">
+                    <button
+                      onClick={() => toggleExpand(u.id)}
+                      className="text-xs text-indigo-500 hover:text-indigo-700 font-semibold"
+                    >
+                      {expandedConfig === u.id ? 'Hide' : 'View'}
+                    </button>
+                  </td>
+                  <td className="px-4 py-2.5 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button onClick={() => openModal(u)}
+                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-900 transition-colors">
+                        Edit
+                      </button>
+                      {u.role === 'student' && (
                         <button
-                          onClick={() => setExpandedConfig(expandedConfig === u.id ? null : u.id)}
-                          className="text-xs text-indigo-500 hover:text-indigo-700 font-semibold"
+                          onClick={() => deleteUser(u.id)}
+                          disabled={deletingId === u.id}
+                          className="text-xs font-semibold text-red-400 hover:text-red-700 transition-colors disabled:opacity-50"
                         >
-                          {expandedConfig === u.id ? 'Hide' : 'View'}
+                          {deletingId === u.id ? '\u2026' : 'Delete'}
                         </button>
-                      </td>
-                      <td className="px-4 py-2.5 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button onClick={() => startEdit(u)}
-                            className="text-xs font-semibold text-indigo-600 hover:text-indigo-900 transition-colors">
-                            Edit
-                          </button>
-                          {u.role === 'student' && (
-                            <button
-                              onClick={() => deleteUser(u.id)}
-                              disabled={deletingId === u.id}
-                              className="text-xs font-semibold text-red-400 hover:text-red-700 transition-colors disabled:opacity-50"
-                            >
-                              {deletingId === u.id ? '…' : 'Delete'}
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </>
-                  )}
+                      )}
+                    </div>
+                  </td>
                 </tr>
 
-                {/* Expanded config row */}
-                {expandedConfig === u.id && editingId !== u.id && (
+                {/* Expanded row: Q config summary + Lesson progress */}
+                {expandedConfig === u.id && (
                   <tr className="bg-slate-50">
-                    <td colSpan={7} className="px-4 py-3">
-                      <div className="flex flex-wrap gap-4 text-xs text-slate-600">
-                        <span><span className="font-semibold text-slate-400">Comp. Qs:</span> {u.numComprehension}</span>
-                        <span><span className="font-semibold text-slate-400">Fill blanks:</span> {u.numBlanks}</span>
-                        <span><span className="font-semibold text-slate-400">Blank Zipf max:</span> {u.blankZipfMax}</span>
-                        <span><span className="font-semibold text-slate-400">Passage words:</span> {u.passageWordCount}</span>
-                        <span><span className="font-semibold text-slate-400">Q type:</span> {u.compQuestionType}</span>
-                        <span><span className="font-semibold text-slate-400">Meaning:</span> {u.enableMcqMeaning ? 'on' : 'off'}</span>
-                        <span><span className="font-semibold text-slate-400">Synonym:</span> {u.enableMcqSynonym ? 'on' : 'off'}</span>
-                        <span><span className="font-semibold text-slate-400">Antonym:</span> {u.enableMcqAntonym ? 'on' : 'off'}</span>
-                        <span><span className="font-semibold text-slate-400">Comprehension:</span> {u.enableComprehension ? 'on' : 'off'}</span>
-                        <span><span className="font-semibold text-slate-400">Fill blank:</span> {u.enableFillBlank ? 'on' : 'off'}</span>
-                        <span><span className="font-semibold text-slate-400">Sentence writing:</span> {u.enableSentenceWriting ? 'on' : 'off'}</span>
+                    <td colSpan={6} className="px-4 py-3">
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+                          {Q_SUMMARY_KEYS.map((k) => (
+                            <span key={k}>
+                              <span className="font-semibold text-slate-400">{Q_CONFIG_LABELS[k]}:</span>{' '}
+                              {formatQConfigValue(u, k)}
+                            </span>
+                          ))}
+                          {QUESTION_KEYS.map(({ key, label }) => (
+                            <span key={key}>
+                              <span className="font-semibold text-slate-400">{Q_CONFIG_LABELS[key]}:</span>{' '}
+                              {(u as any)[key] ? 'on' : 'off'}
+                            </span>
+                          ))}
+                        </div>
+
+
+
+                        <div>
+                          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Lesson Progress</p>
+
+
+
+                          {progressLoading ? (
+                            <span className="text-xs text-slate-400 italic">Loading...</span>
+                          ) : studentProgress.length === 0 ? (
+                            <span className="text-xs text-slate-400">No lesson data yet.</span>
+                          ) : (
+                            <div className="flex flex-wrap gap-2">
+                              {studentProgress.map((lp) => {
+                                const done = progressDone(lp);
+                                const cls = "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold " + progressBadge(lp);
+                                return (
+                                  <span key={lp.lesson} className={cls}>
+                                    {lp.lesson}
+                                    <span className="font-normal opacity-70">({done}/3)</span>
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -372,6 +365,137 @@ export default function TeacherUserManager() {
           </tbody>
         </table>
       </div>
+
+      {/* Edit modal overlay */}
+      {modalUser && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+          onClick={closeModal}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="space-y-5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-semibold text-slate-800">
+                  Edit: {modalUser.displayName ?? modalUser.email}
+                </h3>
+                <button
+                  onClick={closeModal}
+                  className="text-slate-300 hover:text-slate-600 text-lg leading-none transition-colors"
+                  aria-label="Close"
+                >
+                  &times;
+                </button>
+              </div>
+
+              {/* Basic fields */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Display name</p>
+                  <input value={editState.displayName}
+                    onChange={(e) => setEditState((s) => ({ ...s, displayName: e.target.value }))}
+                    placeholder="Display name" className={inputClass} />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">Age</p>
+                  <input type="number" min={5} max={18} value={editState.age}
+                    onChange={(e) => setEditState((s) => ({ ...s, age: e.target.value }))}
+                    placeholder="Age" className={inputClass} />
+                </div>
+                <div className="col-span-2">
+                  <p className="text-xs text-slate-400 mb-1">Passage source</p>
+                  <input value={editState.passageSource}
+                    onChange={(e) => setEditState((s) => ({ ...s, passageSource: e.target.value }))}
+                    placeholder="TextBook_Harry_Portter" className={inputClass} />
+                </div>
+              </div>
+
+              {/* Question type toggles */}
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Enabled Question Types</p>
+                <div className="flex flex-wrap gap-3">
+                  {QUESTION_KEYS.map(({ key, label }) => (
+                    <label key={key} className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={editState[key as keyof EditState] as boolean}
+                        onChange={(e) => setEditState((s) => ({ ...s, [key]: e.target.checked }))}
+                        className="w-3.5 h-3.5 rounded accent-indigo-600"
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Question config fields */}
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Question Settings</p>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Comp. questions</p>
+                    <input type="number" min={0} max={10} value={editState.numComprehension}
+                      onChange={(e) => setEditState((s) => ({ ...s, numComprehension: e.target.value }))}
+                      className={inputClass} />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Fill blanks</p>
+                    <input type="number" min={1} max={10} value={editState.numBlanks}
+                      onChange={(e) => setEditState((s) => ({ ...s, numBlanks: e.target.value }))}
+                      className={inputClass} />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Blank Zipf max</p>
+                    <input type="number" min={2} max={7} step={0.1} value={editState.blankZipfMax}
+                      onChange={(e) => setEditState((s) => ({ ...s, blankZipfMax: e.target.value }))}
+                      className={inputClass} />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Passage words</p>
+                    <input type="number" min={50} max={400} step={10} value={editState.passageWordCount}
+                      onChange={(e) => setEditState((s) => ({ ...s, passageWordCount: e.target.value }))}
+                      className={inputClass} />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Q type</p>
+                    <select value={editState.compQuestionType}
+                      onChange={(e) => setEditState((s) => ({ ...s, compQuestionType: e.target.value }))}
+                      className={inputClass}>
+                      {COMP_TYPE_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Password */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs text-slate-400 mb-1">New password (leave blank to keep)</p>
+                  <input type="password" value={editState.password}
+                    onChange={(e) => setEditState((s) => ({ ...s, password: e.target.value }))}
+                    placeholder="New password" className={inputClass} />
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 pt-1">
+                <button onClick={() => saveEdit(modalUser.id)} disabled={saving}
+                  className="text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-1.5 rounded-lg transition-colors disabled:opacity-60">
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+                <button onClick={closeModal}
+                  className="text-xs font-semibold text-slate-400 hover:text-slate-700 px-3 py-1.5 transition-colors">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

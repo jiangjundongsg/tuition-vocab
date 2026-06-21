@@ -10,7 +10,13 @@ interface UploadResult {
 
 export default function WordUploader() {
   const [text, setText] = useState('');
-  const [targetUserIds, setTargetUserIds] = useState<number[]>([]);
+  const [targetUserIds, setTargetUserIds] = useState<number[]>(() => {
+    try { return JSON.parse(localStorage.getItem('lastStudentIds') || '[]'); } catch { return []; }
+  });
+  function handleStudentChange(ids: number[]) {
+    setTargetUserIds(ids);
+    try { localStorage.setItem('lastStudentIds', JSON.stringify(ids)); } catch {}
+  }
   const [lessonLabel, setLessonLabel] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<UploadResult | null>(null);
@@ -61,7 +67,7 @@ export default function WordUploader() {
   return (
     <div className="space-y-5">
       {/* Student selector */}
-      <StudentSelector selectedIds={targetUserIds} onChange={setTargetUserIds} />
+      <StudentSelector selectedIds={targetUserIds} onChange={handleStudentChange} />
 
       {/* Lesson label */}
       <div>
