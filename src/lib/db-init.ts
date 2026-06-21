@@ -191,6 +191,9 @@ export async function initDb() {
   `;
   await sql`CREATE INDEX IF NOT EXISTS idx_lp_user ON lesson_progress(user_id)`.catch(() => {});
 
+  // config_json on word_sets — stores generation params for cache invalidation
+  await sql`ALTER TABLE word_sets ADD COLUMN IF NOT EXISTS config_json TEXT`.catch(() => {});
+
   // Drop obsolete tables
   await sql`DROP TABLE IF EXISTS question_config`.catch(() => {});
   await sql`DROP TABLE IF EXISTS sessions`.catch(() => {});

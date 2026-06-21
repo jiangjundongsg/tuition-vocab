@@ -54,6 +54,7 @@ export async function POST(
       enableComprehension: user.enableComprehension,
       passageWordCount: user.passageWordCount,
     };
+    const configJson = JSON.stringify(config);
 
     // Get current paragraph so we can pick a DIFFERENT one
     const current = await sql`
@@ -90,12 +91,13 @@ export async function POST(
 
     // Update cache per (user_id, word_id)
     const inserted = await sql`
-      INSERT INTO word_sets (word_id, user_id, paragraph_text, questions_json, fill_blank_json)
-      VALUES (${wordId}, ${user.id}, ${newParagraph}, ${JSON.stringify(questions)}, ${JSON.stringify(fillBlank)})
+      INSERT INTO word_sets (word_id, user_id, paragraph_text, questions_json, fill_blank_json, config_json)
+      VALUES (${wordId}, ${user.id}, ${newParagraph}, ${JSON.stringify(questions)}, ${JSON.stringify(fillBlank)}, ${configJson})
       ON CONFLICT (user_id, word_id) WHERE user_id IS NOT NULL DO UPDATE
         SET paragraph_text  = EXCLUDED.paragraph_text,
             questions_json  = EXCLUDED.questions_json,
             fill_blank_json = EXCLUDED.fill_blank_json,
+            config_json     = EXCLUDED.config_json,
             created_at      = NOW()
       RETURNING id
     `;

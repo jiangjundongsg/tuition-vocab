@@ -76,25 +76,20 @@ export async function GET(
       enableComprehension: user.enableComprehension,
       passageWordCount: user.passageWordCount,
     };
+    const configJson = JSON.stringify(config);
 
     // Check per-user cache
     const cached = await sql`
-      SELECT id, paragraph_text, questions_json, fill_blank_json
+      SELECT id, paragraph_text, questions_json, fill_blank_json, config_json
       FROM word_sets
       WHERE user_id = ${user.id} AND word_id = ${wordId}
       LIMIT 1
     `;
 
     if (cached.length > 0 && cached[0].paragraph_text && cached[0].questions_json) {
-      const cachedQ = JSON.parse(cached[0].questions_json as string) as WordQuestions;
-      // Check if cached questions match current enabled types
-      const hasCorrectTypes =
-        (config.enableMcqMeaning === !!cachedQ.meaning) &&
-        (config.enableMcqSynonym === !!cachedQ.synonym) &&
-        (config.enableMcqAntonym === !!cachedQ.antonym) &&
-        (config.enableComprehension === !!cachedQ.comprehension);
-
-      if (hasCorrectTypes) {
+      // Compare stored config with current — any change invalidates cache
+      if ((cached[0].config_json as string | null) === configJson) {
+        const cachedQ = JSON.parse(cached[0].questions_json as string) as WordQuestions;
         const fillBlank = user.enableFillBlank
           ? generateFillBlank(cached[0].paragraph_text as string, word, user.numBlanks, user.blankZipfMax)
           : null;
@@ -133,12 +128,13 @@ export async function GET(
 
     // Cache per (user_id, word_id)
     const inserted = await sql`
-      INSERT INTO word_sets (word_id, user_id, paragraph_text, questions_json, fill_blank_json)
-      VALUES (${wordId}, ${user.id}, ${paragraph}, ${JSON.stringify(questions)}, ${JSON.stringify(fillBlank)})
+      INSERT INTO word_sets (word_id, user_id, paragraph_text, questions_json, fill_blank_json, config_json)
+      VALUES (${wordId}, ${user.id}, ${paragraph}, ${JSON.stringify(questions)}, ${JSON.stringify(fillBlank)}, ${configJson})
       ON CONFLICT (user_id, word_id) WHERE user_id IS NOT NULL DO UPDATE
         SET paragraph_text  = EXCLUDED.paragraph_text,
             questions_json  = EXCLUDED.questions_json,
             fill_blank_json = EXCLUDED.fill_blank_json,
+            config_json     = EXCLUDED.config_json,
             created_at      = NOW()
       RETURNING id
     `;
