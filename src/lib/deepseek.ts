@@ -82,7 +82,7 @@ export async function generateParagraph(
   const text = await chat(
     `You are the best English teacher in the world. Your mission is to help a young student master the word "${word}" through contextual reading — the most effective, research-backed way to build lasting vocabulary. Craft a paragraph where the word's meaning is unmistakable from context, the language is rich but never condescending, and the student walks away truly knowing the word. Return ONLY the paragraph — no title, no extra text.`,
     `Write a ${min}–${wordCount + 25}-word paragraph using "${word}" naturally. Make it engaging and perfectly suited for a ${age}-year-old. The student is learning English vocabulary through short paragraphs — your paragraph should make the meaning of "${word}" crystal clear from context, so the student can infer and internalize it effortlessly.`,
-    Math.max(400, wordCount * 2),
+    Math.max(10000, wordCount * 200),
   );
   return text.trim();
 }
@@ -120,7 +120,7 @@ Return ONLY valid JSON: {${parts.join(',')}}`;
 
   const text = await chat(
     `You are the best English teacher in the world, helping a young student master vocabulary through the most efficient, research-backed method: contextual reading followed by targeted recall. Design questions that don't just test — they teach. Wrong options should be plausible enough to make the student think, but the correct answer should become obvious once they truly understand the word from the paragraph. Make every question a learning moment. Return ONLY valid JSON. No markdown, no extra text.`,
-    prompt, 4000,
+    prompt, 8000,
   );
 
   const parsed = extractJson(text) as WordQuestions;
@@ -174,7 +174,7 @@ Be encouraging but honest. Score based on age-appropriate expectations.`,
 Student sentence: "${sentence}"
 
 Evaluate and return JSON.`,
-    1000,
+    4000,
   );
 
   const parsed = extractJson(text) as SentenceFeedback;
