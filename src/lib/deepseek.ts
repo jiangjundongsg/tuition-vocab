@@ -185,13 +185,13 @@ Evaluate and return JSON.`,
 // ── Mistake-pick question generation ────────────────────────────
 
 export interface MistakePickQuestion {
-  sentence: string;          // the sentence with intentional errors
+  sentence: string;          // the sentence with one intentional error
   word: string;              // the vocabulary word used in this sentence
-  corrections: {
+  correction: {
     mistake: string;         // description of what's wrong, e.g. "go → went"
-    explanation: string;     // explanation in Chinese, e.g. "过去时态，'yesterday' 要求用过去式 went"
+    explanation: string;     // explanation in Chinese
     errorType: string;       // category of error
-  }[];
+  };
   correctSentence: string;   // fully corrected sentence
 }
 
@@ -200,70 +200,74 @@ export interface MistakePickSet {
   questions: MistakePickQuestion[];
 }
 
+const errorCategories = [
+  '时态错用 (wrong tense: e.g. past tense required but present used, or vice versa)',
+  '主谓不一致 (subject-verb disagreement: singular/plural mismatch)',
+  '缺少非谓语动词/多个动词连用 (multiple verbs without non-finite form, e.g. missing -ing or to-infinitive)',
+  '缺少谓语动词/缺少系动词be (missing main verb or missing linking verb "be")',
+  '主动/被动语态错用 (active/passive voice misuse)',
+  '某些词后接动名词/不定式错误 (gerund vs infinitive after certain verbs, e.g. "enjoy to do" → "enjoy doing")',
+  '介词后没用动词-ing (missing -ing after preposition)',
+  '形容词/副词错用 (adjective vs adverb confusion, e.g. "run quick" → "run quickly")',
+  '比较级/最高级错用 (comparative/superlative misuse, e.g. "more better")',
+  '-ing/-ed结尾形容词错用 (-ing vs -ed adjective, e.g. "I am boring" → "I am bored")',
+  '并列连词/从属连词错用 (coordinating/subordinating conjunction misuse: and/or/but, because/although/etc.)',
+  '代词不一致/关系代词错用/不定代词错用 (pronoun disagreement, relative pronoun misuse, indefinite pronoun error)',
+  '可数名词单复数错用/可数不可数错用 (countable noun singular/plural misuse, countable/uncountable confusion)',
+  '冠词错用/多冠词/少冠词 (article misuse: a/an/the, extra or missing article)',
+  '介词错用/多介词/少介词 (wrong preposition, extra or missing preposition)',
+  '基数词/序数词错用 (cardinal vs ordinal number misuse, e.g. "the one time" → "the first time")',
+];
+
 export async function generateMistakePickQuestions(
   words: { word: string }[],
   lessonNumber: string,
   age: number,
 ): Promise<MistakePickSet> {
-  const wordList = words.map((w) => w.word).join(', ');
-  const count = Math.min(8, Math.max(4, words.length));
-
-  const errorCategories = [
-    '时态错用 (wrong tense: e.g. past tense required but present used, or vice versa)',
-    '主谓不一致 (subject-verb disagreement: singular/plural mismatch)',
-    '缺少非谓语动词/多个动词连用 (multiple verbs without non-finite form, e.g. missing -ing or to-infinitive)',
-    '缺少谓语动词/缺少系动词be (missing main verb or missing linking verb "be")',
-    '主动/被动语态错用 (active/passive voice misuse)',
-    '某些词后接动名词/不定式错误 (gerund vs infinitive after certain verbs, e.g. "enjoy to do" → "enjoy doing")',
-    '介词后没用动词-ing (missing -ing after preposition)',
-    '形容词/副词错用 (adjective vs adverb confusion, e.g. "run quick" → "run quickly")',
-    '比较级/最高级错用 (comparative/superlative misuse, e.g. "more better")',
-    '-ing/-ed结尾形容词错用 (-ing vs -ed adjective, e.g. "I am boring" → "I am bored")',
-    '并列连词/从属连词错用 (coordinating/subordinating conjunction misuse: and/or/but, because/although/etc.)',
-    '代词不一致/关系代词错用/不定代词错用 (pronoun disagreement, relative pronoun misuse, indefinite pronoun error)',
-    '可数名词单复数错用/可数不可数错用 (countable noun singular/plural misuse, countable/uncountable confusion)',
-    '冠词错用/多冠词/少冠词 (article misuse: a/an/the, extra or missing article)',
-    '介词错用/多介词/少介词 (wrong preposition, extra or missing preposition)',
-    '基数词/序数词错用 (cardinal vs ordinal number misuse, e.g. "the one time" → "the first time")',
-  ];
+  const wordList = words.map((w) => `"${w.word}"`).join(', ');
+  const count = words.length;
 
   const text = await chat(
     `You are the best English teacher in the world, preparing "error correction" (改错题) exercises for a ${age}-year-old student. The student is learning vocabulary from Lesson ${lessonNumber} and needs to sharpen their ability to spot and fix grammar mistakes — just like the Chinese college entrance exam (高考) error-correction section.
 
-For each question, create ONE sentence that:
-1. Uses ONE of the vocabulary words naturally in context
-2. Contains 1-2 intentional grammar errors from the categories listed
-3. Sounds like natural writing — the errors should be subtle and realistic, not absurd
+For EACH vocabulary word below, create ONE sentence that:
+1. Uses that word naturally in context — the word should feel like it belongs
+2. Contains exactly ONE intentional grammar mistake — pick the single error category that is MOST appropriate for that specific word. For example:
+   - For a VERB, a tense or voice error is often most fitting
+   - For an ADJECTIVE ending in -ing/-ed, an -ing/-ed confusion is most fitting
+   - For a NOUN that can be countable/uncountable, a singular/plural or article error is most fitting
+   - For a word commonly followed by a gerund/infinitive, that kind of error is most fitting
+3. Makes the mistake subtle and realistic — a common error a ${age}-year-old might actually make, not an absurd one
 4. Is suitable for a ${age}-year-old's reading level
 
-The error categories are:
+The error categories you may choose from:
 ${errorCategories.map((c, i) => `${i + 1}. ${c}`).join('\n')}
 
 Return ONLY valid JSON (no markdown, no extra text):
 {
   "questions": [
     {
-      "sentence": "The incorrect sentence",
-      "word": "the_vocabulary_word_used",
-      "corrections": [
-        { "mistake": "go → went", "explanation": "Brief explanation of why", "errorType": "Category name" }
-      ],
+      "sentence": "The sentence containing exactly 1 error",
+      "word": "the_vocabulary_word",
+      "correction": { "mistake": "wrong → correct", "explanation": "Brief explanation in Chinese", "errorType": "Category name in Chinese" },
       "correctSentence": "The fully corrected sentence"
     }
   ]
 }
 
-Rules:
-- Generate exactly ${count} questions
-- Each sentence MUST use one of these vocabulary words: ${wordList}
-- Use DIFFERENT vocabulary words across questions — avoid repeating the same word
-- Each question should target DIFFERENT error categories — aim for variety
-- The "mistake" field should show what's wrong in the format "wrong → correct"
-- The "explanation" should be a brief, clear explanation in Chinese (中文) suitable for a ${age}-year-old
-- The "errorType" should be a Chinese category name matching the error categories above
+Rules (IMPORTANT):
+- Generate exactly ${count} questions — ONE per vocabulary word, no more, no less
+- The vocabulary words are: ${wordList}
+- Each question MUST use a DIFFERENT word from the list — cover every single word
+- Each question has exactly ONE mistake (not two, not zero)
+- Choose the MOST appropriate error category for each word based on its part of speech and nature
+- Vary the error categories across words — don't reuse the same category repeatedly unless it's the only fitting one
+- The "mistake" field format: "wrong_text → correct_text"
+- The "explanation" should be in Chinese (中文), brief and clear for a ${age}-year-old
+- The "errorType" should be one of the Chinese category names listed above
 - The "correctSentence" must be grammatically perfect
-- Keep sentences natural and age-appropriate — don't force vocabulary words into unnatural contexts`,
-    `Create ${count} error-correction questions for Lesson ${lessonNumber}. Vocabulary words: ${wordList}. Student age: ${age}. Each question must use a different vocabulary word and target a different error category.`,
+- Sentences should be natural and age-appropriate — don't force words into bizarre contexts`,
+    `Create ${count} error-correction sentences — ONE for each vocabulary word: ${wordList}. Lesson ${lessonNumber}, student age ${age}. For each word, pick the single most appropriate error category for that word's nature.`,
     8000,
   );
 
@@ -271,11 +275,14 @@ Rules:
   if (!parsed.questions || !Array.isArray(parsed.questions)) {
     throw new Error('Invalid mistake-pick response: missing questions array');
   }
-  
-  // Validate and clean each question
+
+  // Validate each question
   for (const q of parsed.questions) {
-    if (!q.sentence || !q.correctSentence || !Array.isArray(q.corrections)) {
-      throw new Error('Invalid question format: missing required fields');
+    if (!q.sentence || !q.correctSentence || !q.correction) {
+      throw new Error(`Invalid question format for word "${q.word}": missing required fields`);
+    }
+    if (!q.correction.mistake || !q.correction.explanation || !q.correction.errorType) {
+      throw new Error(`Invalid correction format for word "${q.word}"`);
     }
   }
 

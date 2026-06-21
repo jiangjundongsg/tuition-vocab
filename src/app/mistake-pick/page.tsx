@@ -167,7 +167,7 @@ export default function MistakePickPage() {
             Mistake Pick — {friendlyLessonLabel(selectedLesson)}
           </h2>
           <p className="text-purple-700 text-sm mb-4">
-            {questions.length} sentences to correct. Find and fix the grammar mistakes.
+            {questions.length} words — one sentence per word. Each has a single grammar mistake to find and fix.
           </p>
           {showResume ? (
             <div className="space-y-3">
@@ -203,7 +203,7 @@ export default function MistakePickPage() {
       <div>
         <h1 className="text-3xl text-slate-900">Mistake Pick</h1>
         <p className="text-slate-400 mt-1 text-sm">
-          Sharp grammar skills — find and correct mistakes in sentences using your lesson vocabulary.
+          Sharp grammar skills — one sentence per word, each with a single targeted mistake to find and fix.
         </p>
       </div>
       <div className="space-y-4">

@@ -205,18 +205,16 @@ export default function MistakePickSession({
                   </div>
                 )}
 
-                {/* Mistake details */}
+                {/* Mistake detail */}
                 <div className="space-y-2 mt-2">
-                  <p className="text-xs text-slate-400 uppercase tracking-wide font-medium">Mistakes to learn from:</p>
-                  {question.corrections.map((c, i) => (
-                    <div key={i} className="bg-white rounded-lg p-3 border border-amber-200">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">{c.errorType}</span>
-                        <span className="text-sm font-mono text-red-600">{c.mistake}</span>
-                      </div>
-                      <p className="text-xs text-slate-600 leading-relaxed">{c.explanation}</p>
+                  <p className="text-xs text-slate-400 uppercase tracking-wide font-medium">Mistake to learn from:</p>
+                  <div className="bg-white rounded-lg p-3 border border-amber-200">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">{question.correction.errorType}</span>
+                      <span className="text-sm font-mono text-red-600">{question.correction.mistake}</span>
                     </div>
-                  ))}
+                    <p className="text-xs text-slate-600 leading-relaxed">{question.correction.explanation}</p>
+                  </div>
                 </div>
               </div>
             </div>
