@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import DictationSession from '@/components/DictationSession';
-import { paletteFor } from '@/lib/lessonPalette';
+import DictationSession, { SessionData } from '@/components/DictationSession';
+import { paletteFor, friendlyLessonLabel, paletteWithProgress, LessonProgress } from '@/lib/lessonPalette';
 
 interface WordInfo {
   id: number;
@@ -20,6 +20,10 @@ export default function DictationPage() {
   const [practicing, setPracticing] = useState(false);
   const [error, setError] = useState('');
   const [authChecked, setAuthChecked] = useState(false);
+  const [search, setSearch] = useState('');
+  const [savedSession, setSavedSession] = useState<SessionData | null>(null);
+  const [showResume, setShowResume] = useState(false);
+  const [lessonProgress, setLessonProgress] = useState<Record<string, LessonProgress>>({});
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -42,37 +46,98 @@ export default function DictationPage() {
       .catch(() => {});
   }, [authChecked]);
 
+  // Fetch lesson progress for coloring
   useEffect(() => {
-    if (!selectedLesson) return;
-    setLoadingWords(true);
-    setError('');
-    setWords([]);
-    setPracticing(false);
-    fetch('/api/dictation/last-lesson', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lesson: selectedLesson }),
-    }).then(() => setLastLesson(selectedLesson)).catch(() => {});
-    fetch(`/api/dictation/${encodeURIComponent(selectedLesson)}`)
-      .then((r) => r.json())
-      .then((d) => {
-        const wordList = (d.words ?? []) as Array<{ id: number; word: string }>;
-        const mapped = wordList.map((w) => ({ id: Number(w.id), word: w.word as string }));
-        if (mapped.length === 0) {
-          setError('No words found for this lesson.');
-        } else {
-          setWords(mapped);
-          setPracticing(true);
-        }
-      })
-      .catch(() => setError('Could not load words for this lesson.'))
-      .finally(() => setLoadingWords(false));
-  }, [selectedLesson]);
+    if (!authChecked) return;
+    fetch('/api/lessons/progress')
+      .then(r => r.json())
+      .then(d => setLessonProgress(d.progress ?? {}))
+      .catch(() => {});
+  }, [authChecked, lastLesson]);
 
   function handleDone() {
+    if (selectedLesson) {
+      fetch('/api/lessons/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lesson: selectedLesson, step: 'dictation' }),
+      }).catch(() => {});
+      setLessonProgress(prev => ({
+        ...prev,
+        [selectedLesson]: { ...(prev[selectedLesson] ?? { practice: false, dictation: false, tricky: false }), dictation: true },
+      }));
+    }
     setPracticing(false);
     setSelectedLesson('');
     setWords([]);
+    setSavedSession(null);
+    setShowResume(false);
+  }
+
+  // Save & clear handlers
+  const handleSave = useCallback(async (data: SessionData) => {
+    try {
+      await fetch('/api/practice/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+    } catch { /* silent */ }
+  }, []);
+
+  const handleClear = useCallback(async () => {
+    try {
+      await fetch(`/api/practice/session?type=dictation&lesson=${encodeURIComponent(selectedLesson)}`, {
+        method: 'DELETE',
+      });
+      setSavedSession(null);
+    } catch { /* silent */ }
+  }, [selectedLesson]);
+
+  async function selectLesson(lesson: string) {
+    setSelectedLesson(lesson);
+    setWords([]);
+    setError('');
+    setShowResume(false);
+    try {
+      const res = await fetch(`/api/practice/session?type=dictation&lesson=${encodeURIComponent(lesson)}`);
+      const d = await res.json();
+      if (d.session) {
+        setSavedSession(d.session);
+        setShowResume(true);
+        return;
+      }
+    } catch { /* proceed */ }
+    setSavedSession(null);
+    await loadLessonWords(lesson);
+  }
+
+  async function loadLessonWords(lesson: string) {
+    setLoadingWords(true);
+    setError('');
+    setShowResume(false);
+    fetch('/api/dictation/last-lesson', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lesson }),
+    }).then(() => setLastLesson(lesson)).catch(() => {});
+    try {
+      const r = await fetch(`/api/dictation/${encodeURIComponent(lesson)}`);
+      const d = await r.json();
+      const wordList = (d.words ?? []) as Array<{ id: number; word: string }>;
+      const mapped = wordList.map((w) => ({ id: Number(w.id), word: w.word as string }));
+      if (mapped.length === 0) {
+        setError('No words found for this lesson.');
+        setSelectedLesson('');
+      } else {
+        setWords(mapped);
+        setPracticing(true);
+      }
+    } catch {
+      setError('Could not load words for this lesson.');
+    } finally {
+      setLoadingWords(false);
+    }
   }
 
   if (!authChecked) {
@@ -83,6 +148,53 @@ export default function DictationPage() {
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="h-14 bg-slate-100 rounded-2xl animate-pulse" style={{ animationDelay: `${i * 60}ms` }} />
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Resume prompt
+  if (showResume && savedSession && selectedLesson) {
+    return (
+      <div className="space-y-6">
+        <button
+          onClick={() => { setShowResume(false); setSelectedLesson(''); setSavedSession(null); }}
+          className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-700 font-medium transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to lesson selection
+        </button>
+        <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 text-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto">
+            <svg className="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-amber-900">Unfinished Session</h2>
+          <p className="text-sm text-amber-700">
+            You have an unfinished dictation session for <strong>Lesson {selectedLesson}</strong>.
+          </p>
+          <div className="flex gap-3 justify-center pt-2">
+            <button
+              onClick={() => { setShowResume(false); loadLessonWords(selectedLesson); }}
+              className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition-colors"
+            >
+              Resume Session
+            </button>
+            <button
+              onClick={async () => {
+                setSavedSession(null);
+                await fetch(`/api/practice/session?type=dictation&lesson=${encodeURIComponent(selectedLesson)}`, { method: 'DELETE' }).catch(() => {});
+                setShowResume(false);
+                loadLessonWords(selectedLesson);
+              }}
+              className="bg-white border border-slate-200 text-slate-600 hover:text-slate-800 font-medium px-6 py-2.5 rounded-xl text-sm transition-colors"
+            >
+              Start Fresh
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -100,7 +212,14 @@ export default function DictationPage() {
           </svg>
           Back to lesson selection
         </button>
-        <DictationSession words={words} lessonNumber={selectedLesson} onDone={handleDone} />
+        <DictationSession
+          words={words}
+          lessonNumber={selectedLesson}
+          onDone={handleDone}
+          initialSession={savedSession}
+          onSave={handleSave}
+          onClear={handleClear}
+        />
       </div>
     );
   }
@@ -135,15 +254,24 @@ export default function DictationPage() {
           </div>
         ) : (
           <div className="space-y-4">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search lessons…"
+              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 bg-slate-50/50 placeholder:text-slate-300"
+            />
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-              {lessons.map((lesson) => {
+              {lessons
+                .filter(l => !search || friendlyLessonLabel(l).toLowerCase().includes(search.toLowerCase()) || l.toLowerCase().includes(search.toLowerCase()))
+                .map((lesson) => {
                 const isSelected = selectedLesson === lesson;
                 const isLast = !isSelected && lastLesson === lesson;
                 const p = paletteFor(lesson);
                 return (
                   <button
                     key={lesson}
-                    onClick={() => setSelectedLesson(lesson)}
+                    onClick={() => selectLesson(lesson)}
                     disabled={loadingWords}
                     className={`
                       relative group flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-2xl border text-sm font-semibold transition-all duration-200 disabled:opacity-50
@@ -165,7 +293,7 @@ export default function DictationPage() {
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.536 8.464a5 5 0 010 7.072M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253" />
                     </svg>
-                    <span className="text-xs leading-tight text-center">{lesson}</span>
+                    <span className="text-xs leading-tight text-center">{friendlyLessonLabel(lesson)}</span>
                     {isLast && (
                       <span className="absolute -top-1.5 -right-1.5 flex items-center gap-0.5 bg-amber-400 text-white text-[9px] font-bold pl-1 pr-1.5 py-0.5 rounded-full leading-none shadow-sm shadow-amber-200">
                         <svg className="w-2 h-2" fill="currentColor" viewBox="0 0 20 20">

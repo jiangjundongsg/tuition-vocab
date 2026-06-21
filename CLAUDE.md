@@ -22,7 +22,7 @@ npx tsc --noEmit   # type check only
 - **Frontend**: React 19, Next.js 16 (App Router, Turbopack)
 - **Styling**: Tailwind CSS v4, Nunito / Nunito Sans (Google Fonts)
 - **Database**: Neon PostgreSQL (serverless) via `@neondatabase/serverless`
-- **AI**: Anthropic Claude Opus 4.8 (`claude-opus-4-8`) for passage + question generation and photo word extraction — via `@anthropic-ai/sdk`~The following packages have unmet dependencies:
+- **AI**: Deepseek Chat (`deepseek-chat`) for passage + question generation and photo word extraction — via fetch to `api.deepseek.com/v1`
  rocm-hip-runtime : Depends: rocminfo (= 1.0.0.60300-39~24.04) but 5.7.1-3build1 is to be installed
  rocm-hip-runtime-dev : Depends: rocm-cmake (= 0.14.0.60300-39~24.04) but 6.0.0-1 is to be installed
                         Depends: hipcc (= 1.1.1.60300-39~24.04) but 5.7.1-3 is to be installed
@@ -180,7 +180,8 @@ POST /api/teacher/sql            teacher only; raw SQL (DDL blocked)
 ```
 
 ## Environment Variables
-- `ANTHROPIC_API_KEY` — from console.anthropic.com
+- `DEEPSEEK_API_KEY` — from platform.deepseek.com; required for AI features (passage + question generation, photo word extraction)
+- `DEEPSEEK_MODEL` — optional; defaults to `deepseek-chat`. Set to e.g. `deepseek-v4-pro` for newer models
 - `DATABASE_URL` — Neon PostgreSQL connection string (no `channel_binding=require`)
 - `TEACHER_CODE` — optional; default `VOCAB_TEACHER`
 

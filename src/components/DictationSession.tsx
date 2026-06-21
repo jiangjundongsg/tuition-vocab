@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import DictationItem from './DictationItem';
 import SessionMCQ from './SessionMCQ';
 import FillBlankExercise from './FillBlankExercise';
@@ -22,28 +22,108 @@ interface WrongBankItem {
   wrongCount: number;
 }
 
+export interface SessionData {
+  type: 'practice' | 'dictation' | 'wrong_bank';
+  lesson: string;
+  phase: string;
+  currentWordIndex: number;
+  repracticeIndex: number;
+  submitted: Record<string, boolean>;
+  correct: Record<string, boolean>;
+  answers: Record<string, string>;
+}
+
 interface Props {
   words: WordInfo[];
   lessonNumber: string;
   onDone?: () => void;
+  initialSession?: SessionData | null;
+  onSave?: (data: SessionData) => void;
+  onClear?: () => void;
 }
 
 type Phase = 'dictation' | 'repractice' | 'done';
 
-export default function DictationSession({ words, lessonNumber, onDone }: Props) {
-  const [phase, setPhase] = useState<Phase>('dictation');
+export default function DictationSession({ words, lessonNumber, onDone, initialSession, onSave, onClear }: Props) {
+  const [phase, setPhase] = useState<Phase>(
+    (initialSession?.phase as Phase) || 'dictation',
+  );
   const [wordSets, setWordSets] = useState<Record<number, WordSetData | 'loading' | 'error'>>({});
-  const [dictationSubmitted, setDictationSubmitted] = useState<Record<string, boolean>>({});
-  const [dictationCorrect, setDictationCorrect] = useState<Record<string, boolean>>({});
+  const [dictationSubmitted, setDictationSubmitted] = useState<Record<string, boolean>>(
+    initialSession?.phase === 'dictation' || initialSession?.phase === 'repractice'
+      ? initialSession.submitted ?? {}
+      : {},
+  );
+  const [dictationCorrect, setDictationCorrect] = useState<Record<string, boolean>>(
+    initialSession?.phase === 'dictation' || initialSession?.phase === 'repractice'
+      ? initialSession.correct ?? {}
+      : {},
+  );
 
   const [wrongItems, setWrongItems] = useState<WrongBankItem[]>([]);
-  const [repracticeIndex, setRepracticeIndex] = useState(0);
-  const [repracticeSubmitted, setRepracticeSubmitted] = useState<Record<number, boolean>>({});
-  const [repracticeCorrect, setRepracticeCorrect] = useState<Record<number, boolean>>({});
-  const [repracticeAnswers, setRepracticeAnswers] = useState<Record<number, string>>({});
+  const [repracticeIndex, setRepracticeIndex] = useState(initialSession?.repracticeIndex ?? 0);
+  const [repracticeSubmitted, setRepracticeSubmitted] = useState<Record<number, boolean>>(
+    initialSession?.phase === 'repractice'
+      ? Object.fromEntries(Object.entries(initialSession.submitted).map(([k, v]) => [Number(k), v]))
+      : {},
+  );
+  const [repracticeCorrect, setRepracticeCorrect] = useState<Record<number, boolean>>(
+    initialSession?.phase === 'repractice'
+      ? Object.fromEntries(Object.entries(initialSession.correct).map(([k, v]) => [Number(k), v]))
+      : {},
+  );
+  const [repracticeAnswers, setRepracticeAnswers] = useState<Record<number, string>>(
+    initialSession?.phase === 'repractice' ? initialSession.answers ?? {} : {},
+  );
 
   // Pending dictation answers awaiting word set load (wordId → answer info)
   const [pendingDictation, setPendingDictation] = useState<Record<number, { isCorrect: boolean; word: string }>>({});
+
+  // Autosave
+  const saveTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const autosave = useCallback(() => {
+    if (!onSave) return;
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      onSave({
+        type: 'dictation',
+        lesson: lessonNumber,
+        phase,
+        currentWordIndex: 0,
+        repracticeIndex,
+        submitted: phase === 'repractice'
+          ? Object.fromEntries(Object.entries(repracticeSubmitted).map(([k, v]) => [String(k), v]))
+          : { ...dictationSubmitted },
+        correct: phase === 'repractice'
+          ? Object.fromEntries(Object.entries(repracticeCorrect).map(([k, v]) => [String(k), v]))
+          : { ...dictationCorrect },
+        answers: { ...repracticeAnswers },
+      });
+    }, 300);
+  }, [onSave, lessonNumber, phase, repracticeIndex, dictationSubmitted, dictationCorrect, repracticeSubmitted, repracticeCorrect, repracticeAnswers]);
+
+  useEffect(() => { autosave(); }, [autosave]);
+  useEffect(() => () => { if (saveTimer.current) clearTimeout(saveTimer.current); }, []);
+
+  // Clear session when done
+  const clearedRef = useRef(false);
+  useEffect(() => {
+    if (phase === 'done' && !clearedRef.current) {
+      clearedRef.current = true;
+      onClear?.();
+    }
+  }, [phase, onClear]);
+
+  // Resume: fetch wrong items if in repractice phase
+  useEffect(() => {
+    if (initialSession?.phase === 'repractice' && wrongItems.length === 0) {
+      fetch(`/api/wrong-bank?lesson=${encodeURIComponent(lessonNumber)}`)
+        .then(r => r.json())
+        .then(d => setWrongItems(d.items ?? []))
+        .catch(() => {});
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function loadWordSet(wordId: number, wordLabel: string) {
     setWordSets((prev) => ({ ...prev, [wordId]: 'loading' }));

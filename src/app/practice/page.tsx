@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import PracticeSession from '@/components/PracticeSession';
-import { paletteFor } from '@/lib/lessonPalette';
+import PracticeSession, { SessionData } from '@/components/PracticeSession';
+import { paletteFor, friendlyLessonLabel, paletteWithProgress, LessonProgress } from '@/lib/lessonPalette';
 
 interface WordInfo {
   id: number;
@@ -21,6 +21,11 @@ export default function PracticePage() {
   const [practicing, setPracticing] = useState(false);
   const [error, setError] = useState('');
   const [authChecked, setAuthChecked] = useState(false);
+  const [search, setSearch] = useState('');
+  const [savedSession, setSavedSession] = useState<SessionData | null>(null);
+  const [showResume, setShowResume] = useState(false);
+  const [lessonProgress, setLessonProgress] = useState<Record<string, LessonProgress>>({});
+  const [userConfig, setUserConfig] = useState<{ enableSentenceWriting: boolean; age: number }>({ enableSentenceWriting: false, age: 10 });
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -30,6 +35,7 @@ export default function PracticePage() {
         else {
           setLastLesson(d.user.lastLesson ?? null);
           setIsStaff(d.user.role === 'teacher' || d.user.role === 'admin');
+          setUserConfig({ enableSentenceWriting: !!d.user.enableSentenceWriting, age: d.user.age ?? 10 });
           setAuthChecked(true);
         }
       })
@@ -44,38 +50,113 @@ export default function PracticePage() {
       .catch(() => {});
   }, [authChecked]);
 
+  // Fetch lesson progress for coloring
   useEffect(() => {
-    if (!selectedLesson) return;
+    if (!authChecked) return;
+    fetch('/api/lessons/progress')
+      .then(r => r.json())
+      .then(d => setLessonProgress(d.progress ?? {}))
+      .catch(() => {});
+  }, [authChecked, lastLesson /* refresh after a lesson completes */]);
+
+  function handleDone() {
+    // Mark practice step done for this lesson
+    if (selectedLesson) {
+      fetch('/api/lessons/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lesson: selectedLesson, step: 'practice' }),
+      }).catch(() => {});
+      // Update local progress
+      setLessonProgress(prev => ({
+        ...prev,
+        [selectedLesson]: { ...(prev[selectedLesson] ?? { practice: false, dictation: false, tricky: false }), practice: true },
+      }));
+    }
+    setPracticing(false);
+    setSelectedLesson('');
+    setWords([]);
+    setSavedSession(null);
+    setShowResume(false);
+  }
+
+  // Save handler (debounced in the component, but we POST here)
+  const handleSave = useCallback(async (data: SessionData) => {
+    try {
+      await fetch('/api/practice/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+    } catch { /* silent */ }
+  }, []);
+
+  // Clear handler
+  const handleClear = useCallback(async () => {
+    try {
+      await fetch(`/api/practice/session?type=practice&lesson=${encodeURIComponent(selectedLesson)}`, {
+        method: 'DELETE',
+      });
+      setSavedSession(null);
+    } catch { /* silent */ }
+  }, [selectedLesson]);
+
+  async function selectLesson(lesson: string) {
+    setSelectedLesson(lesson);
+    setWords([]);
+    setError('');
+    setShowResume(false);
+    // Check for saved session
+    try {
+      const res = await fetch(`/api/practice/session?type=practice&lesson=${encodeURIComponent(lesson)}`);
+      const d = await res.json();
+      if (d.session) {
+        setSavedSession(d.session);
+        setShowResume(true);
+        return; // wait for user to choose resume or fresh
+      }
+    } catch { /* proceed without resume */ }
+    setSavedSession(null);
+    await loadLessonWords(lesson, null);
+  }
+
+  async function loadLessonWords(lesson: string, session: SessionData | null) {
     setLoadingWords(true);
     setError('');
-    setWords([]);
-    setPracticing(false);
+    setShowResume(false);
     // Persist the selected lesson as the user's last tried lesson
     fetch('/api/practice/last-lesson', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lesson: selectedLesson }),
-    }).then(() => setLastLesson(selectedLesson)).catch(() => {});
-    fetch(`/api/words?lesson=${encodeURIComponent(selectedLesson)}`)
-      .then((r) => r.json())
-      .then((d) => {
-        const wordList = (d.words ?? []) as Array<{ id: number; word: string }>;
-        const mapped = wordList.map((w) => ({ id: Number(w.id), word: w.word as string }));
-        if (mapped.length === 0) {
-          setError('No words found for this lesson.');
-        } else {
-          setWords(mapped);
-          setPracticing(true);
-        }
-      })
-      .catch(() => setError('Could not load words for this lesson.'))
-      .finally(() => setLoadingWords(false));
-  }, [selectedLesson]);
+      body: JSON.stringify({ lesson }),
+    }).then(() => setLastLesson(lesson)).catch(() => {});
+    try {
+      const r = await fetch(`/api/words?lesson=${encodeURIComponent(lesson)}`);
+      const d = await r.json();
+      const wordList = (d.words ?? []) as Array<{ id: number; word: string }>;
+      const mapped = wordList.map((w) => ({ id: Number(w.id), word: w.word as string }));
+      if (mapped.length === 0) {
+        setError('No words found for this lesson.');
+        setSelectedLesson('');
+      } else {
+        setWords(mapped);
+        setPracticing(true);
+      }
+    } catch {
+      setError('Could not load words for this lesson.');
+    } finally {
+      setLoadingWords(false);
+    }
+  }
 
-  function handleDone() {
-    setPracticing(false);
-    setSelectedLesson('');
-    setWords([]);
+  function handleResume() {
+    loadLessonWords(selectedLesson, savedSession);
+  }
+
+  function handleStartFresh() {
+    setSavedSession(null);
+    handleClear();
+    loadLessonWords(selectedLesson, null);
   }
 
   if (!authChecked) {
@@ -86,6 +167,49 @@ export default function PracticePage() {
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="h-14 bg-slate-100 rounded-2xl animate-pulse" style={{ animationDelay: `${i * 60}ms` }} />
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Resume prompt
+  if (showResume && savedSession && selectedLesson) {
+    return (
+      <div className="space-y-6">
+        <button
+          onClick={() => { setShowResume(false); setSelectedLesson(''); setSavedSession(null); }}
+          className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-700 font-medium transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to lesson selection
+        </button>
+        <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 text-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto">
+            <svg className="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-amber-900">Unfinished Session</h2>
+          <p className="text-sm text-amber-700">
+            You have an unfinished practice session for <strong>Lesson {selectedLesson}</strong>.<br />
+            You were on word {savedSession.currentWordIndex + 1} in the <strong>{savedSession.phase === 'words' ? 'words' : savedSession.phase === 'dictation' ? 'dictation' : 'review'}</strong> phase.
+          </p>
+          <div className="flex gap-3 justify-center pt-2">
+            <button
+              onClick={handleResume}
+              className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition-colors"
+            >
+              Resume Session
+            </button>
+            <button
+              onClick={handleStartFresh}
+              className="bg-white border border-slate-200 text-slate-600 hover:text-slate-800 font-medium px-6 py-2.5 rounded-xl text-sm transition-colors"
+            >
+              Start Fresh
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -103,7 +227,17 @@ export default function PracticePage() {
           </svg>
           Back to lesson selection
         </button>
-        <PracticeSession words={words} lessonNumber={selectedLesson} onDone={handleDone} isStaff={isStaff} />
+        <PracticeSession
+          words={words}
+          lessonNumber={selectedLesson}
+          onDone={handleDone}
+          isStaff={isStaff}
+          initialSession={savedSession}
+          onSave={handleSave}
+          onClear={handleClear}
+          enableSentenceWriting={userConfig.enableSentenceWriting}
+          userAge={userConfig.age}
+        />
       </div>
     );
   }
@@ -138,37 +272,51 @@ export default function PracticePage() {
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Search */}
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search lessons…"
+              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 bg-slate-50/50 placeholder:text-slate-300"
+            />
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-              {lessons.map((lesson) => {
+              {lessons
+                .filter(l => !search || friendlyLessonLabel(l).toLowerCase().includes(search.toLowerCase()) || l.toLowerCase().includes(search.toLowerCase()))
+                .map((lesson) => {
                 const isSelected = selectedLesson === lesson;
                 const isLast = !isSelected && lastLesson === lesson;
                 const p = paletteFor(lesson);
+                const { palette: pp, isDone } = paletteWithProgress(lesson, lessonProgress[lesson] ?? { practice: false, dictation: false, tricky: false });
                 return (
                   <button
                     key={lesson}
-                    onClick={() => setSelectedLesson(lesson)}
+                    onClick={() => selectLesson(lesson)}
                     disabled={loadingWords}
                     className={`
                       relative group flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-2xl border text-sm font-semibold transition-all duration-200 disabled:opacity-50
                       ${isSelected
                         ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-200'
+                        : isDone
+                        ? `${pp.bg} ${pp.border} text-slate-400 line-through ${pp.hoverBorder} ${pp.text}`
                         : isLast
                         ? 'bg-indigo-50 border-indigo-300 text-indigo-700 hover:border-indigo-400 hover:-translate-y-0.5 hover:shadow-sm'
-                        : `${p.bg} ${p.border} text-slate-700 ${p.hoverBorder} ${p.text} hover:-translate-y-0.5 hover:shadow-sm`
+                        : `${pp.bg} ${pp.border} text-slate-700 ${pp.hoverBorder} ${pp.text} hover:-translate-y-0.5 hover:shadow-sm`
                       }
                     `}
                   >
                     <svg
                       className={`w-4 h-4 transition-colors ${
                         isSelected ? 'text-indigo-200'
+                        : isDone ? `${pp.icon} opacity-50`
                         : isLast ? 'text-indigo-400'
-                        : `${p.icon} ${p.iconHover}`
+                        : `${pp.icon} ${pp.iconHover}`
                       }`}
                       fill="none" stroke="currentColor" viewBox="0 0 24 24"
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
-                    <span className="text-xs leading-tight text-center">{lesson}</span>
+                    <span className="text-xs leading-tight text-center">{friendlyLessonLabel(lesson)}</span>
                     {isLast && (
                       <span className="absolute -top-1.5 -right-1.5 flex items-center gap-0.5 bg-amber-400 text-white text-[9px] font-bold pl-1 pr-1.5 py-0.5 rounded-full leading-none shadow-sm shadow-amber-200">
                         <svg className="w-2 h-2" fill="currentColor" viewBox="0 0 20 20">

@@ -3,7 +3,7 @@ import sql from '@/lib/db';
 import { initDb } from '@/lib/db-init';
 import { getCurrentUser } from '@/lib/auth';
 import { findParagraphForWord } from '@/lib/textbook';
-import { generateWordQuestions, generateParagraph, WordQuestions } from '@/lib/claude';
+import { generateWordQuestions, generateParagraph, WordQuestions } from '@/lib/deepseek';
 import { generateFillBlank } from '@/lib/fillblank';
 
 function shuffleArr<T>(arr: T[]): T[] {
@@ -74,13 +74,16 @@ export async function POST(
       }
     }
 
-    // Fall back to Claude-generated if no different paragraph found
+    // Fall back to AI-generated if no different paragraph found
+    let aiCalls = 0;
     if (!newParagraph) {
       newParagraph = await generateParagraph(word, config.age, config.passageWordCount);
+      aiCalls++;
     }
 
     // Regenerate questions and fill-blank with new paragraph
     const questions = await generateWordQuestions(word, newParagraph, config);
+    aiCalls++;
     const fillBlank = user.enableFillBlank
       ? generateFillBlank(newParagraph, word, user.numBlanks, user.blankZipfMax)
       : null;

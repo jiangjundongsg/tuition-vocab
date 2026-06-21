@@ -3,18 +3,18 @@ import bcrypt from 'bcryptjs';
 import sql from '@/lib/db';
 import { initDb } from '@/lib/db-init';
 import { setUserCookie } from '@/lib/auth';
+import { z } from 'zod';
+
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+});
 
 export async function POST(req: NextRequest) {
   try {
     await initDb();
-    const { email, password } = await req.json() as {
-      email: string;
-      password: string;
-    };
-
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
-    }
+    const body = loginSchema.parse(await req.json());
+    const { email, password } = body;
 
     const emailLower = email.toLowerCase().trim();
 

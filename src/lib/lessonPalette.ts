@@ -73,3 +73,70 @@ export function paletteFor(lessonName: string): LessonPalette {
   }
   return PALETTES[Math.abs(hash) % PALETTES.length];
 }
+
+/** Completed (grey) palette for lessons where all 3 steps are done. */
+const COMPLETED_PALETTE: LessonPalette = {
+  bg: 'bg-slate-100/60',
+  border: 'border-slate-200',
+  hoverBorder: 'hover:border-slate-300',
+  icon: 'text-slate-300',
+  iconHover: 'group-hover:text-slate-400',
+  text: 'group-hover:text-slate-600',
+};
+
+export interface LessonProgress {
+  practice: boolean;
+  dictation: boolean;
+  tricky: boolean;
+}
+
+/** Returns how many of {practice, dictation, tricky} have been completed. */
+export function completionLevel(p: LessonProgress): number {
+  return (p.practice ? 1 : 0) + (p.dictation ? 1 : 0) + (p.tricky ? 1 : 0);
+}
+
+export function isFullyComplete(p: LessonProgress): boolean {
+  return p.practice && p.dictation && p.tricky;
+}
+
+/** Return the palette + opacity modifier based on completion. */
+export function paletteWithProgress(
+  lessonName: string,
+  progress: LessonProgress,
+): { palette: LessonPalette; opacityClass: string; isDone: boolean } {
+  const base = paletteFor(lessonName);
+  if (isFullyComplete(progress)) {
+    return { palette: COMPLETED_PALETTE, opacityClass: 'opacity-60', isDone: true };
+  }
+  const level = completionLevel(progress);
+  // 0/3 → full opacity, 1/3 → slight dim, 2/3 → more dim
+  const opacities = ['', 'opacity-80', 'opacity-70'];
+  return { palette: base, opacityClass: opacities[level] ?? '', isDone: false };
+}
+
+/**
+ * Convert a raw lesson number into a human-friendly label.
+ *   P3_20260601 → "P3 · Jun 1"
+ *   260701      → "Jul 1"
+ *   xinqi260610 → "xinqi · Jun 10"
+ */
+export function friendlyLessonLabel(raw: string): string {
+  // Pattern: P3_YYYYMMDD
+  let m = raw.match(/^(P\d+)_(\d{4})(\d{2})(\d{2})$/);
+  if (m) return `${m[1]} · ${monthName(+m[3])} ${+m[4]}`;
+
+  // Pattern: YYMMDD (6 digits)
+  m = raw.match(/^(\d{2})(\d{2})(\d{2})$/);
+  if (m) return `${monthName(+m[2])} ${+m[3]}`;
+
+  // Pattern: nameYYMMDD
+  m = raw.match(/^([a-zA-Z]+)(\d{2})(\d{2})(\d{2})$/);
+  if (m) return `${m[1]} · ${monthName(+m[3])} ${+m[4]}`;
+
+  // Fallback: return as-is if too long, or wrap
+  return raw.length > 15 ? raw.slice(0, 14) + '…' : raw;
+}
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function monthName(m: number): string { return MONTHS[m - 1] ?? String(m); }
+

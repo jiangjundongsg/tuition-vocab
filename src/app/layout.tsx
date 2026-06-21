@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { DM_Sans, DM_Serif_Display } from 'next/font/google';
 import './globals.css';
 import ChildHeader from '@/components/ChildHeader';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -28,7 +29,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen font-sans text-slate-800 antialiased">
         <ChildHeader />
         <main className="max-w-5xl mx-auto px-6 py-10">
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </main>
       </body>
     </html>

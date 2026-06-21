@@ -3,8 +3,36 @@ import sql from '@/lib/db';
 import { initDb } from '@/lib/db-init';
 import { getCurrentUser } from '@/lib/auth';
 import { findParagraphForWord } from '@/lib/textbook';
-import { generateWordQuestions, generateParagraph, WordQuestions } from '@/lib/claude';
+import { generateWordQuestions, generateParagraph, WordQuestions } from '@/lib/deepseek';
 import { generateFillBlank } from '@/lib/fillblank';
+import { z } from 'zod';
+
+// ── AI call quota ──────────────────────────────────────────────
+
+const DAILY_AI_LIMIT = 50; // max AI calls per user per day
+
+async function checkAiQuota(userId: number): Promise<void> {
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const rows = await sql`
+    SELECT ai_calls_today, ai_date FROM users WHERE id = ${userId}
+  `;
+  const calls = Number(rows[0]?.ai_calls_today ?? 0);
+  const date = rows[0]?.ai_date as string | null;
+  const effective = date === today ? calls : 0;
+  if (effective >= DAILY_AI_LIMIT) {
+    throw new Error(`Daily AI limit reached (${DAILY_AI_LIMIT} calls). Try again tomorrow.`);
+  }
+}
+
+async function incrementAiQuota(userId: number, count: number): Promise<void> {
+  const today = new Date().toISOString().slice(0, 10);
+  await sql`
+    UPDATE users SET
+      ai_calls_today = CASE WHEN ai_date = ${today} THEN ai_calls_today + ${count} ELSE ${count} END,
+      ai_date = ${today}
+    WHERE id = ${userId}
+  `;
+}
 
 function shuffleArr<T>(arr: T[]): T[] {
   return [...arr].sort(() => Math.random() - 0.5);
@@ -80,14 +108,23 @@ export async function GET(
       }
     }
 
+    // ── AI generation needed — check quota ──────────────────────
+    await checkAiQuota(user.id);
+
     // Generate paragraph
     let paragraph = findParagraphForWord(word, user.passageSource);
+    let aiCalls = 0;
     if (!paragraph) {
       paragraph = await generateParagraph(word, config.age, config.passageWordCount);
+      aiCalls++;
     }
 
     // Generate questions
     const questions = await generateWordQuestions(word, paragraph, config);
+    aiCalls++;
+
+    // Track usage
+    await incrementAiQuota(user.id, aiCalls);
 
     // Generate fill-blank
     const fillBlank = user.enableFillBlank

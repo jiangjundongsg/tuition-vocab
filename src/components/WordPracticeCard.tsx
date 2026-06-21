@@ -3,7 +3,8 @@
 import { useState, useCallback, useMemo, useRef } from 'react';
 import SessionMCQ from './SessionMCQ';
 import FillBlankExercise from './FillBlankExercise';
-import { WordQuestions } from '@/lib/claude';
+import SentenceWriting from './SentenceWriting';
+import { WordQuestions } from '@/lib/deepseek';
 import { FillBlankQuestion } from '@/lib/fillblank';
 import { makeUtterance, cancelAndSpeak, computeHighlightSchedule } from '@/lib/tts';
 
@@ -53,9 +54,11 @@ interface Props {
   wordIndex: number;
   totalWords: number;
   onComplete: () => void;
+  enableSentenceWriting?: boolean;
+  userAge?: number;
 }
 
-export default function WordPracticeCard({ wordId, wordData: initialData, wordIndex, totalWords, onComplete }: Props) {
+export default function WordPracticeCard({ wordId, wordData: initialData, wordIndex, totalWords, onComplete, enableSentenceWriting = false, userAge = 10 }: Props) {
   const [data, setData] = useState<WordSetData>(initialData);
   const [submitted, setSubmitted] = useState<Record<string, boolean>>({});
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -83,6 +86,7 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
     ...(data.questions.antonym ? ['antonym'] : []),
     ...(data.questions.comprehension ? data.questions.comprehension.map((_, i) => `comp_${i}`) : []),
     ...(data.fillBlank ? ['fill_blank'] : []),
+    ...(enableSentenceWriting ? ['sentence_writing'] : []),
   ];
   const totalQ = questionKeys.length;
   const allAnswered = questionKeys.every((k) => submitted[k]);
@@ -326,6 +330,22 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
             />
           </div>
         ))}
+
+        {/* Sentence Writing */}
+        {enableSentenceWriting && (
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+            <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-3">
+              Q{++qNum} — Sentence Writing
+            </p>
+            <SentenceWriting
+              questionKey="sentence_writing"
+              word={data.word}
+              age={userAge}
+              submitted={!!submitted['sentence_writing']}
+              onAnswer={recordAnswer}
+            />
+          </div>
+        )}
 
         {/* Fill in the Blank */}
         {data.fillBlank && (

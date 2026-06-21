@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import WrongBankList from '@/components/WrongBankList';
-import RepracticeSession from '@/components/RepracticeSession';
+import RepracticeSession, { SessionData } from '@/components/RepracticeSession';
 
 interface WrongItem {
   id: number;
@@ -23,6 +23,8 @@ export default function WrongBankPage() {
   const [loading, setLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
   const [practicingLesson, setPracticingLesson] = useState<string | null>(null);
+  const [savedSession, setSavedSession] = useState<SessionData | null>(null);
+  const [showResume, setShowResume] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -64,9 +66,94 @@ export default function WrongBankPage() {
     return acc;
   }, {});
 
+  async function startPracticingLesson(lesson: string) {
+    // Mark tricky_clicked for this lesson
+    fetch('/api/lessons/progress', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lesson, step: 'tricky' }),
+    }).catch(() => {});
+    // Check for saved session
+    try {
+      const res = await fetch(`/api/practice/session?type=wrong_bank&lesson=${encodeURIComponent(lesson)}`);
+      const d = await res.json();
+      if (d.session) {
+        setSavedSession(d.session);
+        setShowResume(true);
+        setPracticingLesson(lesson);
+        return;
+      }
+    } catch { /* proceed */ }
+    setSavedSession(null);
+    setShowResume(false);
+    setPracticingLesson(lesson);
+  }
+
+  const handleSave = useCallback(async (data: SessionData) => {
+    try {
+      await fetch('/api/practice/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+    } catch { /* silent */ }
+  }, []);
+
+  const handleClear = useCallback(async () => {
+    if (!practicingLesson) return;
+    try {
+      await fetch(`/api/practice/session?type=wrong_bank&lesson=${encodeURIComponent(practicingLesson)}`, {
+        method: 'DELETE',
+      });
+    } catch { /* silent */ }
+  }, [practicingLesson]);
+
   // ── Repractice session view ───────────────────────────────────────────────
   if (practicingLesson !== null) {
     const sessionItems = byLesson[practicingLesson] ?? [];
+
+    // Resume prompt
+    if (showResume && savedSession) {
+      return (
+        <div className="space-y-6">
+          <button
+            onClick={() => { setPracticingLesson(null); setShowResume(false); setSavedSession(null); }}
+            className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-700 font-medium transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Tricky Words
+          </button>
+          <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto">
+              <svg className="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-amber-900">Unfinished Session</h2>
+            <p className="text-sm text-amber-700">
+              You have an unfinished review for <strong>Lesson {practicingLesson}</strong>.
+            </p>
+            <div className="flex gap-3 justify-center pt-2">
+              <button
+                onClick={() => setShowResume(false)}
+                className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition-colors"
+              >
+                Resume Session
+              </button>
+              <button
+                onClick={() => { setSavedSession(null); setShowResume(false); }}
+                className="bg-white border border-slate-200 text-slate-600 hover:text-slate-800 font-medium px-6 py-2.5 rounded-xl text-sm transition-colors"
+              >
+                Start Fresh
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-4">
         <button
@@ -80,11 +167,14 @@ export default function WrongBankPage() {
         </button>
         <RepracticeSession
           items={sessionItems}
-          lessonLabel={practicingLesson === 'No Lesson' ? practicingLesson : practicingLesson}
+          lessonLabel={practicingLesson}
           onDone={() => {
             setPracticingLesson(null);
-            fetchItems(); // refresh list after session
+            fetchItems();
           }}
+          initialSession={savedSession}
+          onSave={handleSave}
+          onClear={handleClear}
         />
       </div>
     );
@@ -128,7 +218,7 @@ export default function WrongBankPage() {
               {/* Practice button for this lesson */}
               <div className="flex justify-end">
                 <button
-                  onClick={() => setPracticingLesson(lesson)}
+                  onClick={() => startPracticingLesson(lesson)}
                   className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold px-4 py-2 rounded-xl text-sm transition-colors shadow-sm"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

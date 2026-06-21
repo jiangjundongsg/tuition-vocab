@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { initDb } from '@/lib/db-init';
 import { getCurrentUser } from '@/lib/auth';
-import { extractWordsFromImage } from '@/lib/claude';
+import { extractWordsFromImage } from '@/lib/deepseek';
 import { scoreWords } from '@/lib/wordfreq';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'] as const;

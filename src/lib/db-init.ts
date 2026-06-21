@@ -82,8 +82,13 @@ export async function initDb() {
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS enable_mcq_antonym   BOOLEAN NOT NULL DEFAULT false`.catch(() => {}),
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS enable_comprehension BOOLEAN NOT NULL DEFAULT true`.catch(() => {}),
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS enable_fill_blank    BOOLEAN NOT NULL DEFAULT true`.catch(() => {}),
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS enable_sentence_writing BOOLEAN NOT NULL DEFAULT false`.catch(() => {}),
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_lesson TEXT`.catch(() => {}),
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_dictation_lesson TEXT`.catch(() => {}),
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_calls_today INTEGER NOT NULL DEFAULT 0`.catch(() => {}),
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_date TEXT`.catch(() => {}),
+    sql`ALTER TABLE word_sets ADD COLUMN IF NOT EXISTS config_hash TEXT`.catch(() => {}),
+    sql`ALTER TABLE word_sets ADD COLUMN IF NOT EXISTS sentence_writing_json TEXT`.catch(() => {}),
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS passage_source TEXT NOT NULL DEFAULT 'TextBook_Harry_Portter'`.catch(() => {}),
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS passage_word_count INTEGER NOT NULL DEFAULT 150`.catch(() => {}),
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS comp_question_type TEXT NOT NULL DEFAULT 'mcq'`.catch(() => {}),
@@ -149,6 +154,42 @@ export async function initDb() {
     sql`ALTER TABLE wrong_bank ALTER COLUMN user_id DROP NOT NULL`.catch(() => {}),
     sql`ALTER TABLE wrong_bank ALTER COLUMN word_set_id DROP NOT NULL`.catch(() => {}),
   ]);
+
+  // Auto-save practice sessions (resume after disconnect)
+  await sql`
+    CREATE TABLE IF NOT EXISTS practice_sessions (
+      id                 SERIAL PRIMARY KEY,
+      user_id            INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      session_type       TEXT NOT NULL,
+      lesson_number      TEXT,
+      phase              TEXT NOT NULL DEFAULT 'words',
+      current_word_index INTEGER NOT NULL DEFAULT 0,
+      repractice_index   INTEGER NOT NULL DEFAULT 0,
+      submitted_json     TEXT,
+      correct_json       TEXT,
+      answers_json       TEXT,
+      created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+      UNIQUE(user_id, session_type, lesson_number)
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_ps_user ON practice_sessions(user_id)`.catch(() => {});
+
+  // Lesson completion tracking
+  await sql`
+    CREATE TABLE IF NOT EXISTS lesson_progress (
+      id                 SERIAL PRIMARY KEY,
+      user_id            INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      lesson_number      TEXT NOT NULL,
+      practice_done      BOOLEAN NOT NULL DEFAULT false,
+      dictation_done     BOOLEAN NOT NULL DEFAULT false,
+      tricky_clicked     BOOLEAN NOT NULL DEFAULT false,
+      created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+      UNIQUE(user_id, lesson_number)
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_lp_user ON lesson_progress(user_id)`.catch(() => {});
 
   // Drop obsolete tables
   await sql`DROP TABLE IF EXISTS question_config`.catch(() => {});

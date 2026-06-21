@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import SessionMCQ from './SessionMCQ';
 import FillBlankExercise from './FillBlankExercise';
 import DictationItem from './DictationItem';
@@ -17,21 +17,70 @@ interface WrongBankItem {
   wrongCount: number;
 }
 
+export interface SessionData {
+  type: 'practice' | 'dictation' | 'wrong_bank';
+  lesson: string;
+  phase: string;
+  currentWordIndex: number;
+  repracticeIndex: number;
+  submitted: Record<string, boolean>;
+  correct: Record<string, boolean>;
+  answers: Record<string, string>;
+}
+
 interface Props {
   items: WrongBankItem[];
   lessonLabel: string;
   onDone: () => void;
+  initialSession?: SessionData | null;
+  onSave?: (data: SessionData) => void;
+  onClear?: () => void;
 }
 
-export default function RepracticeSession({ items, lessonLabel, onDone }: Props) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+export default function RepracticeSession({ items, lessonLabel, onDone, initialSession, onSave, onClear }: Props) {
+  const [currentIndex, setCurrentIndex] = useState(initialSession?.currentWordIndex ?? 0);
   const [wordSets, setWordSets] = useState<Record<number, WordSetData | 'loading' | 'error'>>({});
-  const [submitted, setSubmitted] = useState<Record<number, boolean>>({});
-  const [correct, setCorrect] = useState<Record<number, boolean>>({});
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [submitted, setSubmitted] = useState<Record<number, boolean>>(
+    initialSession ? Object.fromEntries(Object.entries(initialSession.submitted).map(([k, v]) => [Number(k), v])) : {},
+  );
+  const [correct, setCorrect] = useState<Record<number, boolean>>(
+    initialSession ? Object.fromEntries(Object.entries(initialSession.correct).map(([k, v]) => [Number(k), v])) : {},
+  );
+  const [answers, setAnswers] = useState<Record<number, string>>(initialSession?.answers ?? {});
   const [done, setDone] = useState(false);
 
   const item = items[currentIndex];
+
+  // Autosave
+  const saveTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const autosave = useCallback(() => {
+    if (!onSave) return;
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      onSave({
+        type: 'wrong_bank',
+        lesson: lessonLabel,
+        phase: 'repractice',
+        currentWordIndex: currentIndex,
+        repracticeIndex: 0,
+        submitted: Object.fromEntries(Object.entries(submitted).map(([k, v]) => [String(k), v])),
+        correct: Object.fromEntries(Object.entries(correct).map(([k, v]) => [String(k), v])),
+        answers: { ...answers },
+      });
+    }, 300);
+  }, [onSave, lessonLabel, currentIndex, submitted, correct, answers]);
+
+  useEffect(() => { autosave(); }, [autosave]);
+  useEffect(() => () => { if (saveTimer.current) clearTimeout(saveTimer.current); }, []);
+
+  // Clear when done
+  const clearedRef = useRef(false);
+  useEffect(() => {
+    if (done && !clearedRef.current) {
+      clearedRef.current = true;
+      onClear?.();
+    }
+  }, [done, onClear]);
 
   // Load word set for current item
   useEffect(() => {

@@ -23,6 +23,7 @@ export interface AuthUser {
   enableMcqAntonym: boolean;
   enableComprehension: boolean;
   enableFillBlank: boolean;
+  enableSentenceWriting: boolean;
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
@@ -38,7 +39,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       SELECT id, email, display_name, role, age, last_lesson, last_dictation_lesson, passage_source,
              num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type,
              enable_mcq_meaning, enable_mcq_synonym, enable_mcq_antonym,
-             enable_comprehension, enable_fill_blank
+             enable_comprehension, enable_fill_blank, enable_sentence_writing
       FROM users WHERE id = ${userId}
     `;
 
@@ -64,6 +65,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       enableMcqAntonym: r.enable_mcq_antonym === true,
       enableComprehension: r.enable_comprehension !== false,
       enableFillBlank: r.enable_fill_blank !== false,
+      enableSentenceWriting: r.enable_sentence_writing === true,
     };
   } catch {
     return null;

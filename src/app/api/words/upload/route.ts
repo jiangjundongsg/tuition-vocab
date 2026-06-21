@@ -3,6 +3,13 @@ import sql from '@/lib/db';
 import { initDb } from '@/lib/db-init';
 import { getCurrentUser } from '@/lib/auth';
 import { scoreWords, normalizeWordEntry } from '@/lib/wordfreq';
+import { z } from 'zod';
+
+const uploadSchema = z.object({
+  words: z.string().min(1),
+  targetUserIds: z.array(z.number()).min(1),
+  lessonNumber: z.string().optional(),
+});
 
 function todayYYMMDD(): string {
   const now = new Date();
@@ -20,19 +27,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Teacher access required' }, { status: 403 });
     }
 
-    const body = await req.json();
-    const { words: wordList, targetUserIds, lessonNumber: lessonOverride } = body as {
-      words: string;
-      targetUserIds: number[];
-      lessonNumber?: string;
-    };
-
-    if (!wordList || typeof wordList !== 'string') {
-      return NextResponse.json({ error: 'words field is required' }, { status: 400 });
-    }
-    if (!targetUserIds || !Array.isArray(targetUserIds) || targetUserIds.length === 0) {
-      return NextResponse.json({ error: 'targetUserIds array is required' }, { status: 400 });
-    }
+    const { words: wordList, targetUserIds, lessonNumber: lessonOverride } = uploadSchema.parse(await req.json());
 
     // Validate target users exist and are students
     const userRows = await sql`SELECT id, display_name FROM users WHERE id = ANY(${targetUserIds}::int[])`;
