@@ -167,7 +167,7 @@ Return ONLY valid JSON (no markdown, no extra text) with these fields:
 - "grammar": brief grammar feedback
 - "vocabulary": brief vocabulary/word-usage feedback
 - "suggestions": how to improve (empty string if perfect)
-- "correct": true if score >= 6, false otherwise
+- "correct": true if score >= 7, false otherwise
 
 Be encouraging but honest. Score based on age-appropriate expectations.`,
     `Target word: "${word}"

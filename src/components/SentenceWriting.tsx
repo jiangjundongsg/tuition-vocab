@@ -90,8 +90,8 @@ export default function SentenceWriting({ questionKey, word, age, submitted: ini
 
   // Submitted — show feedback
   if (feedback) {
-    const scoreColor = feedback.score >= 8 ? 'text-emerald-600' : feedback.score >= 6 ? 'text-amber-600' : 'text-red-600';
-    const bgColor = feedback.score >= 8 ? 'bg-emerald-50 border-emerald-200' : feedback.score >= 6 ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200';
+    const scoreColor = feedback.score >= 8 ? 'text-emerald-600' : feedback.score >= 7 ? 'text-amber-600' : 'text-red-600';
+    const bgColor = feedback.score >= 8 ? 'bg-emerald-50 border-emerald-200' : feedback.score >= 7 ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200';
 
     return (
       <div className="space-y-3">
@@ -106,7 +106,7 @@ export default function SentenceWriting({ questionKey, word, age, submitted: ini
           <div className="flex items-center gap-3 mb-2">
             <span className={`text-2xl font-bold ${scoreColor}`}>{feedback.score}/10</span>
             <span className={`text-sm font-semibold ${scoreColor}`}>
-              {feedback.score >= 8 ? '🌟 Excellent!' : feedback.score >= 6 ? '👍 Good effort!' : '📝 Needs work'}
+              {feedback.score >= 8 ? '🌟 Excellent!' : feedback.score >= 7 ? '👍 Good effort!' : '📝 Needs work'}
             </span>
           </div>
 
