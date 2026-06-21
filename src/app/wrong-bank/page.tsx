@@ -50,6 +50,25 @@ export default function WrongBankPage() {
     if (authChecked) fetchItems();
   }, [authChecked, fetchItems]);
 
+  const handleSave = useCallback(async (data: SessionData) => {
+    try {
+      await fetch('/api/practice/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+    } catch { /* silent */ }
+  }, []);
+
+  const handleClear = useCallback(async () => {
+    if (!practicingLesson) return;
+    try {
+      await fetch(`/api/practice/session?type=wrong_bank&lesson=${encodeURIComponent(practicingLesson)}`, {
+        method: 'DELETE',
+      });
+    } catch { /* silent */ }
+  }, [practicingLesson]);
+
   if (!authChecked) {
     return (
       <div className="animate-pulse space-y-4">
@@ -88,25 +107,6 @@ export default function WrongBankPage() {
     setShowResume(false);
     setPracticingLesson(lesson);
   }
-
-  const handleSave = useCallback(async (data: SessionData) => {
-    try {
-      await fetch('/api/practice/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-    } catch { /* silent */ }
-  }, []);
-
-  const handleClear = useCallback(async () => {
-    if (!practicingLesson) return;
-    try {
-      await fetch(`/api/practice/session?type=wrong_bank&lesson=${encodeURIComponent(practicingLesson)}`, {
-        method: 'DELETE',
-      });
-    } catch { /* silent */ }
-  }, [practicingLesson]);
 
   // ── Repractice session view ───────────────────────────────────────────────
   if (practicingLesson !== null) {
