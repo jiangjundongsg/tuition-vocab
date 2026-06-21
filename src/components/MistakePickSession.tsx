@@ -32,7 +32,7 @@ export default function MistakePickSession({
   const [answers, setAnswers] = useState<Record<number, string>>(initialSession?.answers ?? {});
   const [inputValue, setInputValue] = useState(initialSession?.answers?.[initialSession?.currentIndex ?? 0] ?? '');
   const [done, setDone] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const question = questions[currentIndex];
   const isSubmitted = !!submitted[currentIndex];
@@ -87,7 +87,9 @@ export default function MistakePickSession({
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Enter' && !isSubmitted) { e.preventDefault(); handleSubmit(); }
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !isSubmitted) {
+      e.preventDefault(); handleSubmit();
+    }
   }
 
   // ── Done screen ────────────────────────────────────────────────────
@@ -101,15 +103,15 @@ export default function MistakePickSession({
           <p className="text-purple-100 text-sm mb-6">
             Corrected <strong>{correctCount}</strong> of <strong>{questions.length}</strong> sentences
           </p>
-          <div className="flex flex-col gap-3 items-center">
+          <div className="flex flex-col gap-3 items-center w-full sm:w-auto">
             {onDone && (
               <button onClick={onDone}
-                className="bg-white text-purple-700 font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-purple-50 transition-colors">
+                className="w-full sm:w-auto bg-white text-purple-700 font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-purple-50 transition-colors">
                 Pick Another Lesson
               </button>
             )}
             <button onClick={() => router.push('/wrong-bank')}
-              className="border-2 border-white/50 text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-white/10 transition-colors">
+              className="w-full sm:w-auto border-2 border-white/50 text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-white/10 transition-colors">
               Go to Tricky Words →
             </button>
           </div>
@@ -161,21 +163,25 @@ export default function MistakePickSession({
         {/* Input */}
         <div className="space-y-3">
           <label className="block text-sm font-semibold text-slate-700">✏️ Type the corrected sentence:</label>
-          <input ref={inputRef} type="text" value={inputValue}
+          <textarea ref={inputRef} value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown} disabled={isSubmitted}
             placeholder="Write the corrected sentence here..."
-            className={`w-full px-4 py-3 rounded-xl border-2 text-sm transition-colors ${
+            rows={3}
+            className={`w-full px-4 py-3 rounded-xl border-2 text-sm transition-colors resize-none ${
               isSubmitted
                 ? isCorrect ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
                 : 'border-red-300 bg-red-50 text-red-700'
                 : 'border-slate-200 bg-slate-50 focus:border-purple-400 focus:bg-white focus:ring-2 focus:ring-purple-100'
             } disabled:opacity-80`} />
           {!isSubmitted && (
-            <button onClick={handleSubmit} disabled={!inputValue.trim()}
-              className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">
-              Check Answer
-            </button>
+            <>
+              <button onClick={handleSubmit} disabled={!inputValue.trim()}
+                className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">
+                Check Answer
+              </button>
+              <p className="text-xs text-slate-400 text-center">Ctrl + Enter to submit</p>
+            </>
           )}
         </div>
 
