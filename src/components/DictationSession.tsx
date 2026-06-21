@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import DictationItem from './DictationItem';
 import SessionMCQ from './SessionMCQ';
 import FillBlankExercise from './FillBlankExercise';
@@ -45,6 +46,7 @@ interface Props {
 type Phase = 'dictation' | 'repractice' | 'done';
 
 export default function DictationSession({ words, lessonNumber, onDone, initialSession, onSave, onClear }: Props) {
+  const router = useRouter();
   const [phase, setPhase] = useState<Phase>(
     (initialSession?.phase as Phase) || 'dictation',
   );
@@ -276,6 +278,7 @@ export default function DictationSession({ words, lessonNumber, onDone, initialS
             <p>Tricky Words Review: {correctRepractice} / {wrongItems.length} corrected</p>
           )}
         </div>
+        <div className="flex flex-col gap-3 items-center">
         {onDone && (
           <button
             onClick={onDone}
@@ -284,6 +287,13 @@ export default function DictationSession({ words, lessonNumber, onDone, initialS
             Practice Another Lesson
           </button>
         )}
+        <button
+          onClick={() => router.push('/wrong-bank')}
+          className="border-2 border-white/50 text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-white/10 transition-colors"
+        >
+          Go to Tricky Words →
+        </button>
+        </div>
       </div>
     );
   }

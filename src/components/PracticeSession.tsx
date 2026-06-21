@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import WordPracticeCard, { WordSetData } from './WordPracticeCard';
 import DictationItem from './DictationItem';
 import SessionMCQ from './SessionMCQ';
@@ -48,6 +49,7 @@ interface Props {
 type Phase = 'words' | 'dictation' | 'repractice' | 'done';
 
 export default function PracticeSession({ words, lessonNumber, onDone, isStaff = false, initialSession, onSave, onClear, enableSentenceWriting = false, userAge = 10 }: Props) {
+  const router = useRouter();
   const [phase, setPhase] = useState<Phase>(
     (initialSession?.phase as Phase) || 'words',
   );
@@ -279,14 +281,22 @@ export default function PracticeSession({ words, lessonNumber, onDone, isStaff =
               <p>Tricky Words Review: {correctRepractice} / {wrongItems.length} corrected</p>
             )}
           </div>
-          {onDone && (
+          <div className="flex flex-col gap-3 items-center">
+            {onDone && (
+              <button
+                onClick={onDone}
+                className="bg-white text-indigo-700 font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-indigo-50 transition-colors"
+              >
+                Practice Another Lesson
+              </button>
+            )}
             <button
-              onClick={onDone}
-              className="bg-white text-indigo-700 font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-indigo-50 transition-colors"
+              onClick={() => router.push('/dictation')}
+              className="border-2 border-white/50 text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-white/10 transition-colors"
             >
-              Practice Another Lesson
+              Go to Dictation →
             </button>
-          )}
+          </div>
         </div>
       </div>
     );
