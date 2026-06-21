@@ -88,15 +88,16 @@ export interface LessonProgress {
   practice: boolean;
   dictation: boolean;
   tricky: boolean;
+  mistake_pick: boolean;
 }
 
-/** Returns how many of {practice, dictation, tricky} have been completed. */
+/** Returns how many of {practice, dictation, tricky, mistake_pick} have been completed. */
 export function completionLevel(p: LessonProgress): number {
-  return (p.practice ? 1 : 0) + (p.dictation ? 1 : 0) + (p.tricky ? 1 : 0);
+  return (p.practice ? 1 : 0) + (p.dictation ? 1 : 0) + (p.tricky ? 1 : 0) + (p.mistake_pick ? 1 : 0);
 }
 
 export function isFullyComplete(p: LessonProgress): boolean {
-  return p.practice && p.dictation && p.tricky;
+  return p.practice && p.dictation && p.tricky && p.mistake_pick;
 }
 
 /** Return the palette + opacity modifier based on completion. */

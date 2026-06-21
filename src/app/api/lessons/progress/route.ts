@@ -2,7 +2,7 @@
  * GET  — fetch lesson completion progress for current user
  * POST — mark a lesson step as done
  *
- * POST body: { lesson: string, step: 'practice' | 'dictation' | 'tricky' }
+ * POST body: { lesson: string, step: 'practice' | 'dictation' | 'tricky' | 'mistake_pick' }
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
@@ -15,16 +15,17 @@ export async function GET() {
   await initDb();
 
   const rows = await sql`
-    SELECT lesson_number, practice_done, dictation_done, tricky_clicked
+    SELECT lesson_number, practice_done, dictation_done, tricky_clicked, mistake_pick_done
     FROM lesson_progress WHERE user_id = ${user.id}
   `;
 
-  const progress: Record<string, { practice: boolean; dictation: boolean; tricky: boolean }> = {};
+  const progress: Record<string, { practice: boolean; dictation: boolean; tricky: boolean; mistake_pick: boolean }> = {};
   for (const r of rows) {
     progress[r.lesson_number as string] = {
       practice: Boolean(r.practice_done),
       dictation: Boolean(r.dictation_done),
       tricky: Boolean(r.tricky_clicked),
+      mistake_pick: Boolean(r.mistake_pick_done),
     };
   }
   return NextResponse.json({ progress });
@@ -52,6 +53,13 @@ export async function POST(request: NextRequest) {
       VALUES (${user.id}, ${lesson}, true)
       ON CONFLICT (user_id, lesson_number)
       DO UPDATE SET dictation_done = true, updated_at = now()
+    `;
+  } else if (step === 'mistake_pick') {
+    await sql`
+      INSERT INTO lesson_progress (user_id, lesson_number, mistake_pick_done)
+      VALUES (${user.id}, ${lesson}, true)
+      ON CONFLICT (user_id, lesson_number)
+      DO UPDATE SET mistake_pick_done = true, updated_at = now()
     `;
   } else {
     await sql`

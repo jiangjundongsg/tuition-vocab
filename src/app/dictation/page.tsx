@@ -64,7 +64,7 @@ export default function DictationPage() {
       }).catch(() => {});
       setLessonProgress(prev => ({
         ...prev,
-        [selectedLesson]: { ...(prev[selectedLesson] ?? { practice: false, dictation: false, tricky: false }), dictation: true },
+        [selectedLesson]: { ...(prev[selectedLesson] ?? { practice: false, dictation: false, tricky: false, mistake_pick: false }), dictation: true },
       }));
     }
     setPracticing(false);

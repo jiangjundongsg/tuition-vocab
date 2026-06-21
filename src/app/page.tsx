@@ -41,6 +41,19 @@ const studentFeatures = [
     hover: 'hover:border-sky-200/80',
     glow: 'group-hover:from-sky-50/60',
   },
+  {
+    href: '/mistake-pick',
+    icon: (
+      <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+      </svg>
+    ),
+    title: 'Mistake Pick',
+    desc: 'Find and correct grammar mistakes in sentences — like the gaokao error-correction section.',
+    iconBg: 'bg-purple-50 ring-1 ring-purple-100',
+    hover: 'hover:border-purple-200/80',
+    glow: 'group-hover:from-purple-50/60',
+  },
 ];
 
 const teacherFeatures = [
@@ -91,6 +104,8 @@ const steps = [
   { n: 3, text: 'Student logs in, selects a lesson, and practices one word at a time', dot: 'bg-sky-500' },
   { n: 4, text: 'For each word: read a passage, then answer 4 questions — MCQ meaning, 2 comprehension, and fill-in-blank', dot: 'bg-teal-500' },
   { n: 5, text: 'After all words, complete a dictation exercise. Wrong answers are re-tested inline before the session ends', dot: 'bg-emerald-500' },
+  { n: 6, text: 'Practice Mistake Pick: find and correct grammar mistakes in sentences — like the gaokao error-correction section', dot: 'bg-purple-500' },
+  { n: 7, text: 'Review all mistakes in the Tricky Words bank and re-practice until mastered', dot: 'bg-rose-500' },
 ];
 
 export default async function HomePage() {

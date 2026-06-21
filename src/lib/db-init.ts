@@ -194,6 +194,23 @@ export async function initDb() {
   // config_json on word_sets — stores generation params for cache invalidation
   await sql`ALTER TABLE word_sets ADD COLUMN IF NOT EXISTS config_json TEXT`.catch(() => {});
 
+  // mistake_pick_done on lesson_progress
+  await sql`ALTER TABLE lesson_progress ADD COLUMN IF NOT EXISTS mistake_pick_done BOOLEAN NOT NULL DEFAULT false`.catch(() => {});
+
+  // Mistake-pick question cache
+  await sql`
+    CREATE TABLE IF NOT EXISTS mistake_pick_sets (
+      id              SERIAL PRIMARY KEY,
+      user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      lesson_number   TEXT NOT NULL,
+      questions_json  TEXT,
+      created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+      UNIQUE(user_id, lesson_number)
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_mps_user_lesson ON mistake_pick_sets(user_id, lesson_number)`.catch(() => {});
+
   // Drop obsolete tables
   await sql`DROP TABLE IF EXISTS question_config`.catch(() => {});
   await sql`DROP TABLE IF EXISTS sessions`.catch(() => {});

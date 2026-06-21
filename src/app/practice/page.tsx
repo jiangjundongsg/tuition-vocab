@@ -70,7 +70,7 @@ export default function PracticePage() {
       // Update local progress
       setLessonProgress(prev => ({
         ...prev,
-        [selectedLesson]: { ...(prev[selectedLesson] ?? { practice: false, dictation: false, tricky: false }), practice: true },
+        [selectedLesson]: { ...(prev[selectedLesson] ?? { practice: false, dictation: false, tricky: false, mistake_pick: false }), practice: true },
       }));
     }
     setPracticing(false);
@@ -287,7 +287,7 @@ export default function PracticePage() {
                 const isSelected = selectedLesson === lesson;
                 const isLast = !isSelected && lastLesson === lesson;
                 const p = paletteFor(lesson);
-                const { palette: pp, isDone } = paletteWithProgress(lesson, lessonProgress[lesson] ?? { practice: false, dictation: false, tricky: false });
+                const { palette: pp, isDone } = paletteWithProgress(lesson, lessonProgress[lesson] ?? { practice: false, dictation: false, tricky: false, mistake_pick: false });
                 return (
                   <button
                     key={lesson}
