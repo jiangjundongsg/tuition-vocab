@@ -15,7 +15,7 @@ export async function GET() {
       SELECT id, email, display_name, role, age, last_lesson, passage_source,
              num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type,
              enable_mcq_meaning, enable_mcq_synonym, enable_mcq_antonym,
-             enable_comprehension, enable_fill_blank,
+             enable_comprehension, enable_fill_blank, enable_sentence_writing,
              created_at
       FROM users ORDER BY created_at ASC
     `;
@@ -39,6 +39,7 @@ export async function GET() {
         enableMcqAntonym: r.enable_mcq_antonym === true,
         enableComprehension: r.enable_comprehension !== false,
         enableFillBlank: r.enable_fill_blank !== false,
+        enableSentenceWriting: r.enable_sentence_writing === true,
         createdAt: r.created_at as string,
       })),
     });

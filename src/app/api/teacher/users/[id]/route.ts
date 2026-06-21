@@ -34,6 +34,7 @@ export async function PATCH(
       enableMcqAntonym?: boolean;
       enableComprehension?: boolean;
       enableFillBlank?: boolean;
+      enableSentenceWriting?: boolean;
     };
 
     if (body.displayName !== undefined) {
@@ -81,6 +82,9 @@ export async function PATCH(
     if (body.enableFillBlank !== undefined) {
       await sql`UPDATE users SET enable_fill_blank = ${!!body.enableFillBlank} WHERE id = ${targetId}`;
     }
+    if (body.enableSentenceWriting !== undefined) {
+      await sql`UPDATE users SET enable_sentence_writing = ${!!body.enableSentenceWriting} WHERE id = ${targetId}`;
+    }
     if (body.password) {
       if (body.password.length < 6) {
         return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
@@ -93,7 +97,7 @@ export async function PATCH(
       SELECT id, email, display_name, role, age, passage_source,
              num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type,
              enable_mcq_meaning, enable_mcq_synonym, enable_mcq_antonym,
-             enable_comprehension, enable_fill_blank
+             enable_comprehension, enable_fill_blank, enable_sentence_writing
       FROM users WHERE id = ${targetId}
     `;
     if (rows.length === 0) return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -117,6 +121,7 @@ export async function PATCH(
         enableMcqAntonym: r.enable_mcq_antonym === true,
         enableComprehension: r.enable_comprehension !== false,
         enableFillBlank: r.enable_fill_blank !== false,
+        enableSentenceWriting: r.enable_sentence_writing === true,
       },
     });
   } catch (err) {

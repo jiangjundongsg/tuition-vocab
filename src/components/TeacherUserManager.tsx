@@ -20,6 +20,7 @@ interface UserRow {
   enableMcqAntonym: boolean;
   enableComprehension: boolean;
   enableFillBlank: boolean;
+  enableSentenceWriting: boolean;
 }
 
 interface EditState {
@@ -37,6 +38,7 @@ interface EditState {
   enableMcqAntonym: boolean;
   enableComprehension: boolean;
   enableFillBlank: boolean;
+  enableSentenceWriting: boolean;
 }
 
 const ROLE_COLORS: Record<string, string> = {
@@ -60,7 +62,7 @@ export default function TeacherUserManager() {
     numComprehension: '2', numBlanks: '5', blankZipfMax: '4.2',
     passageWordCount: '150', compQuestionType: 'mcq',
     enableMcqMeaning: true, enableMcqSynonym: false, enableMcqAntonym: false,
-    enableComprehension: true, enableFillBlank: true,
+    enableComprehension: true, enableFillBlank: true, enableSentenceWriting: false,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -93,6 +95,7 @@ export default function TeacherUserManager() {
       enableMcqAntonym:  u.enableMcqAntonym,
       enableComprehension: u.enableComprehension,
       enableFillBlank:   u.enableFillBlank,
+      enableSentenceWriting: u.enableSentenceWriting,
     });
     setError('');
   }
@@ -115,6 +118,7 @@ export default function TeacherUserManager() {
         enableMcqAntonym:  editState.enableMcqAntonym,
         enableComprehension: editState.enableComprehension,
         enableFillBlank:   editState.enableFillBlank,
+        enableSentenceWriting: editState.enableSentenceWriting,
       };
       if (editState.password) body.password = editState.password;
 
@@ -213,6 +217,7 @@ export default function TeacherUserManager() {
                                 { key: 'enableMcqAntonym',   label: 'Antonym MCQ' },
                                 { key: 'enableComprehension',label: 'Comprehension' },
                                 { key: 'enableFillBlank',    label: 'Fill Blank' },
+                                { key: 'enableSentenceWriting', label: 'Sentence Writing' },
                               ].map(({ key, label }) => (
                                 <label key={key} className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer select-none">
                                   <input
@@ -357,6 +362,7 @@ export default function TeacherUserManager() {
                         <span><span className="font-semibold text-slate-400">Antonym:</span> {u.enableMcqAntonym ? 'on' : 'off'}</span>
                         <span><span className="font-semibold text-slate-400">Comprehension:</span> {u.enableComprehension ? 'on' : 'off'}</span>
                         <span><span className="font-semibold text-slate-400">Fill blank:</span> {u.enableFillBlank ? 'on' : 'off'}</span>
+                        <span><span className="font-semibold text-slate-400">Sentence writing:</span> {u.enableSentenceWriting ? 'on' : 'off'}</span>
                       </div>
                     </td>
                   </tr>
