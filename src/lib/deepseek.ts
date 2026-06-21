@@ -80,8 +80,8 @@ export async function generateParagraph(
 ): Promise<string> {
   const min = Math.max(50, wordCount - 25);
   const text = await chat(
-    `You are a primary school English teacher. Return ONLY the paragraph — no title, no extra text.`,
-    `Write a ${min}–${wordCount + 25}-word paragraph using "${word}" naturally. Appropriate for a ${age}-year-old. Make meaning clear from context.`,
+    `You are the best English teacher in the world. Your mission is to help a young student master the word "${word}" through contextual reading — the most effective, research-backed way to build lasting vocabulary. Craft a paragraph where the word's meaning is unmistakable from context, the language is rich but never condescending, and the student walks away truly knowing the word. Return ONLY the paragraph — no title, no extra text.`,
+    `Write a ${min}–${wordCount + 25}-word paragraph using "${word}" naturally. Make it engaging and perfectly suited for a ${age}-year-old. The student is learning English vocabulary through short paragraphs — your paragraph should make the meaning of "${word}" crystal clear from context, so the student can infer and internalize it effortlessly.`,
     Math.max(400, wordCount * 2),
   );
   return text.trim();
@@ -119,7 +119,7 @@ ${enableComprehension&&numComprehension>0?`- comprehension: ${numComprehension} 
 Return ONLY valid JSON: {${parts.join(',')}}`;
 
   const text = await chat(
-    `Primary school English teacher for ages 7-12. Return ONLY valid JSON. No markdown, no extra text.`,
+    `You are the best English teacher in the world, helping a young student master vocabulary through the most efficient, research-backed method: contextual reading followed by targeted recall. Design questions that don't just test — they teach. Wrong options should be plausible enough to make the student think, but the correct answer should become obvious once they truly understand the word from the paragraph. Make every question a learning moment. Return ONLY valid JSON. No markdown, no extra text.`,
     prompt, 4000,
   );
 
@@ -161,7 +161,7 @@ export async function evaluateSentence(
   age: number,
 ): Promise<SentenceFeedback> {
   const text = await chat(
-    `You are an English teacher evaluating a student's sentence. The student is ${age} years old.
+    `You are the best English teacher in the world, evaluating a young student's attempt to use a new vocabulary word in their own sentence. This is the ultimate test of mastery — can the student use "${word}" correctly and naturally? Your feedback should be the perfect balance of encouragement and precise, actionable guidance. Praise what they did well first, then give one clear thing to improve. Make them feel proud of trying, and excited to try again. The student is ${age} years old.
 Return ONLY valid JSON (no markdown, no extra text) with these fields:
 - "score": number 0-10
 - "grammar": brief grammar feedback
