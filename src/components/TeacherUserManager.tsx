@@ -4,7 +4,10 @@ import { useState, useEffect, Fragment } from 'react';
 
 interface UserRow {
   id: number;
-  email: string;
+  email: string | null;
+  username: string | null;
+  status: string;
+  teacherId: number | null;
   displayName: string | null;
   role: string;
   age: number | null;
@@ -101,13 +104,82 @@ export default function TeacherUserManager() {
   const [studentProgress, setStudentProgress] = useState<LessonProgressItem[]>([]);
   const [progressLoading, setProgressLoading] = useState(false);
 
-  useEffect(() => {
-    fetch('/api/teacher/users')
+  // Current teacher (for the shareable Teacher ID) + approval/add-student state
+  const [meId, setMeId] = useState<number | null>(null);
+  const [meRole, setMeRole] = useState<string>('teacher');
+  const [copied, setCopied] = useState(false);
+  const [approvingId, setApprovingId] = useState<number | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newStudent, setNewStudent] = useState({ username: '', displayName: '', password: '', age: '' });
+  const [addingStudent, setAddingStudent] = useState(false);
+
+  function reloadUsers() {
+    return fetch('/api/teacher/users')
       .then((r) => r.json())
       .then((d) => setUsers(d.users ?? []))
-      .catch(() => setError('Could not load users.'))
-      .finally(() => setLoading(false));
+      .catch(() => setError('Could not load users.'));
+  }
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((r) => r.json())
+      .then((d) => { if (d.user) { setMeId(d.user.id); setMeRole(d.user.role); } })
+      .catch(() => {});
+    reloadUsers().finally(() => setLoading(false));
   }, []);
+
+  async function setStatus(id: number, status: 'approved' | 'rejected') {
+    setApprovingId(id);
+    setError('');
+    try {
+      const res = await fetch(`/api/teacher/users/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Update failed');
+      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status } : u)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Update failed');
+    } finally {
+      setApprovingId(null);
+    }
+  }
+
+  async function addStudent(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newStudent.username.trim() || newStudent.password.length < 6) {
+      setError('A username and a password of at least 6 characters are required');
+      return;
+    }
+    setAddingStudent(true);
+    setError('');
+    try {
+      const res = await fetch('/api/teacher/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          students: [{
+            username: newStudent.username.trim(),
+            displayName: newStudent.displayName.trim() || undefined,
+            password: newStudent.password,
+            age: newStudent.age ? parseInt(newStudent.age) : undefined,
+          }],
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not add student');
+      if (data.created === 0) throw new Error('That username is already taken');
+      setNewStudent({ username: '', displayName: '', password: '', age: '' });
+      setShowAddForm(false);
+      await reloadUsers();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not add student');
+    } finally {
+      setAddingStudent(false);
+    }
+  }
 
   /* Esc to close modal */
   useEffect(() => {
@@ -247,11 +319,99 @@ export default function TeacherUserManager() {
 
   const Q_SUMMARY_KEYS = ['numComprehension','numBlanks','blankZipfMax','passageWordCount','compQuestionType'];
 
+  const pending = users.filter((u) => u.role === 'student' && u.status === 'pending');
+  const roster = users.filter((u) => !(u.role === 'student' && u.status === 'pending'));
 
   return (
     <div className="space-y-4">
       {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{error}</div>}
 
+      {/* Teacher ID — share so students can join */}
+      {meRole === 'teacher' && meId != null && (
+        <div className="bg-gradient-to-br from-indigo-50 to-violet-50 border border-indigo-100 rounded-2xl p-5 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1">Your Teacher ID</p>
+            <p className="text-3xl font-bold text-indigo-700 tabular-nums leading-none">{meId}</p>
+            <p className="text-xs text-slate-500 mt-1.5">Share this with students so they can join your class.</p>
+          </div>
+          <button
+            onClick={() => { navigator.clipboard?.writeText(String(meId)); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+            className="shrink-0 text-xs font-semibold text-indigo-600 bg-white border border-indigo-200 rounded-lg px-3 py-2 hover:bg-indigo-50 transition-colors"
+          >
+            {copied ? 'Copied!' : 'Copy ID'}
+          </button>
+        </div>
+      )}
+
+      {/* Pending join requests */}
+      {pending.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+          <p className="text-xs font-bold text-amber-600 uppercase tracking-widest mb-3">
+            Pending requests ({pending.length})
+          </p>
+          <div className="space-y-2">
+            {pending.map((u) => (
+              <div key={u.id} className="flex items-center justify-between bg-white rounded-xl border border-amber-100 px-4 py-2.5">
+                <div>
+                  <p className="font-semibold text-slate-800 text-sm">{u.displayName ?? u.username ?? '—'}</p>
+                  <p className="text-xs text-slate-400">{u.username ? '@' + u.username : u.email}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setStatus(u.id, 'approved')} disabled={approvingId === u.id}
+                    className="text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
+                    {approvingId === u.id ? '…' : 'Approve'}
+                  </button>
+                  <button onClick={() => setStatus(u.id, 'rejected')} disabled={approvingId === u.id}
+                    className="text-xs font-semibold text-red-500 hover:text-red-700 px-2 py-1.5 transition-colors disabled:opacity-50">
+                    Reject
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Add student */}
+      {(meRole === 'teacher' || meRole === 'admin') && (
+        <div>
+          {showAddForm ? (
+            <form onSubmit={addStudent} className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <input value={newStudent.username} onChange={(e) => setNewStudent((s) => ({ ...s, username: e.target.value }))}
+                  placeholder="Username" autoCapitalize="none" className={inputClass} />
+                <input value={newStudent.displayName} onChange={(e) => setNewStudent((s) => ({ ...s, displayName: e.target.value }))}
+                  placeholder="Name (optional)" className={inputClass} />
+                <input value={newStudent.password} onChange={(e) => setNewStudent((s) => ({ ...s, password: e.target.value }))}
+                  placeholder="Password (min 6)" className={inputClass} />
+                <input type="number" min={5} max={18} value={newStudent.age} onChange={(e) => setNewStudent((s) => ({ ...s, age: e.target.value }))}
+                  placeholder="Age (optional)" className={inputClass} />
+              </div>
+              <div className="flex gap-2">
+                <button type="submit" disabled={addingStudent}
+                  className="text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition-colors disabled:opacity-50">
+                  {addingStudent ? 'Adding…' : 'Add student'}
+                </button>
+                <button type="button" onClick={() => { setShowAddForm(false); setError(''); }}
+                  className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-3 py-2 transition-colors">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
+            <button onClick={() => setShowAddForm(true)}
+              className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+              + Add a student
+            </button>
+          )}
+        </div>
+      )}
+
+      {roster.length === 0 ? (
+        <div className="text-center py-10 bg-white rounded-2xl border border-slate-100">
+          <p className="text-sm text-slate-500">No students yet. Add one above, or share your Teacher ID so students can join.</p>
+        </div>
+      ) : (
       <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
@@ -265,12 +425,17 @@ export default function TeacherUserManager() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
-            {users.map((u) => (
+            {roster.map((u) => (
               <Fragment key={u.id}>
                 <tr className="hover:bg-slate-50 transition-colors">
                   <td className="px-4 py-2.5">
-                    <p className="font-semibold text-slate-800 text-sm">{u.displayName ?? '\u2014'}</p>
-                    <p className="text-xs text-slate-400">{u.email}</p>
+                    <p className="font-semibold text-slate-800 text-sm flex items-center gap-1.5">
+                      {u.displayName ?? u.username ?? '\u2014'}
+                      {u.status === 'rejected' && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-50 text-red-600 ring-1 ring-red-200">rejected</span>
+                      )}
+                    </p>
+                    <p className="text-xs text-slate-400">{u.username ? '@' + u.username : u.email}</p>
                   </td>
                   <td className="px-3 py-2.5 text-center">
                     <span className={'px-2 py-0.5 rounded-full text-xs font-semibold ' + (ROLE_COLORS[u.role] ?? ROLE_COLORS.student)}>
@@ -365,6 +530,7 @@ export default function TeacherUserManager() {
           </tbody>
         </table>
       </div>
+      )}
 
       {/* Edit modal overlay */}
       {modalUser && (
@@ -379,7 +545,7 @@ export default function TeacherUserManager() {
             <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold text-slate-800">
-                  Edit: {modalUser.displayName ?? modalUser.email}
+                  Edit: {modalUser.displayName ?? modalUser.username ?? modalUser.email}
                 </h3>
                 <button
                   onClick={closeModal}

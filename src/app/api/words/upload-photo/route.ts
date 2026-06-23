@@ -46,9 +46,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No vocabulary words found in image' }, { status: 400 });
     }
 
-    const userRows = await sql`SELECT id, display_name FROM users WHERE id = ANY(${targetUserIds}::int[])`;
+    const userRows = user.role === 'admin'
+      ? await sql`SELECT id, display_name FROM users WHERE id = ANY(${targetUserIds}::int[])`
+      : await sql`SELECT id, display_name FROM users WHERE id = ANY(${targetUserIds}::int[]) AND teacher_id = ${user.id}`;
     if (userRows.length === 0) {
-      return NextResponse.json({ error: 'No valid target users found' }, { status: 400 });
+      return NextResponse.json({ error: 'No valid target students found' }, { status: 400 });
     }
 
     const uniqueWords = [...new Set(extractedWords)];

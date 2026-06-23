@@ -4,7 +4,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { initDb } from '@/lib/db-init';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, canManageStudent } from '@/lib/auth';
 
 export async function GET(
   _req: Request,
@@ -19,6 +19,10 @@ export async function GET(
   const { id: idStr } = await params;
   const targetId = parseInt(idStr);
   if (isNaN(targetId)) return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 });
+
+  if (!(await canManageStudent(user, targetId))) {
+    return NextResponse.json({ error: 'Not your student' }, { status: 403 });
+  }
 
   const rows = await sql`
     SELECT lesson_number, practice_done, dictation_done, tricky_clicked

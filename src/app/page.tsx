@@ -113,6 +113,32 @@ export default async function HomePage() {
   const isTeacher = user?.role === 'teacher' || user?.role === 'admin';
   const features = isTeacher ? teacherFeatures : studentFeatures;
 
+  // A student awaiting (or denied) teacher approval can't practice yet.
+  if (user?.role === 'student' && user.status !== 'approved') {
+    const rejected = user.status === 'rejected';
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center py-12">
+        <div className="w-full max-w-md text-center bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/60 p-10">
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5 ${rejected ? 'bg-red-50' : 'bg-amber-50'}`}>
+            <span className="text-3xl">{rejected ? '🚫' : '⏳'}</span>
+          </div>
+          <h1 className="text-2xl font-semibold text-slate-900 mb-2">
+            {rejected ? 'Request not approved' : 'Waiting for approval'}
+          </h1>
+          <p className="text-slate-500 text-sm leading-relaxed">
+            {rejected
+              ? 'Your teacher did not approve this account. Please check the Teacher ID you used, or ask your teacher to add you.'
+              : `Your account is set up! Your teacher (ID ${user.teacherId ?? '—'}) just needs to approve you before you can start practising. Check back soon.`}
+          </p>
+          <p className="mt-6 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400">
+            <span className={`w-1.5 h-1.5 rounded-full ${rejected ? 'bg-red-400' : 'bg-amber-400 animate-pulse'}`} />
+            {user.displayName ?? user.username}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-20">
 

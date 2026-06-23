@@ -29,10 +29,12 @@ export async function POST(req: NextRequest) {
 
     const { words: wordList, targetUserIds, lessonNumber: lessonOverride } = uploadSchema.parse(await req.json());
 
-    // Validate target users exist and are students
-    const userRows = await sql`SELECT id, display_name FROM users WHERE id = ANY(${targetUserIds}::int[])`;
+    // Only the teacher's own students are valid targets (admin: any).
+    const userRows = user.role === 'admin'
+      ? await sql`SELECT id, display_name FROM users WHERE id = ANY(${targetUserIds}::int[])`
+      : await sql`SELECT id, display_name FROM users WHERE id = ANY(${targetUserIds}::int[]) AND teacher_id = ${user.id}`;
     if (userRows.length === 0) {
-      return NextResponse.json({ error: 'No valid target users found' }, { status: 400 });
+      return NextResponse.json({ error: 'No valid target students found' }, { status: 400 });
     }
 
     // Parse word list: one word or phrase per line

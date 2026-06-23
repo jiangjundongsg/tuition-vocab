@@ -6,7 +6,9 @@ import { setUserCookie } from '@/lib/auth';
 import { z } from 'zod';
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  // Accept either the new `identifier` field or the legacy `email` field.
+  identifier: z.string().min(1).optional(),
+  email: z.string().min(1).optional(),
   password: z.string().min(1),
 });
 
@@ -14,31 +16,33 @@ export async function POST(req: NextRequest) {
   try {
     await initDb();
     const body = loginSchema.parse(await req.json());
-    const { email, password } = body;
-
-    const emailLower = email.toLowerCase().trim();
+    const identifier = (body.identifier ?? body.email ?? '').toLowerCase().trim();
+    if (!identifier) {
+      return NextResponse.json({ error: 'Email or username is required' }, { status: 400 });
+    }
 
     const rows = await sql`
-      SELECT id, email, password_hash, display_name
+      SELECT id, email, username, password_hash, display_name
       FROM users
-      WHERE email = ${emailLower}
+      WHERE lower(email) = ${identifier} OR lower(username) = ${identifier}
+      LIMIT 1
     `;
 
     if (rows.length === 0) {
-      return NextResponse.json({ error: 'Incorrect email or password' }, { status: 401 });
+      return NextResponse.json({ error: 'Incorrect username/email or password' }, { status: 401 });
     }
 
     const user = rows[0];
-    const valid = await bcrypt.compare(password, user.password_hash as string);
+    const valid = await bcrypt.compare(body.password, user.password_hash as string);
 
     if (!valid) {
-      return NextResponse.json({ error: 'Incorrect email or password' }, { status: 401 });
+      return NextResponse.json({ error: 'Incorrect username/email or password' }, { status: 401 });
     }
 
     await setUserCookie(Number(user.id));
 
     return NextResponse.json({
-      user: { id: user.id, email: user.email, displayName: user.display_name },
+      user: { id: user.id, email: user.email, username: user.username, displayName: user.display_name },
     });
   } catch (err) {
     console.error('Login error:', err);

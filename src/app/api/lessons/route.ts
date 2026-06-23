@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { initDb } from '@/lib/db-init';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, canManageStudent } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
   try {
@@ -15,6 +15,9 @@ export async function GET(req: NextRequest) {
     let targetId = user.id;
     if ((user.role === 'teacher' || user.role === 'admin') && userIdParam) {
       targetId = parseInt(userIdParam);
+      if (!(await canManageStudent(user, targetId))) {
+        return NextResponse.json({ error: 'Not your student' }, { status: 403 });
+      }
     }
 
     const rows = await sql`

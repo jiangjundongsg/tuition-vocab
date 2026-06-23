@@ -43,6 +43,7 @@ export default function WordsPage() {
   const [error, setError] = useState('');
   const [wordSearch, setWordSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [isAdmin, setIsAdmin] = useState(false);
   const PER_PAGE = 50;
 
   const fetchWords = useCallback(async () => {
@@ -68,6 +69,7 @@ export default function WordsPage() {
         if (role !== 'teacher' && role !== 'admin') {
           router.replace('/login?message=teacher-only');
         } else {
+          setIsAdmin(role === 'admin');
           fetchWords();
         }
       })
@@ -123,10 +125,11 @@ export default function WordsPage() {
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
   const TABS: { key: Tab; label: string; icon: string }[] = [
-    { key: 'users',  label: 'Users',  icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
+    { key: 'users',  label: 'Students', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
     { key: 'words',  label: 'Words',  icon: 'M7 4h10M7 8h10M7 12h4M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
     { key: 'upload', label: 'Upload', icon: 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12' },
-    { key: 'sql',    label: 'SQL',    icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4' },
+    // SQL portal is admin-only — it would otherwise bypass per-teacher scoping.
+    ...(isAdmin ? [{ key: 'sql' as Tab, label: 'SQL', icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4' }] : []),
   ];
 
   return (

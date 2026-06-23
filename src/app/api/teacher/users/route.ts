@@ -11,21 +11,35 @@ export async function GET() {
       return NextResponse.json({ error: 'Teacher access required' }, { status: 403 });
     }
 
-    const rows = await sql`
-      SELECT id, email, display_name, role, age, last_lesson, passage_source,
-             num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type,
-             enable_mcq_meaning, enable_mcq_synonym, enable_mcq_antonym,
-             enable_comprehension, enable_fill_blank, enable_sentence_writing,
-             created_at
-      FROM users ORDER BY created_at ASC
-    `;
+    // Teachers see only their own students; admin sees everyone.
+    const isAdmin = user.role === 'admin';
+    const rows = isAdmin
+      ? await sql`
+          SELECT id, email, username, display_name, role, status, teacher_id, age, last_lesson, passage_source,
+                 num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type,
+                 enable_mcq_meaning, enable_mcq_synonym, enable_mcq_antonym,
+                 enable_comprehension, enable_fill_blank, enable_sentence_writing,
+                 created_at
+          FROM users ORDER BY created_at ASC
+        `
+      : await sql`
+          SELECT id, email, username, display_name, role, status, teacher_id, age, last_lesson, passage_source,
+                 num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type,
+                 enable_mcq_meaning, enable_mcq_synonym, enable_mcq_antonym,
+                 enable_comprehension, enable_fill_blank, enable_sentence_writing,
+                 created_at
+          FROM users WHERE teacher_id = ${user.id} ORDER BY created_at ASC
+        `;
 
     return NextResponse.json({
       users: rows.map((r) => ({
         id: Number(r.id),
-        email: r.email as string,
+        email: r.email as string | null,
+        username: r.username as string | null,
         displayName: r.display_name as string | null,
         role: r.role as string,
+        status: (r.status as string) ?? 'approved',
+        teacherId: r.teacher_id != null ? Number(r.teacher_id) : null,
         age: r.age != null ? Number(r.age) : null,
         lastLesson: r.last_lesson as string | null,
         passageSource: (r.passage_source as string) || 'TextBook_Harry_Portter',

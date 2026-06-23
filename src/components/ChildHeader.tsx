@@ -6,16 +6,19 @@ import { useEffect, useState } from 'react';
 
 interface User {
   id: number;
-  email: string;
+  email: string | null;
+  username: string | null;
   displayName: string | null;
   role: string;
+  status: string;
 }
 
 const studentNav = [
-  { href: '/',            label: 'Home' },
-  { href: '/practice',   label: 'Practice' },
-  { href: '/dictation',  label: 'Dictation' },
-  { href: '/wrong-bank', label: 'Tricky Words' },
+  { href: '/',             label: 'Home' },
+  { href: '/practice',     label: 'Practice' },
+  { href: '/dictation',    label: 'Dictation' },
+  { href: '/wrong-bank',   label: 'Tricky Words' },
+  { href: '/mistake-pick', label: 'Mistake Pick' },
 ];
 
 const teacherNav = [
@@ -47,8 +50,10 @@ export default function ChildHeader() {
   }
 
   const isTeacher = user?.role === 'teacher' || user?.role === 'admin';
-  const navItems = isTeacher ? teacherNav : studentNav;
-  const displayName = user?.displayName ?? user?.email.split('@')[0] ?? '';
+  // Students awaiting (or denied) approval can't practice yet — show Home only.
+  const isPendingStudent = user?.role === 'student' && user.status !== 'approved';
+  const navItems = isTeacher ? teacherNav : (isPendingStudent ? [{ href: '/', label: 'Home' }] : studentNav);
+  const displayName = user?.displayName ?? user?.username ?? user?.email?.split('@')[0] ?? '';
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/60">

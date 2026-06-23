@@ -18,8 +18,10 @@ export async function POST(req: NextRequest) {
     await initDb();
 
     const user = await getCurrentUser();
-    if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
-      return NextResponse.json({ error: 'Teacher access required' }, { status: 403 });
+    // Admin-only: a raw-SQL portal would otherwise let a teacher read other
+    // teachers' students, breaking per-class isolation.
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
     const body = (await req.json()) as { query: string };

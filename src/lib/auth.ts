@@ -5,9 +5,12 @@ const USER_COOKIE = 'vocab_user_id';
 
 export interface AuthUser {
   id: number;
-  email: string;
+  email: string | null;
+  username: string | null;
   displayName: string | null;
   role: string; // 'student' | 'teacher' | 'admin'
+  status: string; // 'pending' | 'approved' | 'rejected'
+  teacherId: number | null; // approving teacher (students only)
   age: number | null;
   lastLesson: string | null;
   lastDictationLesson: string | null;
@@ -36,7 +39,8 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     if (isNaN(userId)) return null;
 
     const rows = await sql`
-      SELECT id, email, display_name, role, age, last_lesson, last_dictation_lesson, passage_source,
+      SELECT id, email, username, display_name, role, status, teacher_id, age,
+             last_lesson, last_dictation_lesson, passage_source,
              num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type,
              enable_mcq_meaning, enable_mcq_synonym, enable_mcq_antonym,
              enable_comprehension, enable_fill_blank, enable_sentence_writing
@@ -48,9 +52,12 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 
     return {
       id: Number(r.id),
-      email: r.email as string,
+      email: r.email as string | null,
+      username: r.username as string | null,
       displayName: r.display_name as string | null,
       role: (r.role as string) ?? 'student',
+      status: (r.status as string) ?? 'approved',
+      teacherId: r.teacher_id != null ? Number(r.teacher_id) : null,
       age: r.age != null ? Number(r.age) : null,
       lastLesson: r.last_lesson as string | null,
       lastDictationLesson: r.last_dictation_lesson as string | null,
@@ -85,4 +92,23 @@ export async function setUserCookie(userId: number): Promise<void> {
 export async function clearUserCookie(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete(USER_COOKIE);
+}
+
+// ── Teacher ↔ student ownership ──────────────────────────────────────────────
+
+/** IDs of every student belonging to a teacher (the students they may manage). */
+export async function studentIdsOf(teacherId: number): Promise<number[]> {
+  const rows = await sql`SELECT id FROM users WHERE teacher_id = ${teacherId}`;
+  return rows.map((r) => Number(r.id));
+}
+
+/**
+ * Whether `user` may view/manage the student with id `studentId`.
+ * admin → any user; teacher → only students whose teacher_id is theirs.
+ */
+export async function canManageStudent(user: AuthUser, studentId: number): Promise<boolean> {
+  if (user.role === 'admin') return true;
+  if (user.role !== 'teacher') return false;
+  const rows = await sql`SELECT 1 FROM users WHERE id = ${studentId} AND teacher_id = ${user.id}`;
+  return rows.length > 0;
 }

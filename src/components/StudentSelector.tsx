@@ -6,6 +6,7 @@ interface StudentOption {
   id: number;
   displayName: string | null;
   email: string;
+  username?: string | null;
 }
 
 interface Props {
@@ -21,8 +22,8 @@ export default function StudentSelector({ selectedIds, onChange }: Props) {
     fetch('/api/teacher/users')
       .then((r) => r.json())
       .then((d) => {
-        const all = (d.users ?? []) as Array<{ id: number; displayName: string | null; email: string; role: string }>;
-        setStudents(all.filter((u) => u.role === 'student'));
+        const all = (d.users ?? []) as Array<{ id: number; displayName: string | null; email: string; username?: string | null; role: string; status?: string }>;
+        setStudents(all.filter((u) => u.role === 'student' && u.status !== 'rejected'));
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -49,7 +50,7 @@ export default function StudentSelector({ selectedIds, onChange }: Props) {
   }
 
   if (students.length === 0) {
-    return <p className="text-xs text-slate-400">No students found. Please register student accounts first.</p>;
+    return <p className="text-xs text-slate-400">No students yet. Add students under the Students tab, or share your Teacher ID so they can join.</p>;
   }
 
   return (
@@ -75,7 +76,7 @@ export default function StudentSelector({ selectedIds, onChange }: Props) {
                   : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300 hover:bg-indigo-50'
               }`}
             >
-              {s.displayName ?? s.email}
+              {s.displayName ?? s.username ?? s.email}
             </button>
           );
         })}

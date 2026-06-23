@@ -30,7 +30,12 @@ export default function MistakePickSession({
   const [submitted, setSubmitted] = useState<Record<number, boolean>>(initialSession?.submitted ?? {});
   const [correct, setCorrect] = useState<Record<number, boolean>>(initialSession?.correct ?? {});
   const [answers, setAnswers] = useState<Record<number, string>>(initialSession?.answers ?? {});
-  const [inputValue, setInputValue] = useState(initialSession?.answers?.[initialSession?.currentIndex ?? 0] ?? '');
+  // Pre-fill the box with the original (erroneous) sentence so the student edits
+  // in place rather than retyping the whole thing. A saved answer takes priority.
+  const startIdx = initialSession?.currentIndex ?? 0;
+  const [inputValue, setInputValue] = useState(
+    initialSession?.answers?.[startIdx] ?? questions[startIdx]?.sentence ?? ''
+  );
   const [done, setDone] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -82,7 +87,7 @@ export default function MistakePickSession({
     if (currentIndex < questions.length - 1) {
       const nextIdx = currentIndex + 1;
       setCurrentIndex(nextIdx);
-      setInputValue(answers[nextIdx] ?? '');
+      setInputValue(answers[nextIdx] ?? questions[nextIdx]?.sentence ?? '');
     } else { setDone(true); }
   }
 

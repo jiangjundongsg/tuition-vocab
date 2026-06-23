@@ -95,7 +95,17 @@ export async function initDb() {
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS num_comprehension INTEGER NOT NULL DEFAULT 2`.catch(() => {}),
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS num_blanks INTEGER NOT NULL DEFAULT 5`.catch(() => {}),
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS blank_zipf_max REAL NOT NULL DEFAULT 4.2`.catch(() => {}),
+    // Teacher↔student ownership + approval + username login
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS teacher_id INTEGER REFERENCES users(id) ON DELETE SET NULL`.catch(() => {}),
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'approved'`.catch(() => {}),
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT`.catch(() => {}),
+    sql`ALTER TABLE users ALTER COLUMN email DROP NOT NULL`.catch(() => {}),
   ]);
+
+  // Case-insensitive unique username (students may log in without an email),
+  // and an index for scoping a teacher's students.
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_lower ON users (lower(username)) WHERE username IS NOT NULL`.catch(() => {});
+  await sql`CREATE INDEX IF NOT EXISTS idx_users_teacher_id ON users (teacher_id)`.catch(() => {});
 
   // v4.0: Add user_id to words
   await sql`ALTER TABLE words ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE CASCADE`.catch(() => {});
@@ -210,6 +220,22 @@ export async function initDb() {
     )
   `;
   await sql`CREATE INDEX IF NOT EXISTS idx_mps_user_lesson ON mistake_pick_sets(user_id, lesson_number)`.catch(() => {});
+
+  // One-time tokens for password reset (account recovery). Only a SHA-256 hash
+  // of the token is stored, so a DB leak can't be used to reset a password.
+  // Single-use (used_at) and time-limited (expires_at).
+  await sql`
+    CREATE TABLE IF NOT EXISTS auth_tokens (
+      id         SERIAL PRIMARY KEY,
+      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token_hash TEXT NOT NULL UNIQUE,
+      purpose    TEXT NOT NULL,        -- 'reset'
+      expires_at TIMESTAMPTZ NOT NULL,
+      used_at    TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS auth_tokens_user ON auth_tokens (user_id, purpose)`.catch(() => {});
 
   // Drop obsolete tables
   await sql`DROP TABLE IF EXISTS question_config`.catch(() => {});

@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { initDb } from '@/lib/db-init';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, canManageStudent, AuthUser } from '@/lib/auth';
+
+/** 403 guard: the word must belong to one of the teacher's students (admin any). */
+async function guardWordOwnership(user: AuthUser, wordId: number): Promise<NextResponse | null> {
+  if (user.role === 'admin') return null;
+  const rows = await sql`SELECT user_id FROM words WHERE id = ${wordId}`;
+  if (rows.length === 0) return NextResponse.json({ error: 'Word not found' }, { status: 404 });
+  const ownerId = rows[0].user_id != null ? Number(rows[0].user_id) : null;
+  if (ownerId == null || !(await canManageStudent(user, ownerId))) {
+    return NextResponse.json({ error: 'Not your student' }, { status: 403 });
+  }
+  return null;
+}
 
 export async function PATCH(
   req: NextRequest,
@@ -17,6 +29,9 @@ export async function PATCH(
     const { id: idStr } = await params;
     const wordId = parseInt(idStr);
     if (isNaN(wordId)) return NextResponse.json({ error: 'Invalid word ID' }, { status: 400 });
+
+    const denied = await guardWordOwnership(user, wordId);
+    if (denied) return denied;
 
     const body = await req.json() as { lessonNumber?: string; difficulty?: string };
 
@@ -51,6 +66,9 @@ export async function DELETE(
     const { id: idStr } = await params;
     const wordId = parseInt(idStr);
     if (isNaN(wordId)) return NextResponse.json({ error: 'Invalid word ID' }, { status: 400 });
+
+    const denied = await guardWordOwnership(user, wordId);
+    if (denied) return denied;
 
     await sql`DELETE FROM words WHERE id = ${wordId}`;
     return NextResponse.json({ deleted: true });

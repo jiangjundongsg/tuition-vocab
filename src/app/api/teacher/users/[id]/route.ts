@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import sql from '@/lib/db';
 import { initDb } from '@/lib/db-init';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, canManageStudent } from '@/lib/auth';
 
 export async function PATCH(
   req: NextRequest,
@@ -19,8 +19,13 @@ export async function PATCH(
     const targetId = parseInt(idStr);
     if (isNaN(targetId)) return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 });
 
+    if (!(await canManageStudent(user, targetId))) {
+      return NextResponse.json({ error: 'Not your student' }, { status: 403 });
+    }
+
     const body = await req.json() as {
       displayName?: string;
+      status?: string;
       age?: number | null;
       passageSource?: string;
       password?: string;
@@ -39,6 +44,11 @@ export async function PATCH(
 
     if (body.displayName !== undefined) {
       await sql`UPDATE users SET display_name = ${body.displayName.trim() || null} WHERE id = ${targetId}`;
+    }
+    if (body.status !== undefined) {
+      const v = ['pending', 'approved', 'rejected'].includes(body.status) ? body.status : null;
+      if (!v) return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+      await sql`UPDATE users SET status = ${v} WHERE id = ${targetId}`;
     }
     if (body.age !== undefined) {
       const ageVal = body.age != null && Number(body.age) > 0 ? Number(body.age) : null;
@@ -94,7 +104,7 @@ export async function PATCH(
     }
 
     const rows = await sql`
-      SELECT id, email, display_name, role, age, passage_source,
+      SELECT id, email, username, display_name, role, status, teacher_id, age, passage_source,
              num_comprehension, num_blanks, blank_zipf_max, passage_word_count, comp_question_type,
              enable_mcq_meaning, enable_mcq_synonym, enable_mcq_antonym,
              enable_comprehension, enable_fill_blank, enable_sentence_writing
@@ -107,8 +117,11 @@ export async function PATCH(
       user: {
         id: Number(r.id),
         email: r.email,
+        username: r.username,
         displayName: r.display_name,
         role: r.role,
+        status: (r.status as string) ?? 'approved',
+        teacherId: r.teacher_id != null ? Number(r.teacher_id) : null,
         age: r.age != null ? Number(r.age) : null,
         passageSource: r.passage_source,
         numComprehension: Number(r.num_comprehension) || 2,
@@ -144,6 +157,10 @@ export async function DELETE(
     const { id: idStr } = await params;
     const targetId = parseInt(idStr);
     if (isNaN(targetId)) return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 });
+
+    if (!(await canManageStudent(user, targetId))) {
+      return NextResponse.json({ error: 'Not your student' }, { status: 403 });
+    }
 
     await sql`DELETE FROM users WHERE id = ${targetId}`;
     return NextResponse.json({ ok: true });

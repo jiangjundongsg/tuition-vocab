@@ -50,13 +50,16 @@ async function chat(
   model = MODEL,
 ): Promise<string> {
   if (!API_KEY) throw new Error('DEEPSEEK_API_KEY not configured');
+  // Always respond in English — including every explanation, feedback, and field
+  // value — even when the prompt references non-English context (e.g. 高考/改错题).
+  const englishOnly = ' Always respond entirely in English. All text, explanations, and feedback you produce must be in English only.';
   const res = await fetch(`${BASE}/chat/completions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${API_KEY}` },
     body: JSON.stringify({
       model, max_tokens: maxTokens, temperature: 0.7,
       messages: [
-        { role: 'system', content: systemPrompt },
+        { role: 'system', content: systemPrompt + englishOnly },
         { role: 'user', content: userMessage },
       ],
     }),
