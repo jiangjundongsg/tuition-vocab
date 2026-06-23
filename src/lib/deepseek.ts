@@ -51,7 +51,7 @@ async function chat(
 ): Promise<string> {
   if (!API_KEY) throw new Error('DEEPSEEK_API_KEY not configured');
   // Always respond in English — including every explanation, feedback, and field
-  // value — even when the prompt references non-English context (e.g. 高考/改错题).
+  // value — even if a prompt mentions a non-English context.
   const englishOnly = ' Always respond entirely in English. All text, explanations, and feedback you produce must be in English only.';
   const res = await fetch(`${BASE}/chat/completions`, {
     method: 'POST',
@@ -192,7 +192,7 @@ export interface MistakePickQuestion {
   word: string;              // the vocabulary word used in this sentence
   correction: {
     mistake: string;         // description of what's wrong, e.g. "go → went"
-    explanation: string;     // explanation in Chinese
+    explanation: string;     // explanation in English
     errorType: string;       // category of error
   };
   correctSentence: string;   // fully corrected sentence
@@ -204,22 +204,22 @@ export interface MistakePickSet {
 }
 
 const errorCategories = [
-  '时态错用 (wrong tense: e.g. past tense required but present used, or vice versa)',
-  '主谓不一致 (subject-verb disagreement: singular/plural mismatch)',
-  '缺少非谓语动词/多个动词连用 (multiple verbs without non-finite form, e.g. missing -ing or to-infinitive)',
-  '缺少谓语动词/缺少系动词be (missing main verb or missing linking verb "be")',
-  '主动/被动语态错用 (active/passive voice misuse)',
-  '某些词后接动名词/不定式错误 (gerund vs infinitive after certain verbs, e.g. "enjoy to do" → "enjoy doing")',
-  '介词后没用动词-ing (missing -ing after preposition)',
-  '形容词/副词错用 (adjective vs adverb confusion, e.g. "run quick" → "run quickly")',
-  '比较级/最高级错用 (comparative/superlative misuse, e.g. "more better")',
-  '-ing/-ed结尾形容词错用 (-ing vs -ed adjective, e.g. "I am boring" → "I am bored")',
-  '并列连词/从属连词错用 (coordinating/subordinating conjunction misuse: and/or/but, because/although/etc.)',
-  '代词不一致/关系代词错用/不定代词错用 (pronoun disagreement, relative pronoun misuse, indefinite pronoun error)',
-  '可数名词单复数错用/可数不可数错用 (countable noun singular/plural misuse, countable/uncountable confusion)',
-  '冠词错用/多冠词/少冠词 (article misuse: a/an/the, extra or missing article)',
-  '介词错用/多介词/少介词 (wrong preposition, extra or missing preposition)',
-  '基数词/序数词错用 (cardinal vs ordinal number misuse, e.g. "the one time" → "the first time")',
+  'Wrong tense (e.g. past tense required but present used, or vice versa)',
+  'Subject-verb disagreement (singular/plural mismatch)',
+  'Multiple verbs without a non-finite form (missing -ing or to-infinitive)',
+  'Missing main verb or missing linking verb "be"',
+  'Active/passive voice misuse',
+  'Gerund vs infinitive after certain verbs (e.g. "enjoy to do" → "enjoy doing")',
+  'Missing -ing after a preposition',
+  'Adjective vs adverb confusion (e.g. "run quick" → "run quickly")',
+  'Comparative/superlative misuse (e.g. "more better")',
+  '-ing vs -ed adjective (e.g. "I am boring" → "I am bored")',
+  'Coordinating/subordinating conjunction misuse (and/or/but, because/although, etc.)',
+  'Pronoun disagreement, relative pronoun misuse, or indefinite pronoun error',
+  'Countable noun singular/plural misuse, or countable/uncountable confusion',
+  'Article misuse (a/an/the, extra or missing article)',
+  'Wrong preposition, extra or missing preposition',
+  'Cardinal vs ordinal number misuse (e.g. "the one time" → "the first time")',
 ];
 
 export async function generateMistakePickQuestions(
@@ -231,7 +231,7 @@ export async function generateMistakePickQuestions(
   const count = words.length;
 
   const text = await chat(
-    `You are the best English teacher in the world, preparing "error correction" (改错题) exercises for a ${age}-year-old student. The student is learning vocabulary from Lesson ${lessonNumber} and needs to sharpen their ability to spot and fix grammar mistakes — just like the Chinese college entrance exam (高考) error-correction section.
+    `You are the best English teacher in the world, preparing English error-correction exercises for a ${age}-year-old student. The student is learning vocabulary from Lesson ${lessonNumber} and needs to sharpen their ability to spot and fix grammar mistakes.
 
 For EACH vocabulary word below, create ONE sentence that:
 1. Uses that word naturally in context — the word should feel like it belongs
@@ -252,7 +252,7 @@ Return ONLY valid JSON (no markdown, no extra text):
     {
       "sentence": "The sentence containing exactly 1 error",
       "word": "the_vocabulary_word",
-      "correction": { "mistake": "wrong → correct", "explanation": "Brief explanation in Chinese", "errorType": "Category name in Chinese" },
+      "correction": { "mistake": "wrong → correct", "explanation": "Brief explanation in English", "errorType": "Category name in English" },
       "correctSentence": "The fully corrected sentence"
     }
   ]
@@ -266,8 +266,8 @@ Rules (IMPORTANT):
 - Choose the MOST appropriate error category for each word based on its part of speech and nature
 - Vary the error categories across words — don't reuse the same category repeatedly unless it's the only fitting one
 - The "mistake" field format: "wrong_text → correct_text"
-- The "explanation" should be in Chinese (中文), brief and clear for a ${age}-year-old
-- The "errorType" should be one of the Chinese category names listed above
+- The "explanation" should be in English, brief and clear for a ${age}-year-old
+- The "errorType" should be one of the English category names listed above
 - The "correctSentence" must be grammatically perfect
 - Sentences should be natural and age-appropriate — don't force words into bizarre contexts`,
     `Create ${count} error-correction sentences — ONE for each vocabulary word: ${wordList}. Lesson ${lessonNumber}, student age ${age}. For each word, pick the single most appropriate error category for that word's nature.`,

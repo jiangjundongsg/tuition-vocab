@@ -34,7 +34,7 @@ export default function SentenceWriting({ questionKey, word, age, submitted: ini
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        throw new Error(d.detail || 'Evaluation failed');
+        throw new Error(d.detail || d.error || 'Evaluation failed');
       }
       const fb: SentenceFeedback = await res.json();
       setFeedback(fb);

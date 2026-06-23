@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { initDb } from '@/lib/db-init';
 import { evaluateSentence } from '@/lib/deepseek';
-import sql from '@/lib/db';
+import { DAILY_AI_LIMIT, checkAiQuota, incrementAiQuota } from '@/lib/quota';
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,24 +19,18 @@ export async function POST(request: NextRequest) {
     if (!word || !sentence) return NextResponse.json({ error: 'Missing word or sentence' }, { status: 400 });
 
     // Check daily AI quota
-    const today = new Date().toISOString().slice(0, 10);
-    const rows = await sql`SELECT ai_calls_today, ai_date FROM users WHERE id = ${user.id}`;
-    const calls = Number(rows[0]?.ai_calls_today ?? 0);
-    const date = (rows[0]?.ai_date as string | null) ?? '';
-    const effective = date === today ? calls : 0;
-    if (effective >= 50) {
-      return NextResponse.json({ error: 'Daily AI limit reached' }, { status: 429 });
+    try {
+      await checkAiQuota(user.id);
+    } catch {
+      return NextResponse.json(
+        { error: `Daily AI limit reached (${DAILY_AI_LIMIT} calls). Try again tomorrow.` },
+        { status: 429 },
+      );
     }
 
     const feedback = await evaluateSentence(word, sentence, age ?? 10);
 
-    // Increment AI quota
-    await sql`
-      UPDATE users SET
-        ai_calls_today = CASE WHEN ai_date = ${today} THEN ai_calls_today + 1 ELSE 1 END,
-        ai_date = ${today}
-      WHERE id = ${user.id}
-    `;
+    await incrementAiQuota(user.id, 1);
 
     return NextResponse.json(feedback);
   } catch (err) {
