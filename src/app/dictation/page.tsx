@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import DictationSession, { SessionData } from '@/components/DictationSession';
 import { paletteFor, friendlyLessonLabel, paletteWithProgress, LessonProgress } from '@/lib/lessonPalette';
@@ -24,6 +24,7 @@ export default function DictationPage() {
   const [savedSession, setSavedSession] = useState<SessionData | null>(null);
   const [showResume, setShowResume] = useState(false);
   const [lessonProgress, setLessonProgress] = useState<Record<string, LessonProgress>>({});
+  const autoSelectedRef = useRef(false);
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -54,6 +55,17 @@ export default function DictationPage() {
       .then(d => setLessonProgress(d.progress ?? {}))
       .catch(() => {});
   }, [authChecked, lastLesson]);
+
+  // Auto-open a lesson passed via ?lesson= (e.g. arriving from Practice)
+  useEffect(() => {
+    if (!authChecked || autoSelectedRef.current) return;
+    const lesson = new URLSearchParams(window.location.search).get('lesson');
+    if (!lesson) return;
+    autoSelectedRef.current = true;
+    window.history.replaceState(null, '', window.location.pathname);
+    selectLesson(lesson);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once when auth resolves
+  }, [authChecked]);
 
   function handleDone() {
     if (selectedLesson) {

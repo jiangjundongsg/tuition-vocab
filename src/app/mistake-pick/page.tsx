@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import MistakePickSession, { MistakePickSessionData } from '@/components/MistakePickSession';
 import { MistakePickQuestion } from '@/lib/deepseek';
@@ -19,6 +19,7 @@ export default function MistakePickPage() {
   const [savedSession, setSavedSession] = useState<MistakePickSessionData | null>(null);
   const [showResume, setShowResume] = useState(false);
   const [lessonProgress, setLessonProgress] = useState<Record<string, LessonProgress>>({});
+  const autoSelectedRef = useRef(false);
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -44,6 +45,16 @@ export default function MistakePickPage() {
       .then((r) => r.json())
       .then((d) => setLessonProgress(d.progress ?? {}))
       .catch(() => {});
+  }, [authChecked]);
+
+  // Auto-open a lesson passed via ?lesson= (e.g. arriving from Dictation)
+  useEffect(() => {
+    if (!authChecked || autoSelectedRef.current) return;
+    const lesson = new URLSearchParams(window.location.search).get('lesson');
+    if (!lesson) return;
+    autoSelectedRef.current = true;
+    window.history.replaceState(null, '', window.location.pathname);
+    selectLesson(lesson);
   }, [authChecked]);
 
   function handleDone() {

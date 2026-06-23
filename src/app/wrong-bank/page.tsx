@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import WrongBankList from '@/components/WrongBankList';
 import RepracticeSession, { SessionData } from '@/components/RepracticeSession';
@@ -25,6 +25,7 @@ export default function WrongBankPage() {
   const [practicingLesson, setPracticingLesson] = useState<string | null>(null);
   const [savedSession, setSavedSession] = useState<SessionData | null>(null);
   const [showResume, setShowResume] = useState(false);
+  const autoOpenedRef = useRef(false);
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -49,6 +50,18 @@ export default function WrongBankPage() {
   useEffect(() => {
     if (authChecked) fetchItems();
   }, [authChecked, fetchItems]);
+
+  // Auto-open a lesson passed via ?lesson= (e.g. arriving from Mistake Pick)
+  useEffect(() => {
+    if (!authChecked || loading || autoOpenedRef.current) return;
+    const lesson = new URLSearchParams(window.location.search).get('lesson');
+    if (!lesson) return;
+    autoOpenedRef.current = true;
+    window.history.replaceState(null, '', window.location.pathname);
+    if (items.some((i) => (i.lessonNumber ?? 'No Lesson') === lesson)) {
+      startPracticingLesson(lesson);
+    }
+  }, [authChecked, loading, items]);
 
   const handleSave = useCallback(async (data: SessionData) => {
     try {
