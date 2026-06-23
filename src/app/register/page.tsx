@@ -14,9 +14,9 @@ interface StudentRow {
 }
 
 const inputClass =
-  'w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all bg-slate-50/50 placeholder:text-slate-300';
+  'w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all bg-stone-50/50 placeholder:text-stone-300';
 const labelClass =
-  'block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5';
+  'block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -121,26 +121,26 @@ export default function RegisterPage() {
   return (
     <div className="flex items-start justify-center py-10 pb-16">
       <div className="w-full max-w-sm">
-        <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/60 p-8">
+        <div className="bg-white rounded-xl border border-stone-100 shadow-xl shadow-stone-200/60 p-8">
 
           {/* Logo + heading */}
           <div className="mb-6 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center mx-auto mb-4 shadow-md shadow-indigo-200">
+            <div className="w-12 h-12 rounded-xl bg-stone-900 flex items-center justify-center mx-auto mb-4">
               <span className="text-white text-xl leading-none select-none">★</span>
             </div>
-            <h1 className="text-2xl font-semibold text-slate-900">Create account</h1>
-            <p className="text-slate-400 mt-1 text-sm">Join Vocab Star and start learning</p>
+            <h1 className="text-2xl font-semibold text-stone-900">Create account</h1>
+            <p className="text-stone-400 mt-1 text-sm">Join Vocab Star and start learning</p>
           </div>
 
           {/* Role selector */}
-          <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl mb-5">
+          <div className="grid grid-cols-2 gap-2 p-1 bg-stone-100 rounded-xl mb-5">
             {(['student', 'teacher'] as Role[]).map((r) => (
               <button
                 key={r}
                 type="button"
                 onClick={() => { setRole(r); setError(''); }}
                 className={`py-2 rounded-lg text-sm font-semibold capitalize transition-all ${
-                  role === r ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                  role === r ? 'bg-white text-indigo-600 shadow-sm' : 'text-stone-500 hover:text-stone-700'
                 }`}
               >
                 {r === 'student' ? "I'm a student" : "I'm a teacher"}
@@ -157,7 +157,7 @@ export default function RegisterPage() {
 
             <div>
               <label className={labelClass}>
-                Name <span className="normal-case font-normal text-slate-400">(optional)</span>
+                Name <span className="normal-case font-normal text-stone-400">(optional)</span>
               </label>
               <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="e.g. Alex" className={inputClass} />
@@ -171,7 +171,7 @@ export default function RegisterPage() {
                     required placeholder="Pick a username to log in" className={inputClass} autoCapitalize="none" />
                 </div>
                 <div>
-                  <label className={labelClass}>Age <span className="normal-case font-normal text-slate-400">(optional)</span></label>
+                  <label className={labelClass}>Age <span className="normal-case font-normal text-stone-400">(optional)</span></label>
                   <input type="number" value={age} onChange={(e) => setAge(e.target.value)}
                     min={5} max={18} placeholder="e.g. 10" className={inputClass} />
                 </div>
@@ -179,10 +179,10 @@ export default function RegisterPage() {
                   <label className={labelClass}>Teacher ID</label>
                   <input type="number" value={teacherId} onChange={(e) => setTeacherId(e.target.value)}
                     required placeholder="e.g. 42" className={inputClass} />
-                  <p className="text-xs text-slate-400 mt-1.5">Ask your teacher for their ID. They&apos;ll approve your account.</p>
+                  <p className="text-xs text-stone-400 mt-1.5">Ask your teacher for their ID. They&apos;ll approve your account.</p>
                 </div>
                 <div>
-                  <label className={labelClass}>Email <span className="normal-case font-normal text-slate-400">(optional)</span></label>
+                  <label className={labelClass}>Email <span className="normal-case font-normal text-stone-400">(optional)</span></label>
                   <input type="email" value={studentEmail} onChange={(e) => setStudentEmail(e.target.value)}
                     placeholder="for password recovery" className={inputClass} />
                 </div>
@@ -213,19 +213,19 @@ export default function RegisterPage() {
                   <label className={labelClass}>Teacher code</label>
                   <input type="text" value={teacherCode} onChange={(e) => setTeacherCode(e.target.value)}
                     required placeholder="Enter your teacher access code" className={inputClass} />
-                  <p className="text-xs text-slate-400 mt-1.5">Ask your school admin for the teacher code.</p>
+                  <p className="text-xs text-stone-400 mt-1.5">Ask your school admin for the teacher code.</p>
                 </div>
 
                 {/* Add students inline */}
-                <div className="border-t border-slate-100 pt-3.5">
+                <div className="border-t border-stone-100 pt-3.5">
                   <div className="flex items-center justify-between mb-2">
-                    <label className={`${labelClass} mb-0`}>Add your students <span className="normal-case font-normal text-slate-400">(optional)</span></label>
+                    <label className={`${labelClass} mb-0`}>Add your students <span className="normal-case font-normal text-stone-400">(optional)</span></label>
                   </div>
                   <div className="space-y-3">
                     {students.map((s, i) => (
-                      <div key={i} className="bg-slate-50/70 border border-slate-100 rounded-xl p-3 space-y-2 relative">
+                      <div key={i} className="bg-stone-50/70 border border-stone-100 rounded-xl p-3 space-y-2 relative">
                         <button type="button" onClick={() => removeStudentRow(i)}
-                          className="absolute top-2 right-2 text-slate-300 hover:text-red-500 text-xs" aria-label="Remove student">✕</button>
+                          className="absolute top-2 right-2 text-stone-300 hover:text-red-500 text-xs" aria-label="Remove student">✕</button>
                         <input type="text" value={s.username} onChange={(e) => updateStudentRow(i, 'username', e.target.value)}
                           placeholder="Username" className={inputClass} autoCapitalize="none" />
                         <div className="flex gap-2">
@@ -240,22 +240,22 @@ export default function RegisterPage() {
                     ))}
                   </div>
                   <button type="button" onClick={addStudentRow}
-                    className="mt-2.5 w-full border border-dashed border-slate-300 text-slate-500 hover:border-indigo-300 hover:text-indigo-600 rounded-xl py-2 text-sm font-semibold transition-colors">
+                    className="mt-2.5 w-full border border-dashed border-stone-300 text-stone-500 hover:border-indigo-300 hover:text-indigo-600 rounded-xl py-2 text-sm font-semibold transition-colors">
                     + Add a student
                   </button>
-                  <p className="text-xs text-slate-400 mt-1.5">You can also add students later from Teacher Tools.</p>
+                  <p className="text-xs text-stone-400 mt-1.5">You can also add students later from Teacher Tools.</p>
                 </div>
               </>
             )}
 
             <button type="submit" disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm py-2.5 rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-sm shadow-indigo-200 hover:shadow-md hover:shadow-indigo-200 mt-1">
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm py-2.5 rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-sm hover:shadow-md mt-1">
               {loading ? 'Creating account…' : 'Create account'}
             </button>
           </form>
         </div>
 
-        <p className="text-center text-sm text-slate-400 mt-5">
+        <p className="text-center text-sm text-stone-400 mt-5">
           Already have an account?{' '}
           <Link href="/login" className="text-indigo-600 font-semibold hover:underline">
             Log in

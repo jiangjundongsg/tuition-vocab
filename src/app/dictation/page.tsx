@@ -155,10 +155,10 @@ export default function DictationPage() {
   if (!authChecked) {
     return (
       <div className="space-y-5">
-        <div className="h-8 bg-slate-100 rounded-xl w-32 animate-pulse" />
+        <div className="h-8 bg-stone-100 rounded-xl w-32 animate-pulse" />
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-14 bg-slate-100 rounded-2xl animate-pulse" style={{ animationDelay: `${i * 60}ms` }} />
+            <div key={i} className="h-14 bg-stone-100 rounded-2xl animate-pulse" style={{ animationDelay: `${i * 60}ms` }} />
           ))}
         </div>
       </div>
@@ -171,7 +171,7 @@ export default function DictationPage() {
       <div className="space-y-6">
         <button
           onClick={() => { setShowResume(false); setSelectedLesson(''); setSavedSession(null); }}
-          className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-700 font-medium transition-colors"
+          className="flex items-center gap-2 text-sm text-stone-400 hover:text-stone-700 font-medium transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -202,7 +202,7 @@ export default function DictationPage() {
                 setShowResume(false);
                 loadLessonWords(selectedLesson);
               }}
-              className="bg-white border border-slate-200 text-slate-600 hover:text-slate-800 font-medium px-6 py-2.5 rounded-xl text-sm transition-colors"
+              className="bg-white border border-stone-200 text-stone-600 hover:text-stone-800 font-medium px-6 py-2.5 rounded-xl text-sm transition-colors"
             >
               Start Fresh
             </button>
@@ -217,7 +217,7 @@ export default function DictationPage() {
       <div className="space-y-4">
         <button
           onClick={handleDone}
-          className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-700 font-medium transition-colors"
+          className="flex items-center gap-2 text-sm text-stone-400 hover:text-stone-700 font-medium transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -241,25 +241,25 @@ export default function DictationPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-semibold text-slate-900">Dictation</h1>
-        <p className="text-slate-400 mt-1 text-sm">
+        <h1 className="text-3xl font-semibold text-stone-900">Dictation</h1>
+        <p className="text-stone-400 mt-1 text-sm">
           Choose a lesson to practise dictation directly — no reading questions required.
         </p>
       </div>
 
       {/* Lesson picker */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5">
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Select a Lesson</p>
+      <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-6 space-y-5">
+        <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">Select a Lesson</p>
 
         {lessons.length === 0 ? (
           <div className="text-center py-8 space-y-2">
-            <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-3">
-              <svg className="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 rounded-2xl bg-stone-50 flex items-center justify-center mx-auto mb-3">
+              <svg className="w-6 h-6 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.536 8.464a5 5 0 010 7.072M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253" />
               </svg>
             </div>
-            <p className="text-sm text-slate-500 font-medium">No lessons yet</p>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-stone-500 font-medium">No lessons yet</p>
+            <p className="text-sm text-stone-400">
               Ask your teacher to{' '}
               <a href="/upload" className="text-indigo-600 hover:underline font-semibold">upload a word list</a>
             </p>
@@ -271,7 +271,7 @@ export default function DictationPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search lessons…"
-              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 bg-slate-50/50 placeholder:text-slate-300"
+              className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 bg-stone-50/50 placeholder:text-stone-300"
             />
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
               {lessons
@@ -288,10 +288,10 @@ export default function DictationPage() {
                     className={`
                       relative group flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-2xl border text-sm font-semibold transition-all duration-200 disabled:opacity-50
                       ${isSelected
-                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-200'
+                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-md'
                         : isLast
                         ? 'bg-indigo-50 border-indigo-300 text-indigo-700 hover:border-indigo-400 hover:-translate-y-0.5 hover:shadow-sm'
-                        : `${p.bg} ${p.border} text-slate-700 ${p.hoverBorder} ${p.text} hover:-translate-y-0.5 hover:shadow-sm`
+                        : `${p.bg} ${p.border} text-stone-700 ${p.hoverBorder} ${p.text} hover:-translate-y-0.5 hover:shadow-sm`
                       }
                     `}
                   >
@@ -307,7 +307,7 @@ export default function DictationPage() {
                     </svg>
                     <span className="text-xs leading-tight text-center">{friendlyLessonLabel(lesson)}</span>
                     {isLast && (
-                      <span className="absolute -top-1.5 -right-1.5 flex items-center gap-0.5 bg-amber-400 text-white text-[9px] font-bold pl-1 pr-1.5 py-0.5 rounded-full leading-none shadow-sm shadow-amber-200">
+                      <span className="absolute -top-1.5 -right-1.5 flex items-center gap-0.5 bg-amber-400 text-white text-[9px] font-bold pl-1 pr-1.5 py-0.5 rounded-full leading-none shadow-sm">
                         <svg className="w-2 h-2" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                         </svg>
@@ -320,7 +320,7 @@ export default function DictationPage() {
             </div>
 
             {loadingWords && (
-              <div className="flex items-center gap-2 text-sm text-slate-400 px-1 pt-1">
+              <div className="flex items-center gap-2 text-sm text-stone-400 px-1 pt-1">
                 <span className="w-4 h-4 border-2 border-indigo-300 border-t-transparent rounded-full animate-spin" />
                 Loading lesson words…
               </div>

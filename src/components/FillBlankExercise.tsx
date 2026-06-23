@@ -41,16 +41,16 @@ export default function FillBlankExercise({ questionKey, data, submitted, onAnsw
 
   return (
     <div className="space-y-3">
-      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+      <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">
         Fill in the Blanks
       </p>
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-stone-400">
         The first letter of each missing word is shown. Fill in the complete word.
       </p>
 
       {/* Paragraph with inline blank inputs — first letter matches paragraph font/size exactly */}
       <div
-        className="bg-slate-50 border border-slate-100 rounded-xl p-4 text-sm text-slate-700"
+        className="bg-stone-50 border border-stone-100 rounded-xl p-4 text-sm text-stone-700"
         style={{ lineHeight: '2.6' }}
       >
         {parts.map((part, i) => {

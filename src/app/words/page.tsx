@@ -22,7 +22,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   high:    'bg-emerald-100 text-emerald-700',
   medium:  'bg-amber-100 text-amber-700',
   low:     'bg-rose-100 text-rose-700',
-  unknown: 'bg-slate-100 text-slate-500',
+  unknown: 'bg-stone-100 text-stone-500',
 };
 
 type Tab = 'users' | 'words' | 'upload' | 'sql';
@@ -137,8 +137,8 @@ export default function WordsPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Management Tools</h1>
-        <p className="text-slate-500 text-sm mt-1">{words.length} words in database</p>
+        <h1 className="text-2xl font-bold text-stone-900">Management Tools</h1>
+        <p className="text-stone-500 text-sm mt-1">{words.length} words in database</p>
       </div>
 
       {error && (
@@ -148,7 +148,7 @@ export default function WordsPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex flex-wrap border-b border-slate-200 gap-x-1">
+      <div className="flex flex-wrap border-b border-stone-200 gap-x-1">
         {TABS.map(({ key, label, icon }) => (
           <button
             key={key}
@@ -156,7 +156,7 @@ export default function WordsPage() {
             className={`flex items-center gap-1.5 px-5 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
               tab === key
                 ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                : 'border-transparent text-stone-500 hover:text-stone-800'
             }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -169,7 +169,7 @@ export default function WordsPage() {
 
       {/* ── SQL Query ── */}
       {tab === 'sql' && (
-        <div className="bg-white rounded-2xl border border-slate-100 p-5">
+        <div className="bg-white rounded-2xl border border-stone-100 p-5">
           <TeacherSQLPortal />
         </div>
       )}
@@ -183,7 +183,7 @@ export default function WordsPage() {
       {tab === 'upload' && (
         <div className="space-y-6">
           {/* Upload sub-tabs */}
-          <div className="flex border-b border-slate-200">
+          <div className="flex border-b border-stone-200">
             {(['csv', 'photo', 'pdf'] as const).map((st) => (
               <button
                 key={st}
@@ -191,7 +191,7 @@ export default function WordsPage() {
                 className={`px-5 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
                   uploadSubTab === st
                     ? 'border-indigo-600 text-indigo-600'
-                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                    : 'border-transparent text-stone-500 hover:text-stone-800'
                 }`}
               >
                 {st === 'csv' ? 'CSV / Text' : st === 'photo' ? '📷 Photo' : '📄 PDF'}
@@ -201,12 +201,12 @@ export default function WordsPage() {
 
           {uploadSubTab === 'pdf' ? (
             <>
-              <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+              <div className="bg-white rounded-2xl border border-stone-100 p-6 shadow-sm">
                 <PDFUploader />
               </div>
-              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">How it works</p>
-                <div className="space-y-2.5 text-xs text-slate-500">
+              <div className="bg-stone-50 border border-stone-100 rounded-2xl p-5">
+                <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3">How it works</p>
+                <div className="space-y-2.5 text-xs text-stone-500">
                   {[
                     'Upload a PDF file such as a textbook page or printed word list.',
                     'Claude AI will read the document and extract vocabulary words.',
@@ -223,25 +223,25 @@ export default function WordsPage() {
             </>
           ) : uploadSubTab === 'csv' ? (
             <>
-              <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+              <div className="bg-white rounded-2xl border border-stone-100 p-6 shadow-sm">
                 <WordUploader />
               </div>
-              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Format Guide (CSV)</p>
-                <div className="space-y-3 text-sm text-slate-500">
+              <div className="bg-stone-50 border border-stone-100 rounded-2xl p-5">
+                <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-4">Format Guide (CSV)</p>
+                <div className="space-y-3 text-sm text-stone-500">
                   {[
                     { code: '1A,curious',     desc: 'Lesson 1A, word "curious"' },
                     { code: '2B,magnificent', desc: 'Lesson 2B, word "magnificent"' },
                     { code: 'ambitious',      desc: 'No lesson number — word only' },
                   ].map(({ code, desc }) => (
                     <div key={code} className="flex gap-3 items-center">
-                      <code className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-mono text-slate-700 shrink-0">
+                      <code className="bg-white border border-stone-200 rounded-lg px-2.5 py-1 text-xs font-mono text-stone-700 shrink-0">
                         {code}
                       </code>
-                      <span className="text-slate-400 text-xs">{desc}</span>
+                      <span className="text-stone-400 text-xs">{desc}</span>
                     </div>
                   ))}
-                  <p className="text-xs text-slate-400 pt-1">
+                  <p className="text-xs text-stone-400 pt-1">
                     Lesson number can be any text (e.g. 1A, 2B, Unit3). Difficulty is scored automatically.
                   </p>
                 </div>
@@ -249,12 +249,12 @@ export default function WordsPage() {
             </>
           ) : (
             <>
-              <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+              <div className="bg-white rounded-2xl border border-stone-100 p-6 shadow-sm">
                 <PhotoUploader />
               </div>
-              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">How it works</p>
-                <div className="space-y-2.5 text-xs text-slate-500">
+              <div className="bg-stone-50 border border-stone-100 rounded-2xl p-5">
+                <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3">How it works</p>
+                <div className="space-y-2.5 text-xs text-stone-500">
                   {[
                     'Take a photo of a printed or handwritten word list.',
                     'Upload the photo — Claude AI will extract the vocabulary words.',
@@ -283,9 +283,9 @@ export default function WordsPage() {
               value={wordSearch}
               onChange={(e) => { setWordSearch(e.target.value); setPage(1); }}
               placeholder="Search words…"
-              className="border border-slate-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-indigo-400 bg-white w-40"
+              className="border border-stone-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-indigo-400 bg-white w-40"
             />
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-stone-400">
               {filtered.length} word{filtered.length !== 1 ? 's' : ''}
             </span>
           </div>
@@ -298,7 +298,7 @@ export default function WordsPage() {
                 className={`px-3 py-1.5 rounded-lg border text-sm font-semibold transition-colors ${
                   filterLesson === null
                     ? 'bg-indigo-600 text-white border-indigo-600'
-                    : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-300'
+                    : 'bg-white text-stone-600 border-stone-300 hover:border-indigo-300'
                 }`}
               >
                 All
@@ -310,7 +310,7 @@ export default function WordsPage() {
                   className={`px-3 py-1.5 rounded-lg border text-sm font-semibold transition-colors ${
                     filterLesson === n
                       ? 'bg-indigo-600 text-white border-indigo-600'
-                      : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-300'
+                      : 'bg-white text-stone-600 border-stone-300 hover:border-indigo-300'
                   }`}
                 >
                   {n}
@@ -322,11 +322,11 @@ export default function WordsPage() {
           {/* Table */}
           {loading ? (
             <div className="animate-pulse space-y-2">
-              {[1, 2, 3, 4, 5].map((i) => <div key={i} className="h-12 bg-slate-100 rounded-xl" />)}
+              {[1, 2, 3, 4, 5].map((i) => <div key={i} className="h-12 bg-stone-100 rounded-xl" />)}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
-              <p className="font-semibold text-slate-700 mb-1">No words yet.</p>
+            <div className="text-center py-16 bg-white rounded-2xl border border-stone-100">
+              <p className="font-semibold text-stone-700 mb-1">No words yet.</p>
               <button
                 onClick={() => setTab('upload')}
                 className="text-indigo-600 font-semibold text-sm hover:underline mt-1 inline-block"
@@ -335,37 +335,37 @@ export default function WordsPage() {
               </button>
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+            <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50">
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Word</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Lesson</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Difficulty</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Zipf</th>
-                    <th className="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
+                  <tr className="border-b border-stone-100 bg-stone-50">
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Word</th>
+                    <th className="text-center px-4 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Lesson</th>
+                    <th className="text-center px-4 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Difficulty</th>
+                    <th className="text-center px-4 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide hidden sm:table-cell">Zipf</th>
+                    <th className="text-right px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-stone-50">
                   {paginated.map((word) => (
-                    <tr key={word.id} className="hover:bg-slate-50 transition-colors">
+                    <tr key={word.id} className="hover:bg-stone-50 transition-colors">
                       {editingId === word.id ? (
                         <>
-                          <td className="px-5 py-2.5 font-semibold text-slate-800">{word.word}</td>
+                          <td className="px-5 py-2.5 font-semibold text-stone-800">{word.word}</td>
                           <td className="px-4 py-2.5 text-center">
                             <input
                               type="text"
                               value={editLesson}
                               onChange={(e) => setEditLesson(e.target.value)}
                               placeholder="e.g. 1A"
-                              className="w-20 border border-slate-300 rounded-lg px-2 py-1 text-center text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100"
+                              className="w-20 border border-stone-300 rounded-lg px-2 py-1 text-center text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100"
                             />
                           </td>
                           <td className="px-4 py-2.5 text-center">
                             <select
                               value={editDifficulty}
                               onChange={(e) => setEditDifficulty(e.target.value)}
-                              className="border border-slate-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100"
+                              className="border border-stone-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100"
                             >
                               {DIFFICULTY_OPTIONS.map((d) => (
                                 <option key={d} value={d}>{d}</option>
@@ -373,7 +373,7 @@ export default function WordsPage() {
                             </select>
                           </td>
                           <td className="px-4 py-2.5 text-center hidden sm:table-cell">
-                            <span className="text-xs text-slate-400">
+                            <span className="text-xs text-stone-400">
                               {word.zipf_score !== null ? word.zipf_score.toFixed(1) : '—'}
                             </span>
                           </td>
@@ -387,7 +387,7 @@ export default function WordsPage() {
                             </button>
                             <button
                               onClick={() => setEditingId(null)}
-                              className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-2 py-1.5 transition-colors"
+                              className="text-xs font-semibold text-stone-500 hover:text-stone-700 px-2 py-1.5 transition-colors"
                             >
                               Cancel
                             </button>
@@ -395,8 +395,8 @@ export default function WordsPage() {
                         </>
                       ) : (
                         <>
-                          <td className="px-5 py-2.5 font-semibold text-slate-800">{word.word}</td>
-                          <td className="px-4 py-2.5 text-center text-slate-400 text-xs">
+                          <td className="px-5 py-2.5 font-semibold text-stone-800">{word.word}</td>
+                          <td className="px-4 py-2.5 text-center text-stone-400 text-xs">
                             {word.lesson_number ?? '—'}
                           </td>
                           <td className="px-4 py-2.5 text-center">
@@ -407,7 +407,7 @@ export default function WordsPage() {
                             </span>
                           </td>
                           <td className="px-4 py-2.5 text-center hidden sm:table-cell">
-                            <span className="text-xs text-slate-400">
+                            <span className="text-xs text-stone-400">
                               {word.zipf_score !== null ? word.zipf_score.toFixed(1) : '—'}
                             </span>
                           </td>
@@ -438,14 +438,14 @@ export default function WordsPage() {
           {/* Pagination */}
           {totalPages > 1 && !loading && (
             <div className="flex items-center justify-between pt-2">
-              <span className="text-xs text-slate-400">Page {page} of {totalPages}</span>
+              <span className="text-xs text-stone-400">Page {page} of {totalPages}</span>
               <div className="flex gap-1">
                 <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                  className="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                  className="px-3 py-1.5 text-xs font-semibold text-stone-600 bg-white border border-stone-200 rounded-lg hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
                   ← Prev
                 </button>
                 <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                  className="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                  className="px-3 py-1.5 text-xs font-semibold text-stone-600 bg-white border border-stone-200 rounded-lg hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
                   Next →
                 </button>
               </div>

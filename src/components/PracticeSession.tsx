@@ -273,7 +273,7 @@ export default function PracticeSession({ words, lessonNumber, onDone, isStaff =
     return (
       <div className="space-y-6">
         <div className="bg-indigo-600 rounded-xl p-8 text-center text-white">
-          <p className="text-5xl mb-4">🎉</p>
+          <p className="text-2xl mb-3 text-amber-300">&#9733;</p>
           <h2 className="text-2xl font-bold mb-2">Session Complete!</h2>
           <div className="text-indigo-100 text-sm mb-4 space-y-1">
             <p>Dictation: {correctDictation} / {words.length} correct</p>
@@ -335,12 +335,12 @@ export default function PracticeSession({ words, lessonNumber, onDone, isStaff =
         </div>
 
         {/* Word + question */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-4">
+        <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-4">
           <div className="flex items-center gap-3">
             <span className="bg-indigo-600 text-white text-sm font-bold px-3 py-1 rounded-lg">
               {item.word}
             </span>
-            <span className="text-xs text-slate-400">{item.typeLabel}</span>
+            <span className="text-xs text-stone-400">{item.typeLabel}</span>
             {item.wrongCount > 1 && (
               <span className="text-xs text-red-500 font-semibold">
                 ✗ wrong {item.wrongCount}×
@@ -350,7 +350,7 @@ export default function PracticeSession({ words, lessonNumber, onDone, isStaff =
 
           {/* Paragraph context */}
           {wsData && (
-            <p className="text-sm text-slate-600 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 leading-relaxed">
+            <p className="text-sm text-stone-600 bg-stone-50 border border-stone-100 rounded-lg px-3 py-2 leading-relaxed">
               {wsData.paragraph}
             </p>
           )}
@@ -416,7 +416,7 @@ export default function PracticeSession({ words, lessonNumber, onDone, isStaff =
             />
           )}
           {!wsData && item.questionKey !== 'dictation' && (
-            <p className="text-sm text-slate-400">Loading question…</p>
+            <p className="text-sm text-stone-400">Loading question…</p>
           )}
 
           {/* Result + Next */}
@@ -444,9 +444,9 @@ export default function PracticeSession({ words, lessonNumber, onDone, isStaff =
   if (phase === 'dictation') {
     return (
       <div className="space-y-5">
-        <div className="bg-white rounded-2xl border border-slate-100 p-5">
-          <h2 className="text-lg font-bold text-slate-900 mb-1">Dictation</h2>
-          <p className="text-sm text-slate-500">
+        <div className="bg-white rounded-2xl border border-stone-100 p-5">
+          <h2 className="text-lg font-bold text-stone-900 mb-1">Dictation</h2>
+          <p className="text-sm text-stone-500">
             Click to hear each word, then type what you hear. The word meaning is shown as a hint.
           </p>
         </div>
@@ -490,12 +490,12 @@ export default function PracticeSession({ words, lessonNumber, onDone, isStaff =
   return (
     <div className="space-y-4">
       {/* Progress bar */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-4">
-        <div className="flex justify-between text-sm font-semibold text-slate-600 mb-2">
+      <div className="bg-white rounded-2xl border border-stone-100 p-4">
+        <div className="flex justify-between text-sm font-semibold text-stone-600 mb-2">
           <span>Progress</span>
           <span>Word {currentWordIndex + 1} of {words.length}</span>
         </div>
-        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+        <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
           <div
             className="h-full bg-indigo-600 rounded-full transition-all duration-500"
             style={{ width: `${(currentWordIndex / words.length) * 100}%` }}
@@ -507,8 +507,8 @@ export default function PracticeSession({ words, lessonNumber, onDone, isStaff =
       {!currentWordSet || currentWordSet === 'loading' ? (
         <div className="animate-pulse space-y-4">
           <div className="h-24 bg-indigo-100 rounded-xl" />
-          <div className="h-32 bg-slate-100 rounded-xl" />
-          <div className="h-20 bg-slate-100 rounded-xl" />
+          <div className="h-32 bg-stone-100 rounded-xl" />
+          <div className="h-20 bg-stone-100 rounded-xl" />
         </div>
       ) : currentWordSet === 'error' ? (
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-5 py-4 text-sm">

@@ -39,17 +39,17 @@ export default function DictationItem({ wordIndex, word, meaning, questionKey, s
 
   return (
     <div className={`bg-white rounded-xl border transition-colors ${
-      !submitted ? 'border-slate-200' :
+      !submitted ? 'border-stone-200' :
       isCorrect ? 'border-emerald-300 bg-emerald-50/50' :
       'border-red-300 bg-red-50/50'
     } p-4`}>
       {safeMeaning && (
-        <p className="text-xs text-slate-500 italic mb-2 ml-10">
+        <p className="text-xs text-stone-500 italic mb-2 ml-10">
           Meaning: {safeMeaning}
         </p>
       )}
       <div className="flex items-center gap-3 mb-3">
-        <span className="w-7 h-7 rounded-full bg-slate-100 text-slate-600 text-xs font-bold flex items-center justify-center shrink-0">
+        <span className="w-7 h-7 rounded-full bg-stone-100 text-stone-600 text-xs font-bold flex items-center justify-center shrink-0">
           {wordIndex + 1}
         </span>
         <button
@@ -78,7 +78,7 @@ export default function DictationItem({ wordIndex, word, meaning, questionKey, s
           onKeyDown={(e) => e.key === 'Enter' && submit()}
           placeholder="Type the word you heard…"
           disabled={submitted}
-          className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 disabled:bg-slate-50 transition-colors"
+          className="flex-1 border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 disabled:bg-stone-50 transition-colors"
         />
         {!submitted && (
           <button

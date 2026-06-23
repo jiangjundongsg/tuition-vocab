@@ -71,13 +71,13 @@ export default function WordUploader() {
 
       {/* Lesson label */}
       <div>
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Lesson Label (optional)</p>
+        <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1">Lesson Label (optional)</p>
         <input
           type="text"
           value={lessonLabel}
           onChange={(e) => setLessonLabel(e.target.value)}
           placeholder="e.g. Lesson 1A (defaults to userID + date, e.g. 3260311)"
-          className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100"
+          className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100"
         />
       </div>
 
@@ -86,10 +86,10 @@ export default function WordUploader() {
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
         className={`border-2 border-dashed rounded-xl p-4 transition-colors ${
-          dragging ? 'border-indigo-400 bg-indigo-50' : 'border-slate-300 bg-slate-50'
+          dragging ? 'border-indigo-400 bg-indigo-50' : 'border-stone-300 bg-stone-50'
         }`}
       >
-        <p className="text-center text-xs text-slate-400 mb-3">
+        <p className="text-center text-xs text-stone-400 mb-3">
           Drag & drop a .csv or .txt file here, or type/paste below
         </p>
         <textarea
@@ -97,7 +97,7 @@ export default function WordUploader() {
           onChange={(e) => setText(e.target.value)}
           placeholder={"curious\nambitious\nice cream\ngive up\n\n(One word or phrase per line)"}
           rows={8}
-          className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm font-mono focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 resize-none bg-white"
+          className="w-full px-3 py-2.5 border border-stone-300 rounded-lg text-sm font-mono focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 resize-none bg-white"
         />
       </div>
 

@@ -270,7 +270,7 @@ export default function DictationSession({ words, lessonNumber, onDone, initialS
     const correctRepractice = Object.values(repracticeCorrect).filter(Boolean).length;
     return (
       <div className="bg-indigo-600 rounded-xl p-8 text-center text-white">
-        <p className="text-5xl mb-4">🎉</p>
+        <p className="text-2xl mb-3 text-amber-300">&#9733;</p>
         <h2 className="text-2xl font-bold mb-2">Session Complete!</h2>
         <div className="text-indigo-100 text-sm mb-4 space-y-1">
           <p>Dictation: {correctDictation} / {words.length} correct</p>
@@ -325,17 +325,17 @@ export default function DictationSession({ words, lessonNumber, onDone, initialS
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-4">
+        <div className="bg-white rounded-2xl border border-stone-100 p-5 space-y-4">
           <div className="flex items-center gap-3">
             <span className="bg-indigo-600 text-white text-sm font-bold px-3 py-1 rounded-lg">{item.word}</span>
-            <span className="text-xs text-slate-400">{item.typeLabel}</span>
+            <span className="text-xs text-stone-400">{item.typeLabel}</span>
             {item.wrongCount > 1 && (
               <span className="text-xs text-red-500 font-semibold">✗ wrong {item.wrongCount}×</span>
             )}
           </div>
 
           {wsData && (
-            <p className="text-sm text-slate-600 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 leading-relaxed">
+            <p className="text-sm text-stone-600 bg-stone-50 border border-stone-100 rounded-lg px-3 py-2 leading-relaxed">
               {wsData.paragraph}
             </p>
           )}
@@ -363,7 +363,7 @@ export default function DictationSession({ words, lessonNumber, onDone, initialS
             <DictationItem wordIndex={repracticeIndex} word={item.word} meaning={meaningExplanation} questionKey={`rp_${item.id}_dict`} submitted={isSubmitted} isCorrect={isCorrect} onAnswer={(_, a, c) => handleRepracticeAnswer(item.id, a, c)} />
           )}
           {!wsData && item.questionKey !== 'dictation' && (
-            <p className="text-sm text-slate-400">Loading question…</p>
+            <p className="text-sm text-stone-400">Loading question…</p>
           )}
 
           {isSubmitted && (
@@ -384,9 +384,9 @@ export default function DictationSession({ words, lessonNumber, onDone, initialS
   // ─── Dictation ─────────────────────────────────────────────────────────────
   return (
     <div className="space-y-5">
-      <div className="bg-white rounded-2xl border border-slate-100 p-5">
-        <h2 className="text-lg font-bold text-slate-900 mb-1">Dictation — Lesson {lessonNumber}</h2>
-        <p className="text-sm text-slate-500">
+      <div className="bg-white rounded-2xl border border-stone-100 p-5">
+        <h2 className="text-lg font-bold text-stone-900 mb-1">Dictation — Lesson {lessonNumber}</h2>
+        <p className="text-sm text-stone-500">
           Click to hear each word, then type what you hear. The word meaning is shown as a hint.
         </p>
       </div>

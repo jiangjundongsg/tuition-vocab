@@ -47,15 +47,15 @@ function LoginForm() {
       <div className="w-full max-w-sm">
 
         {/* Card */}
-        <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/60 p-8">
+        <div className="bg-white rounded-xl border border-stone-100 shadow-xl shadow-stone-200/60 p-8">
 
           {/* Logo + heading */}
           <div className="mb-8 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center mx-auto mb-4 shadow-md shadow-indigo-200">
+            <div className="w-12 h-12 rounded-xl bg-stone-900 flex items-center justify-center mx-auto mb-4">
               <span className="text-white text-xl leading-none select-none">★</span>
             </div>
-            <h1 className="text-2xl font-semibold text-slate-900">Welcome back</h1>
-            <p className="text-slate-400 mt-1 text-sm">Log in to continue your learning</p>
+            <h1 className="text-2xl font-semibold text-stone-900">Welcome back</h1>
+            <p className="text-stone-400 mt-1 text-sm">Log in to continue your learning</p>
           </div>
 
           {isTeacherOnly && (
@@ -72,7 +72,7 @@ function LoginForm() {
             )}
 
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+              <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">
                 Email or username
               </label>
               <input
@@ -82,12 +82,12 @@ function LoginForm() {
                 required
                 autoCapitalize="none"
                 placeholder="your@email.com or username"
-                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all bg-slate-50/50 placeholder:text-slate-300"
+                className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all bg-stone-50/50 placeholder:text-stone-300"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+              <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5">
                 Password
               </label>
               <input
@@ -96,27 +96,27 @@ function LoginForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="Enter your password"
-                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all bg-slate-50/50 placeholder:text-slate-300"
+                className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all bg-stone-50/50 placeholder:text-stone-300"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm py-2.5 rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-sm shadow-indigo-200 hover:shadow-md hover:shadow-indigo-200 mt-1"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm py-2.5 rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-sm hover:shadow-md mt-1"
             >
               {loading ? 'Logging in…' : 'Log in'}
             </button>
 
             <p className="text-center">
-              <Link href="/forgot-password" className="text-sm text-slate-400 hover:text-indigo-600 hover:underline transition-colors">
+              <Link href="/forgot-password" className="text-sm text-stone-400 hover:text-indigo-600 hover:underline transition-colors">
                 Forgot your username or password?
               </Link>
             </p>
           </form>
         </div>
 
-        <p className="text-center text-sm text-slate-400 mt-5">
+        <p className="text-center text-sm text-stone-400 mt-5">
           Don&apos;t have an account?{' '}
           <Link href="/register" className="text-indigo-600 font-semibold hover:underline">
             Sign up
