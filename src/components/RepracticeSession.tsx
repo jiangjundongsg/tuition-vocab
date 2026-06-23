@@ -135,7 +135,7 @@ export default function RepracticeSession({ items, lessonLabel, onDone, initialS
     return (
       <div className="space-y-4">
         <div className="bg-indigo-600 rounded-2xl p-8 text-center text-white shadow-sm">
-          <p className="text-2xl mb-3 text-amber-300">&#9733;</p>
+          <p className="text-5xl mb-4">🎉</p>
           <h2 className="text-2xl font-bold mb-2">All done!</h2>
           <p className="text-indigo-100 text-sm mb-6">
             Corrected <strong>{correctCount}</strong> of <strong>{items.length}</strong> tricky questions for Lesson {lessonLabel}
@@ -186,13 +186,13 @@ export default function RepracticeSession({ items, lessonLabel, onDone, initialS
       </div>
 
       {/* Question card */}
-      <div className="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm space-y-4">
+      <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm space-y-4">
         {/* Word + type badge */}
         <div className="flex items-center gap-3 flex-wrap">
           <span className="bg-indigo-600 text-white text-sm font-bold px-3 py-1 rounded-lg">
             {item.word}
           </span>
-          <span className="text-xs text-stone-400 bg-stone-100 px-2.5 py-1 rounded-full">
+          <span className="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">
             {item.typeLabel}
           </span>
           {item.wrongCount > 1 && (
@@ -204,7 +204,7 @@ export default function RepracticeSession({ items, lessonLabel, onDone, initialS
 
         {/* Paragraph context */}
         {wsData && (
-          <p className="text-sm text-stone-600 bg-stone-50 border border-stone-100 rounded-lg px-3 py-2.5 leading-relaxed">
+          <p className="text-sm text-slate-600 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2.5 leading-relaxed">
             {wsData.paragraph}
           </p>
         )}
@@ -212,9 +212,9 @@ export default function RepracticeSession({ items, lessonLabel, onDone, initialS
         {/* Loading state */}
         {!wsData && ws === 'loading' && item.questionKey !== 'dictation' && (
           <div className="animate-pulse space-y-2">
-            <div className="h-4 bg-stone-100 rounded w-3/4" />
-            <div className="h-10 bg-stone-100 rounded" />
-            <div className="h-10 bg-stone-100 rounded" />
+            <div className="h-4 bg-slate-100 rounded w-3/4" />
+            <div className="h-10 bg-slate-100 rounded" />
+            <div className="h-10 bg-slate-100 rounded" />
           </div>
         )}
 

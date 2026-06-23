@@ -199,22 +199,22 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
   return (
     <div className="space-y-5">
       {/* Word header */}
-      <div className="bg-stone-900 rounded-xl p-5 text-white">
+      <div className="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl p-5 text-white shadow-sm">
         <div className="flex items-center gap-3 mb-2">
-          <span className="kicker text-stone-400">
+          <span className="text-xs font-semibold bg-white/20 px-2.5 py-1 rounded-full">
             Word {wordIndex + 1} of {totalWords}
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <h2 className="font-display text-3xl flex-1 text-white">{data.word}</h2>
+          <h2 className="text-2xl font-bold tracking-wide flex-1">{data.word}</h2>
           <SpeakButton word={data.word} />
         </div>
       </div>
 
       {/* Paragraph */}
-      <div className="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm">
+      <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <p className="kicker">Read the passage</p>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Read the passage</p>
           <div className="flex items-center gap-2">
             {/* Read aloud */}
             <button
@@ -232,10 +232,10 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
               onClick={handleChangePassage}
               disabled={refreshing || Object.keys(submitted).length > 0}
               title={Object.keys(submitted).length > 0 ? 'Cannot change passage after answering' : 'Load a different passage'}
-              className="flex items-center gap-1.5 text-xs font-semibold text-stone-500 hover:text-stone-700 px-2.5 py-1.5 rounded-lg hover:bg-stone-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-700 px-2.5 py-1.5 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {refreshing ? (
-                <span className="w-3 h-3 border-2 border-stone-400 border-t-transparent rounded-full animate-spin" />
+                <span className="w-3 h-3 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
               ) : (
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -245,7 +245,7 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
             </button>
           </div>
         </div>
-        <p className="font-serif text-[17px] text-stone-800 leading-loose">
+        <p className="text-sm text-slate-700 leading-relaxed">
           {passageTokens.map((tok, i) =>
             tok.isWord ? (
               <mark
@@ -269,7 +269,7 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
       <div className="space-y-4">
         {/* Word Meaning MCQ */}
         {data.questions.meaning && (
-          <div className="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm">
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
             <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-3">
               Q{++qNum} — Word Meaning
             </p>
@@ -285,7 +285,7 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
 
         {/* Synonym MCQ */}
         {data.questions.synonym && (
-          <div className="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm">
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
             <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-3">
               Q{++qNum} — Synonym
             </p>
@@ -301,7 +301,7 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
 
         {/* Antonym MCQ */}
         {data.questions.antonym && (
-          <div className="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm">
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
             <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-3">
               Q{++qNum} — Antonym
             </p>
@@ -317,7 +317,7 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
 
         {/* Comprehension questions (variable count) */}
         {data.questions.comprehension?.map((compQ, i) => (
-          <div key={i} className="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm">
+          <div key={i} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
             <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-3">
               Q{++qNum} — Comprehension
             </p>
@@ -333,7 +333,7 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
 
         {/* Sentence Writing */}
         {enableSentenceWriting && (
-          <div className="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm">
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
             <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-3">
               Q{++qNum} — Sentence Writing
             </p>
@@ -349,7 +349,7 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
 
         {/* Fill in the Blank */}
         {data.fillBlank && (
-          <div className="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm">
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
             <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wide mb-3">
               Q{++qNum} — Fill in the Blank
             </p>
@@ -365,8 +365,8 @@ export default function WordPracticeCard({ wordId, wordData: initialData, wordIn
 
       {/* Score + Next button */}
       {allAnswered && totalQ > 0 && (
-        <div className="bg-stone-50 rounded-2xl border border-stone-100 p-4 flex items-center justify-between">
-          <span className="text-sm text-stone-600">
+        <div className="bg-slate-50 rounded-2xl border border-slate-100 p-4 flex items-center justify-between">
+          <span className="text-sm text-slate-600">
             Score:{' '}
             <strong className={correctCount === totalQ ? 'text-emerald-600' : 'text-indigo-600'}>
               {correctCount} / {totalQ}

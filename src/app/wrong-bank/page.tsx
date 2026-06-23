@@ -85,8 +85,8 @@ export default function WrongBankPage() {
   if (!authChecked) {
     return (
       <div className="animate-pulse space-y-4">
-        <div className="h-8 bg-stone-100 rounded w-40" />
-        <div className="h-32 bg-stone-100 rounded-2xl" />
+        <div className="h-8 bg-slate-100 rounded w-40" />
+        <div className="h-32 bg-slate-100 rounded-2xl" />
       </div>
     );
   }
@@ -131,7 +131,7 @@ export default function WrongBankPage() {
         <div className="space-y-6">
           <button
             onClick={() => { setPracticingLesson(null); setShowResume(false); setSavedSession(null); }}
-            className="flex items-center gap-2 text-sm text-stone-400 hover:text-stone-700 font-medium transition-colors"
+            className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-700 font-medium transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -157,7 +157,7 @@ export default function WrongBankPage() {
               </button>
               <button
                 onClick={() => { setSavedSession(null); setShowResume(false); }}
-                className="bg-white border border-stone-200 text-stone-600 hover:text-stone-800 font-medium px-6 py-2.5 rounded-xl text-sm transition-colors"
+                className="bg-white border border-slate-200 text-slate-600 hover:text-slate-800 font-medium px-6 py-2.5 rounded-xl text-sm transition-colors"
               >
                 Start Fresh
               </button>
@@ -171,7 +171,7 @@ export default function WrongBankPage() {
       <div className="space-y-4">
         <button
           onClick={() => setPracticingLesson(null)}
-          className="flex items-center gap-2 text-sm text-stone-400 hover:text-stone-700 font-medium transition-colors"
+          className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-700 font-medium transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -197,15 +197,15 @@ export default function WrongBankPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl text-stone-900">Tricky Words</h1>
-        <p className="text-stone-400 mt-1 text-sm">
+        <h1 className="text-3xl text-slate-900">Tricky Words</h1>
+        <p className="text-slate-400 mt-1 text-sm">
           Questions you&apos;ve answered incorrectly. Pick a lesson and practise them again.
         </p>
       </div>
 
       {loading ? (
         <div className="animate-pulse space-y-2">
-          {[1, 2, 3].map((i) => <div key={i} className="h-12 bg-stone-100 rounded-2xl" />)}
+          {[1, 2, 3].map((i) => <div key={i} className="h-12 bg-slate-100 rounded-2xl" />)}
         </div>
       ) : items.length === 0 ? (
         <WrongBankList items={[]} />
@@ -215,15 +215,15 @@ export default function WrongBankPage() {
             <div key={lesson} className="space-y-2">
               {/* Lesson header with Practice button */}
               <div className="flex items-center gap-3">
-                <div className="h-px flex-1 bg-stone-200" />
-                <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-stone-400">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-100 to-amber-100" />
+                <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-400">
                   <svg className="w-2.5 h-2.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                   </svg>
                   {lesson === 'No Lesson' ? 'No Lesson' : `Lesson ${lesson}`}
                   {' '}· {lessonItems.length} question{lessonItems.length !== 1 ? 's' : ''}
                 </h2>
-                <div className="h-px flex-1 bg-stone-200" />
+                <div className="h-px flex-1 bg-gradient-to-l from-transparent via-amber-100 to-amber-100" />
               </div>
 
               <WrongBankList items={lessonItems} />

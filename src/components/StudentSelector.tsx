@@ -46,21 +46,21 @@ export default function StudentSelector({ selectedIds, onChange }: Props) {
   }
 
   if (loading) {
-    return <div className="animate-pulse h-8 bg-stone-100 rounded-lg" />;
+    return <div className="animate-pulse h-8 bg-slate-100 rounded-lg" />;
   }
 
   if (students.length === 0) {
-    return <p className="text-xs text-stone-400">No students yet. Add students under the Students tab, or share your Teacher ID so they can join.</p>;
+    return <p className="text-xs text-slate-400">No students yet. Add students under the Students tab, or share your Teacher ID so they can join.</p>;
   }
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Target Students</p>
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Target Students</p>
         <div className="flex gap-2 text-xs">
           <button onClick={selectAll} className="text-indigo-600 hover:text-indigo-800 font-semibold">All</button>
-          <span className="text-stone-300">|</span>
-          <button onClick={selectNone} className="text-stone-400 hover:text-stone-600 font-semibold">None</button>
+          <span className="text-slate-300">|</span>
+          <button onClick={selectNone} className="text-slate-400 hover:text-slate-600 font-semibold">None</button>
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -73,7 +73,7 @@ export default function StudentSelector({ selectedIds, onChange }: Props) {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
                 selected
                   ? 'bg-indigo-600 border-indigo-600 text-white'
-                  : 'bg-white border-stone-200 text-stone-600 hover:border-indigo-300 hover:bg-indigo-50'
+                  : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300 hover:bg-indigo-50'
               }`}
             >
               {s.displayName ?? s.username ?? s.email}

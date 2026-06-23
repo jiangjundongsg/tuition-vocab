@@ -68,16 +68,16 @@ export default function TeacherSQLPortal() {
     <div className="space-y-4">
       {/* Query textarea */}
       <div>
-        <label className="block text-sm font-semibold text-stone-700 mb-2">SQL Query</label>
+        <label className="block text-sm font-semibold text-slate-700 mb-2">SQL Query</label>
         <textarea
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           rows={5}
           spellCheck={false}
-          className="w-full border border-stone-300 rounded-lg px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 resize-y"
+          className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 resize-y"
           placeholder="SELECT * FROM words LIMIT 10;"
         />
-        <p className="text-xs text-stone-400 mt-1">
+        <p className="text-xs text-slate-400 mt-1">
           Allowed: SELECT, INSERT, UPDATE, DELETE. DDL (DROP, CREATE, ALTER, TRUNCATE) is blocked.
         </p>
       </div>
@@ -93,7 +93,7 @@ export default function TeacherSQLPortal() {
         {result && result.rows.length > 0 && (
           <button
             onClick={downloadCsv}
-            className="border border-stone-200 text-stone-600 hover:bg-stone-50 font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
+            className="border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
           >
             Download CSV
           </button>
@@ -110,7 +110,7 @@ export default function TeacherSQLPortal() {
       {/* Results */}
       {result && (
         <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm text-stone-500">
+          <div className="flex items-center justify-between text-sm text-slate-500">
             <span>
               {result.rowCount} row{result.rowCount !== 1 ? 's' : ''} returned
               {result.truncated && ' (showing first 200)'}
@@ -118,35 +118,35 @@ export default function TeacherSQLPortal() {
           </div>
 
           {result.rows.length === 0 ? (
-            <div className="bg-white border border-stone-200 rounded-lg px-4 py-8 text-center text-sm text-stone-400">
+            <div className="bg-white border border-slate-200 rounded-lg px-4 py-8 text-center text-sm text-slate-400">
               Query executed successfully. No rows returned.
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-stone-200">
+            <div className="overflow-x-auto rounded-lg border border-slate-200">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="bg-stone-50 border-b border-stone-200">
+                  <tr className="bg-slate-50 border-b border-slate-200">
                     {columns.map((col) => (
                       <th
                         key={col}
-                        className="text-left px-3 py-2 font-semibold text-stone-600 whitespace-nowrap"
+                        className="text-left px-3 py-2 font-semibold text-slate-600 whitespace-nowrap"
                       >
                         {col}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-stone-100">
+                <tbody className="divide-y divide-slate-100">
                   {result.rows.map((row, i) => (
-                    <tr key={i} className="hover:bg-stone-50">
+                    <tr key={i} className="hover:bg-slate-50">
                       {columns.map((col) => (
                         <td
                           key={col}
-                          className="px-3 py-2 text-stone-700 font-mono max-w-xs truncate"
+                          className="px-3 py-2 text-slate-700 font-mono max-w-xs truncate"
                           title={String(row[col] ?? '')}
                         >
                           {row[col] === null ? (
-                            <span className="text-stone-300 italic">null</span>
+                            <span className="text-slate-300 italic">null</span>
                           ) : (
                             String(row[col])
                           )}

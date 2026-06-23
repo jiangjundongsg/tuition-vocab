@@ -28,7 +28,7 @@ interface Props {
 export default function SpeakableText({
   text,
   rate = 0.9,
-  className = 'text-sm font-medium text-stone-800 leading-relaxed',
+  className = 'text-sm font-medium text-slate-800 leading-relaxed',
 }: Props) {
   const [speaking, setSpeaking] = useState(false);
   const [highlightStart, setHighlightStart] = useState(-1);

@@ -1,9 +1,8 @@
 /**
- * Editorial lesson styling — a single, restrained look applied to every
- * lesson card so the picker reads like a journal's table of contents:
- * ivory cards, hairline rules, one indigo accent on hover. No rainbow.
+ * Stable, soft pastel palette assigned per lesson name.
+ * Used by the student-facing lesson pickers so the grid feels
+ * like a colorful library shelf without being noisy.
  *
- * The per-lesson signature is kept for API compatibility with the pickers.
  * All classes are full literals so Tailwind's JIT keeps them.
  */
 
@@ -16,27 +15,73 @@ export interface LessonPalette {
   text: string;
 }
 
-const BASE_PALETTE: LessonPalette = {
-  bg: 'bg-white',
-  border: 'border-stone-200',
-  hoverBorder: 'hover:border-indigo-300',
-  icon: 'text-stone-400',
-  iconHover: 'group-hover:text-indigo-500',
-  text: 'group-hover:text-indigo-700',
-};
+const PALETTES: LessonPalette[] = [
+  {
+    bg: 'bg-orange-50/60',
+    border: 'border-orange-100',
+    hoverBorder: 'hover:border-orange-200',
+    icon: 'text-orange-300',
+    iconHover: 'group-hover:text-orange-500',
+    text: 'group-hover:text-orange-700',
+  },
+  {
+    bg: 'bg-amber-50/60',
+    border: 'border-amber-100',
+    hoverBorder: 'hover:border-amber-200',
+    icon: 'text-amber-300',
+    iconHover: 'group-hover:text-amber-500',
+    text: 'group-hover:text-amber-700',
+  },
+  {
+    bg: 'bg-emerald-50/60',
+    border: 'border-emerald-100',
+    hoverBorder: 'hover:border-emerald-200',
+    icon: 'text-emerald-300',
+    iconHover: 'group-hover:text-emerald-500',
+    text: 'group-hover:text-emerald-700',
+  },
+  {
+    bg: 'bg-sky-50/60',
+    border: 'border-sky-100',
+    hoverBorder: 'hover:border-sky-200',
+    icon: 'text-sky-300',
+    iconHover: 'group-hover:text-sky-500',
+    text: 'group-hover:text-sky-700',
+  },
+  {
+    bg: 'bg-violet-50/60',
+    border: 'border-violet-100',
+    hoverBorder: 'hover:border-violet-200',
+    icon: 'text-violet-300',
+    iconHover: 'group-hover:text-violet-500',
+    text: 'group-hover:text-violet-700',
+  },
+  {
+    bg: 'bg-rose-50/60',
+    border: 'border-rose-100',
+    hoverBorder: 'hover:border-rose-200',
+    icon: 'text-rose-300',
+    iconHover: 'group-hover:text-rose-500',
+    text: 'group-hover:text-rose-700',
+  },
+];
 
-export function paletteFor(_lessonName: string): LessonPalette {
-  return BASE_PALETTE;
+export function paletteFor(lessonName: string): LessonPalette {
+  let hash = 0;
+  for (let i = 0; i < lessonName.length; i++) {
+    hash = (hash * 31 + lessonName.charCodeAt(i)) | 0;
+  }
+  return PALETTES[Math.abs(hash) % PALETTES.length];
 }
 
-/** Completed palette for lessons where all steps are done — quietly muted. */
+/** Completed (grey) palette for lessons where all 3 steps are done. */
 const COMPLETED_PALETTE: LessonPalette = {
-  bg: 'bg-stone-50',
-  border: 'border-stone-200',
-  hoverBorder: 'hover:border-stone-300',
-  icon: 'text-stone-300',
-  iconHover: 'group-hover:text-stone-400',
-  text: 'group-hover:text-stone-600',
+  bg: 'bg-slate-100/60',
+  border: 'border-slate-200',
+  hoverBorder: 'hover:border-slate-300',
+  icon: 'text-slate-300',
+  iconHover: 'group-hover:text-slate-400',
+  text: 'group-hover:text-slate-600',
 };
 
 export interface LessonProgress {

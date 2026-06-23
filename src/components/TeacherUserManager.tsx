@@ -297,10 +297,10 @@ export default function TeacherUserManager() {
 
   function progressBadge(item: LessonProgressItem) {
     const done = progressDone(item);
-    if (done === 3) return 'bg-stone-200 text-stone-400 line-through ring-1 ring-stone-200';
-    if (done === 2) return 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-300';
+    if (done === 3) return 'bg-slate-200 text-slate-400 line-through ring-1 ring-slate-200';
+    if (done === 2) return 'bg-purple-50 text-purple-700 ring-1 ring-purple-300';
     if (done === 1) return 'bg-amber-50 text-amber-700 ring-1 ring-amber-300';
-    return 'bg-white text-stone-400 ring-1 ring-stone-200';
+    return 'bg-white text-slate-400 ring-1 ring-slate-200';
   }
 
   function formatQConfigValue(u: UserRow, key: string): string {
@@ -311,10 +311,10 @@ export default function TeacherUserManager() {
   }
 
 
-  const inputClass = "border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 bg-white w-full";
+  const inputClass = "border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 bg-white w-full";
 
   if (loading) {
-    return <div className="animate-pulse space-y-2">{[1,2,3].map(i => <div key={i} className="h-12 bg-stone-100 rounded-xl" />)}</div>;
+    return <div className="animate-pulse space-y-2">{[1,2,3].map(i => <div key={i} className="h-12 bg-slate-100 rounded-xl" />)}</div>;
   }
 
   const Q_SUMMARY_KEYS = ['numComprehension','numBlanks','blankZipfMax','passageWordCount','compQuestionType'];
@@ -328,11 +328,11 @@ export default function TeacherUserManager() {
 
       {/* Teacher ID — share so students can join */}
       {meRole === 'teacher' && meId != null && (
-        <div className="bg-stone-50 border border-stone-200 rounded-xl p-5 flex items-center justify-between gap-4">
+        <div className="bg-gradient-to-br from-indigo-50 to-violet-50 border border-indigo-100 rounded-2xl p-5 flex items-center justify-between gap-4">
           <div>
-            <p className="kicker mb-1">Your Teacher ID</p>
-            <p className="font-display text-3xl text-indigo-700 tabular-nums leading-none">{meId}</p>
-            <p className="text-xs text-stone-500 mt-1.5">Share this with students so they can join your class.</p>
+            <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1">Your Teacher ID</p>
+            <p className="text-3xl font-bold text-indigo-700 tabular-nums leading-none">{meId}</p>
+            <p className="text-xs text-slate-500 mt-1.5">Share this with students so they can join your class.</p>
           </div>
           <button
             onClick={() => { navigator.clipboard?.writeText(String(meId)); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
@@ -353,8 +353,8 @@ export default function TeacherUserManager() {
             {pending.map((u) => (
               <div key={u.id} className="flex items-center justify-between bg-white rounded-xl border border-amber-100 px-4 py-2.5">
                 <div>
-                  <p className="font-semibold text-stone-800 text-sm">{u.displayName ?? u.username ?? '—'}</p>
-                  <p className="text-xs text-stone-400">{u.username ? '@' + u.username : u.email}</p>
+                  <p className="font-semibold text-slate-800 text-sm">{u.displayName ?? u.username ?? '—'}</p>
+                  <p className="text-xs text-slate-400">{u.username ? '@' + u.username : u.email}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => setStatus(u.id, 'approved')} disabled={approvingId === u.id}
@@ -376,7 +376,7 @@ export default function TeacherUserManager() {
       {(meRole === 'teacher' || meRole === 'admin') && (
         <div>
           {showAddForm ? (
-            <form onSubmit={addStudent} className="bg-white rounded-2xl border border-stone-100 p-4 space-y-3">
+            <form onSubmit={addStudent} className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3">
               <div className="grid grid-cols-2 gap-2">
                 <input value={newStudent.username} onChange={(e) => setNewStudent((s) => ({ ...s, username: e.target.value }))}
                   placeholder="Username" autoCapitalize="none" className={inputClass} />
@@ -393,7 +393,7 @@ export default function TeacherUserManager() {
                   {addingStudent ? 'Adding…' : 'Add student'}
                 </button>
                 <button type="button" onClick={() => { setShowAddForm(false); setError(''); }}
-                  className="text-xs font-semibold text-stone-500 hover:text-stone-700 px-3 py-2 transition-colors">
+                  className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-3 py-2 transition-colors">
                   Cancel
                 </button>
               </div>
@@ -408,45 +408,45 @@ export default function TeacherUserManager() {
       )}
 
       {roster.length === 0 ? (
-        <div className="text-center py-10 bg-white rounded-2xl border border-stone-100">
-          <p className="text-sm text-stone-500">No students yet. Add one above, or share your Teacher ID so students can join.</p>
+        <div className="text-center py-10 bg-white rounded-2xl border border-slate-100">
+          <p className="text-sm text-slate-500">No students yet. Add one above, or share your Teacher ID so students can join.</p>
         </div>
       ) : (
-      <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-stone-100 bg-stone-50">
-              <th className="text-left px-4 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">User</th>
-              <th className="text-center px-3 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Role</th>
-              <th className="text-center px-3 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Age</th>
-              <th className="text-center px-3 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide hidden sm:table-cell">Last Lesson</th>
-              <th className="text-center px-3 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Progress</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Actions</th>
+            <tr className="border-b border-slate-100 bg-slate-50">
+              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">User</th>
+              <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Role</th>
+              <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Age</th>
+              <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Last Lesson</th>
+              <th className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Progress</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-stone-50">
+          <tbody className="divide-y divide-slate-50">
             {roster.map((u) => (
               <Fragment key={u.id}>
-                <tr className="hover:bg-stone-50 transition-colors">
+                <tr className="hover:bg-slate-50 transition-colors">
                   <td className="px-4 py-2.5">
-                    <p className="font-semibold text-stone-800 text-sm flex items-center gap-1.5">
+                    <p className="font-semibold text-slate-800 text-sm flex items-center gap-1.5">
                       {u.displayName ?? u.username ?? '\u2014'}
                       {u.status === 'rejected' && (
                         <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-50 text-red-600 ring-1 ring-red-200">rejected</span>
                       )}
                     </p>
-                    <p className="text-xs text-stone-400">{u.username ? '@' + u.username : u.email}</p>
+                    <p className="text-xs text-slate-400">{u.username ? '@' + u.username : u.email}</p>
                   </td>
                   <td className="px-3 py-2.5 text-center">
                     <span className={'px-2 py-0.5 rounded-full text-xs font-semibold ' + (ROLE_COLORS[u.role] ?? ROLE_COLORS.student)}>
                       {u.role}
                     </span>
                   </td>
-                  <td className="px-3 py-2.5 text-center text-xs text-stone-500">{u.age ?? '\u2014'}</td>
+                  <td className="px-3 py-2.5 text-center text-xs text-slate-500">{u.age ?? '\u2014'}</td>
                   <td className="px-3 py-2.5 text-center hidden sm:table-cell">
                     {u.lastLesson
                       ? <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100">{u.lastLesson}</span>
-                      : <span className="text-xs text-stone-400">\u2014</span>}
+                      : <span className="text-xs text-slate-400">\u2014</span>}
                   </td>
                   <td className="px-3 py-2.5 text-center">
                     <button
@@ -477,19 +477,19 @@ export default function TeacherUserManager() {
 
                 {/* Expanded row: Q config summary + Lesson progress */}
                 {expandedConfig === u.id && (
-                  <tr className="bg-stone-50">
+                  <tr className="bg-slate-50">
                     <td colSpan={6} className="px-4 py-3">
                       <div className="space-y-3">
-                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-600">
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
                           {Q_SUMMARY_KEYS.map((k) => (
                             <span key={k}>
-                              <span className="font-semibold text-stone-400">{Q_CONFIG_LABELS[k]}:</span>{' '}
+                              <span className="font-semibold text-slate-400">{Q_CONFIG_LABELS[k]}:</span>{' '}
                               {formatQConfigValue(u, k)}
                             </span>
                           ))}
                           {QUESTION_KEYS.map(({ key, label }) => (
                             <span key={key}>
-                              <span className="font-semibold text-stone-400">{Q_CONFIG_LABELS[key]}:</span>{' '}
+                              <span className="font-semibold text-slate-400">{Q_CONFIG_LABELS[key]}:</span>{' '}
                               {(u as any)[key] ? 'on' : 'off'}
                             </span>
                           ))}
@@ -498,14 +498,14 @@ export default function TeacherUserManager() {
 
 
                         <div>
-                          <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Lesson Progress</p>
+                          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Lesson Progress</p>
 
 
 
                           {progressLoading ? (
-                            <span className="text-xs text-stone-400 italic">Loading...</span>
+                            <span className="text-xs text-slate-400 italic">Loading...</span>
                           ) : studentProgress.length === 0 ? (
-                            <span className="text-xs text-stone-400">No lesson data yet.</span>
+                            <span className="text-xs text-slate-400">No lesson data yet.</span>
                           ) : (
                             <div className="flex flex-wrap gap-2">
                               {studentProgress.map((lp) => {
@@ -539,17 +539,17 @@ export default function TeacherUserManager() {
           onClick={closeModal}
         >
           <div
-            className="bg-white rounded-2xl shadow-xl border border-stone-100 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto p-6"
+            className="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="space-y-5">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-semibold text-stone-800">
+                <h3 className="text-base font-semibold text-slate-800">
                   Edit: {modalUser.displayName ?? modalUser.username ?? modalUser.email}
                 </h3>
                 <button
                   onClick={closeModal}
-                  className="text-stone-300 hover:text-stone-600 text-lg leading-none transition-colors"
+                  className="text-slate-300 hover:text-slate-600 text-lg leading-none transition-colors"
                   aria-label="Close"
                 >
                   &times;
@@ -559,19 +559,19 @@ export default function TeacherUserManager() {
               {/* Basic fields */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div>
-                  <p className="text-xs text-stone-400 mb-1">Display name</p>
+                  <p className="text-xs text-slate-400 mb-1">Display name</p>
                   <input value={editState.displayName}
                     onChange={(e) => setEditState((s) => ({ ...s, displayName: e.target.value }))}
                     placeholder="Display name" className={inputClass} />
                 </div>
                 <div>
-                  <p className="text-xs text-stone-400 mb-1">Age</p>
+                  <p className="text-xs text-slate-400 mb-1">Age</p>
                   <input type="number" min={5} max={18} value={editState.age}
                     onChange={(e) => setEditState((s) => ({ ...s, age: e.target.value }))}
                     placeholder="Age" className={inputClass} />
                 </div>
                 <div className="col-span-2">
-                  <p className="text-xs text-stone-400 mb-1">Passage source</p>
+                  <p className="text-xs text-slate-400 mb-1">Passage source</p>
                   <input value={editState.passageSource}
                     onChange={(e) => setEditState((s) => ({ ...s, passageSource: e.target.value }))}
                     placeholder="TextBook_Harry_Portter" className={inputClass} />
@@ -580,10 +580,10 @@ export default function TeacherUserManager() {
 
               {/* Question type toggles */}
               <div>
-                <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Enabled Question Types</p>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Enabled Question Types</p>
                 <div className="flex flex-wrap gap-3">
                   {QUESTION_KEYS.map(({ key, label }) => (
-                    <label key={key} className="flex items-center gap-1.5 text-xs text-stone-600 cursor-pointer select-none">
+                    <label key={key} className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer select-none">
                       <input
                         type="checkbox"
                         checked={editState[key as keyof EditState] as boolean}
@@ -598,34 +598,34 @@ export default function TeacherUserManager() {
 
               {/* Question config fields */}
               <div>
-                <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-2">Question Settings</p>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Question Settings</p>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                   <div>
-                    <p className="text-xs text-stone-400 mb-1">Comp. questions</p>
+                    <p className="text-xs text-slate-400 mb-1">Comp. questions</p>
                     <input type="number" min={0} max={10} value={editState.numComprehension}
                       onChange={(e) => setEditState((s) => ({ ...s, numComprehension: e.target.value }))}
                       className={inputClass} />
                   </div>
                   <div>
-                    <p className="text-xs text-stone-400 mb-1">Fill blanks</p>
+                    <p className="text-xs text-slate-400 mb-1">Fill blanks</p>
                     <input type="number" min={1} max={10} value={editState.numBlanks}
                       onChange={(e) => setEditState((s) => ({ ...s, numBlanks: e.target.value }))}
                       className={inputClass} />
                   </div>
                   <div>
-                    <p className="text-xs text-stone-400 mb-1">Blank Zipf max</p>
+                    <p className="text-xs text-slate-400 mb-1">Blank Zipf max</p>
                     <input type="number" min={2} max={7} step={0.1} value={editState.blankZipfMax}
                       onChange={(e) => setEditState((s) => ({ ...s, blankZipfMax: e.target.value }))}
                       className={inputClass} />
                   </div>
                   <div>
-                    <p className="text-xs text-stone-400 mb-1">Passage words</p>
+                    <p className="text-xs text-slate-400 mb-1">Passage words</p>
                     <input type="number" min={50} max={400} step={10} value={editState.passageWordCount}
                       onChange={(e) => setEditState((s) => ({ ...s, passageWordCount: e.target.value }))}
                       className={inputClass} />
                   </div>
                   <div>
-                    <p className="text-xs text-stone-400 mb-1">Q type</p>
+                    <p className="text-xs text-slate-400 mb-1">Q type</p>
                     <select value={editState.compQuestionType}
                       onChange={(e) => setEditState((s) => ({ ...s, compQuestionType: e.target.value }))}
                       className={inputClass}>
@@ -640,7 +640,7 @@ export default function TeacherUserManager() {
               {/* Password */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <p className="text-xs text-stone-400 mb-1">New password (leave blank to keep)</p>
+                  <p className="text-xs text-slate-400 mb-1">New password (leave blank to keep)</p>
                   <input type="password" value={editState.password}
                     onChange={(e) => setEditState((s) => ({ ...s, password: e.target.value }))}
                     placeholder="New password" className={inputClass} />
@@ -654,7 +654,7 @@ export default function TeacherUserManager() {
                   {saving ? 'Saving...' : 'Save'}
                 </button>
                 <button onClick={closeModal}
-                  className="text-xs font-semibold text-stone-400 hover:text-stone-700 px-3 py-1.5 transition-colors">
+                  className="text-xs font-semibold text-slate-400 hover:text-slate-700 px-3 py-1.5 transition-colors">
                   Cancel
                 </button>
               </div>

@@ -58,7 +58,7 @@ export default function SentenceWriting({ questionKey, word, age, submitted: ini
   if (!submitted) {
     return (
       <div className="space-y-3">
-        <p className="text-sm text-stone-600 font-medium">
+        <p className="text-sm text-slate-600 font-medium">
           Write a sentence using the word <strong className="text-indigo-600">&ldquo;{word}&rdquo;</strong>:
         </p>
         <textarea
@@ -67,13 +67,13 @@ export default function SentenceWriting({ questionKey, word, age, submitted: ini
           placeholder={`Type your sentence here using "${word}"…`}
           disabled={loading}
           rows={3}
-          className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 bg-white placeholder:text-stone-300 resize-none disabled:opacity-50"
+          className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 bg-white placeholder:text-slate-300 resize-none disabled:opacity-50"
         />
         {error && <p className="text-xs text-red-500">{error}</p>}
         <button
           onClick={handleSubmit}
           disabled={loading || sentence.trim().length < 3}
-          className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-stone-300 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors"
+          className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors"
         >
           {loading ? (
             <span className="flex items-center gap-2">
@@ -96,9 +96,9 @@ export default function SentenceWriting({ questionKey, word, age, submitted: ini
     return (
       <div className="space-y-3">
         {/* The sentence */}
-        <div className="bg-stone-50 border border-stone-100 rounded-xl px-4 py-3">
-          <p className="text-xs text-stone-400 mb-1">Your sentence:</p>
-          <p className="text-sm text-stone-800 italic">&ldquo;{sentence}&rdquo;</p>
+        <div className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
+          <p className="text-xs text-slate-400 mb-1">Your sentence:</p>
+          <p className="text-sm text-slate-800 italic">&ldquo;{sentence}&rdquo;</p>
         </div>
 
         {/* Score */}
@@ -112,20 +112,20 @@ export default function SentenceWriting({ questionKey, word, age, submitted: ini
 
           {feedback.grammar && (
             <div className="mt-2">
-              <p className="text-xs font-semibold text-stone-500 mb-0.5">Grammar</p>
-              <p className="text-sm text-stone-700">{feedback.grammar}</p>
+              <p className="text-xs font-semibold text-slate-500 mb-0.5">Grammar</p>
+              <p className="text-sm text-slate-700">{feedback.grammar}</p>
             </div>
           )}
           {feedback.vocabulary && (
             <div className="mt-2">
-              <p className="text-xs font-semibold text-stone-500 mb-0.5">Vocabulary & Usage</p>
-              <p className="text-sm text-stone-700">{feedback.vocabulary}</p>
+              <p className="text-xs font-semibold text-slate-500 mb-0.5">Vocabulary & Usage</p>
+              <p className="text-sm text-slate-700">{feedback.vocabulary}</p>
             </div>
           )}
           {feedback.suggestions && (
             <div className="mt-2">
-              <p className="text-xs font-semibold text-stone-500 mb-0.5">Suggestions</p>
-              <p className="text-sm text-stone-700">{feedback.suggestions}</p>
+              <p className="text-xs font-semibold text-slate-500 mb-0.5">Suggestions</p>
+              <p className="text-sm text-slate-700">{feedback.suggestions}</p>
             </div>
           )}
         </div>
