@@ -222,24 +222,11 @@ export default function DictationSession({ words, lessonNumber, onDone, initialS
 
   const allDictationDone = words.every((_, i) => dictationSubmitted[`dictation_${i}`]);
 
-  async function finishDictation() {
-    try {
-      const res = await fetch(`/api/wrong-bank?lesson=${encodeURIComponent(lessonNumber)}`);
-      const data = await res.json();
-      const items: WrongBankItem[] = data.items ?? [];
-      if (items.length === 0) {
-        setPhase('done');
-      } else {
-        setWrongItems(items);
-        setRepracticeIndex(0);
-        setRepracticeSubmitted({});
-        setRepracticeCorrect({});
-        setRepracticeAnswers({});
-        setPhase('repractice');
-      }
-    } catch {
-      setPhase('done');
-    }
+  // Finishing dictation goes straight to the completion screen (which links to
+  // Mistake Pick). Words missed during dictation are already saved to the wrong
+  // bank by recordDictation, so they still surface in the Tricky Words section.
+  function finishDictation() {
+    setPhase('done');
   }
 
   async function handleRepracticeAnswer(wrongBankId: number, answer: string, isCorrect: boolean) {
@@ -417,7 +404,7 @@ export default function DictationSession({ words, lessonNumber, onDone, initialS
           onClick={finishDictation}
           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl text-sm transition-colors"
         >
-          Review Tricky Words →
+          See Results →
         </button>
       )}
     </div>
