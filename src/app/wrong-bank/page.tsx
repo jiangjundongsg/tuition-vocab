@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import WrongBankList from '@/components/WrongBankList';
 import RepracticeSession, { SessionData } from '@/components/RepracticeSession';
+import LessonTable, { LessonRow } from '@/components/LessonTable';
 
 interface WrongItem {
   id: number;
@@ -20,6 +21,7 @@ interface WrongItem {
 export default function WrongBankPage() {
   const router = useRouter();
   const [items, setItems] = useState<WrongItem[]>([]);
+  const [lessonRows, setLessonRows] = useState<LessonRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
   const [practicingLesson, setPracticingLesson] = useState<string | null>(null);
@@ -50,6 +52,15 @@ export default function WrongBankPage() {
   useEffect(() => {
     if (authChecked) fetchItems();
   }, [authChecked, fetchItems]);
+
+  // Lesson metadata (upload date + status) to enrich the tricky-words table.
+  useEffect(() => {
+    if (!authChecked) return;
+    fetch('/api/lessons')
+      .then((r) => r.json())
+      .then((d) => setLessonRows(d.lessonRows ?? []))
+      .catch(() => {});
+  }, [authChecked]);
 
   // Auto-open a lesson passed via ?lesson= (e.g. arriving from Mistake Pick)
   useEffect(() => {
@@ -97,6 +108,27 @@ export default function WrongBankPage() {
     acc[key].push(item);
     return acc;
   }, {});
+
+  // Rows for the lesson table: one per lesson that has tricky words, enriched
+  // with upload date + status from /api/lessons. Sorted by last attended, then
+  // first-upload date, both descending (matching the other sections).
+  const metaByLesson = Object.fromEntries(lessonRows.map((r) => [r.lessonNumber, r]));
+  const trickyCounts = Object.fromEntries(Object.entries(byLesson).map(([k, v]) => [k, v.length]));
+  const lessonTableRows: LessonRow[] = Object.keys(byLesson)
+    .map((key) => metaByLesson[key] ?? {
+      lessonNumber: key,
+      uploadedAt: null,
+      lastAttendedAt: null,
+      progress: { practice: false, dictation: false, tricky: false, mistake_pick: false },
+    })
+    .sort((a, b) => {
+      const la = a.lastAttendedAt ? Date.parse(a.lastAttendedAt) : -Infinity;
+      const lb = b.lastAttendedAt ? Date.parse(b.lastAttendedAt) : -Infinity;
+      if (la !== lb) return lb - la;
+      const ua = a.uploadedAt ? Date.parse(a.uploadedAt) : -Infinity;
+      const ub = b.uploadedAt ? Date.parse(b.uploadedAt) : -Infinity;
+      return ub - ua;
+    });
 
   async function startPracticingLesson(lesson: string) {
     // Mark tricky_clicked for this lesson
@@ -210,39 +242,14 @@ export default function WrongBankPage() {
       ) : items.length === 0 ? (
         <WrongBankList items={[]} />
       ) : (
-        <div className="space-y-6">
-          {Object.entries(byLesson).sort().map(([lesson, lessonItems]) => (
-            <div key={lesson} className="space-y-2">
-              {/* Lesson header with Practice button */}
-              <div className="flex items-center gap-3">
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-100 to-amber-100" />
-                <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-400">
-                  <svg className="w-2.5 h-2.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                  </svg>
-                  {lesson === 'No Lesson' ? 'No Lesson' : `Lesson ${lesson}`}
-                  {' '}· {lessonItems.length} question{lessonItems.length !== 1 ? 's' : ''}
-                </h2>
-                <div className="h-px flex-1 bg-gradient-to-l from-transparent via-amber-100 to-amber-100" />
-              </div>
-
-              <WrongBankList items={lessonItems} />
-
-              {/* Practice button for this lesson */}
-              <div className="flex justify-end">
-                <button
-                  onClick={() => startPracticingLesson(lesson)}
-                  className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold px-4 py-2 rounded-xl text-sm transition-colors shadow-sm"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Practice {lessonItems.length} question{lessonItems.length !== 1 ? 's' : ''} →
-                </button>
-              </div>
-            </div>
-          ))}
+        <div className="space-y-2">
+          <LessonTable
+            rows={lessonTableRows}
+            onSelect={startPracticingLesson}
+            extraHeader="Tricky"
+            renderExtra={(row) => trickyCounts[row.lessonNumber] ?? 0}
+          />
+          <p className="text-xs text-slate-400 px-1">Click a lesson to re-practise its tricky questions.</p>
         </div>
       )}
     </div>

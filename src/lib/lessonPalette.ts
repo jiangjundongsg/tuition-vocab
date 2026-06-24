@@ -100,6 +100,15 @@ export function isFullyComplete(p: LessonProgress): boolean {
   return p.practice && p.dictation && p.tricky && p.mistake_pick;
 }
 
+export type LessonStatus = 'not_started' | 'in_progress' | 'done';
+
+/** Overall lesson status from its four steps — used by the lesson tables. */
+export function lessonStatus(p: LessonProgress): LessonStatus {
+  if (isFullyComplete(p)) return 'done';
+  if (completionLevel(p) === 0) return 'not_started';
+  return 'in_progress';
+}
+
 /** Return the palette + opacity modifier based on completion. */
 export function paletteWithProgress(
   lessonName: string,

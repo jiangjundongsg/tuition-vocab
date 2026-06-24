@@ -4,21 +4,20 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import MistakePickSession, { MistakePickSessionData } from '@/components/MistakePickSession';
 import { MistakePickQuestion } from '@/lib/deepseek';
-import { paletteFor, friendlyLessonLabel, paletteWithProgress, LessonProgress } from '@/lib/lessonPalette';
+import { friendlyLessonLabel } from '@/lib/lessonPalette';
+import LessonTable, { LessonRow } from '@/components/LessonTable';
 
 export default function MistakePickPage() {
   const router = useRouter();
-  const [lessons, setLessons] = useState<string[]>([]);
+  const [lessonRows, setLessonRows] = useState<LessonRow[]>([]);
   const [selectedLesson, setSelectedLesson] = useState('');
   const [questions, setQuestions] = useState<MistakePickQuestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [practicing, setPracticing] = useState(false);
   const [error, setError] = useState('');
   const [authChecked, setAuthChecked] = useState(false);
-  const [search, setSearch] = useState('');
   const [savedSession, setSavedSession] = useState<MistakePickSessionData | null>(null);
   const [showResume, setShowResume] = useState(false);
-  const [lessonProgress, setLessonProgress] = useState<Record<string, LessonProgress>>({});
   const autoSelectedRef = useRef(false);
 
   useEffect(() => {
@@ -31,21 +30,16 @@ export default function MistakePickPage() {
       .catch(() => router.replace('/login?message=login-required'));
   }, [router]);
 
-  useEffect(() => {
-    if (!authChecked) return;
+  const loadLessons = useCallback(() => {
     fetch('/api/lessons')
       .then((r) => r.json())
-      .then((d) => setLessons(d.lessons ?? []))
+      .then((d) => setLessonRows(d.lessonRows ?? []))
       .catch(() => {});
-  }, [authChecked]);
+  }, []);
 
   useEffect(() => {
-    if (!authChecked) return;
-    fetch('/api/lessons/progress')
-      .then((r) => r.json())
-      .then((d) => setLessonProgress(d.progress ?? {}))
-      .catch(() => {});
-  }, [authChecked]);
+    if (authChecked) loadLessons();
+  }, [authChecked, loadLessons]);
 
   // Auto-open a lesson passed via ?lesson= (e.g. arriving from Dictation)
   useEffect(() => {
@@ -63,14 +57,7 @@ export default function MistakePickPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lesson: selectedLesson, step: 'mistake_pick' }),
-      }).catch(() => {});
-      setLessonProgress((prev) => ({
-        ...prev,
-        [selectedLesson]: {
-          ...(prev[selectedLesson] ?? { practice: false, dictation: false, tricky: false, mistake_pick: false }),
-          mistake_pick: true,
-        },
-      }));
+      }).then(() => loadLessons()).catch(() => {});
     }
     setPracticing(false);
     setSelectedLesson('');
@@ -208,7 +195,6 @@ export default function MistakePickPage() {
   }
 
   // ── Lesson selection ──────────────────────────────────────────────
-  const defProgress: LessonProgress = { practice: false, dictation: false, tricky: false, mistake_pick: false };
   return (
     <div className="space-y-6">
       <div>
@@ -217,47 +203,28 @@ export default function MistakePickPage() {
           Sharp grammar skills — one sentence per word, each with a single targeted mistake to find and fix.
         </p>
       </div>
-      <div className="space-y-4">
-        <div className="relative">
-          <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input type="text" placeholder="Search lessons..." value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 bg-slate-50/50 placeholder:text-slate-300"
+      {lessonRows.length === 0 ? (
+        <p className="text-sm text-slate-400">
+          No lessons yet. Ask your teacher to{' '}
+          <a href="/upload" className="text-indigo-600 hover:underline font-semibold">upload a word list</a>.
+        </p>
+      ) : (
+        <div className="space-y-4">
+          <LessonTable
+            rows={lessonRows}
+            onSelect={selectLesson}
+            selectedLesson={selectedLesson}
+            disabled={loading}
           />
+          {loading && (
+            <div className="flex items-center gap-2 text-sm text-slate-400 px-1 pt-1">
+              <span className="w-4 h-4 border-2 border-purple-300 border-t-transparent rounded-full animate-spin" />
+              Preparing questions with AI…
+            </div>
+          )}
+          {error && <p className="text-sm text-red-500 px-1">{error}</p>}
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-          {lessons.filter((l) => !search || friendlyLessonLabel(l).toLowerCase().includes(search.toLowerCase()) || l.toLowerCase().includes(search.toLowerCase()))
-            .map((lesson) => {
-              const isSelected = selectedLesson === lesson;
-              const p = paletteFor(lesson);
-              const { palette: pp, isDone } = paletteWithProgress(lesson, lessonProgress[lesson] ?? defProgress);
-              return (
-                <button key={lesson} onClick={() => selectLesson(lesson)} disabled={loading}
-                  className={`relative group flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-2xl border text-sm font-semibold transition-all duration-200 disabled:opacity-50 ${
-                    isSelected ? 'bg-purple-600 border-purple-600 text-white shadow-md shadow-purple-200'
-                    : isDone ? `${pp.bg} ${pp.border} text-slate-400 line-through ${pp.hoverBorder} ${pp.text}`
-                    : `${pp.bg} ${pp.border} text-slate-700 ${pp.hoverBorder} ${pp.text} hover:-translate-y-0.5 hover:shadow-sm`
-                  }`}>
-                  <svg className={`w-4 h-4 transition-colors ${
-                    isSelected ? 'text-purple-200' : isDone ? `${pp.icon} opacity-50` : `${pp.icon} ${pp.iconHover}`
-                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                  </svg>
-                  <span className="text-xs leading-tight text-center">{friendlyLessonLabel(lesson)}</span>
-                </button>
-              );
-            })}
-        </div>
-        {loading && (
-          <div className="flex items-center gap-2 text-sm text-slate-400 px-1 pt-1">
-            <span className="w-4 h-4 border-2 border-purple-300 border-t-transparent rounded-full animate-spin" />
-            Preparing questions with AI…
-          </div>
-        )}
-        {error && <p className="text-sm text-red-500 px-1">{error}</p>}
-      </div>
+      )}
     </div>
   );
 }

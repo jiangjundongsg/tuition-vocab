@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import PracticeSession, { SessionData } from '@/components/PracticeSession';
-import { paletteFor, friendlyLessonLabel, paletteWithProgress, LessonProgress } from '@/lib/lessonPalette';
+import LessonTable, { LessonRow } from '@/components/LessonTable';
 
 interface WordInfo {
   id: number;
@@ -12,7 +12,7 @@ interface WordInfo {
 
 export default function PracticePage() {
   const router = useRouter();
-  const [lessons, setLessons] = useState<string[]>([]);
+  const [lessonRows, setLessonRows] = useState<LessonRow[]>([]);
   const [selectedLesson, setSelectedLesson] = useState<string>('');
   const [lastLesson, setLastLesson] = useState<string | null>(null);
   const [isStaff, setIsStaff] = useState(false);
@@ -21,10 +21,8 @@ export default function PracticePage() {
   const [practicing, setPracticing] = useState(false);
   const [error, setError] = useState('');
   const [authChecked, setAuthChecked] = useState(false);
-  const [search, setSearch] = useState('');
   const [savedSession, setSavedSession] = useState<SessionData | null>(null);
   const [showResume, setShowResume] = useState(false);
-  const [lessonProgress, setLessonProgress] = useState<Record<string, LessonProgress>>({});
   const [userConfig, setUserConfig] = useState<{ enableSentenceWriting: boolean; age: number }>({ enableSentenceWriting: false, age: 10 });
 
   useEffect(() => {
@@ -42,36 +40,26 @@ export default function PracticePage() {
       .catch(() => router.replace('/login?message=login-required'));
   }, [router]);
 
-  useEffect(() => {
-    if (!authChecked) return;
+  const loadLessons = useCallback(() => {
     fetch('/api/lessons')
       .then((r) => r.json())
-      .then((d) => setLessons(d.lessons ?? []))
+      .then((d) => setLessonRows(d.lessonRows ?? []))
       .catch(() => {});
-  }, [authChecked]);
+  }, []);
 
-  // Fetch lesson progress for coloring
   useEffect(() => {
-    if (!authChecked) return;
-    fetch('/api/lessons/progress')
-      .then(r => r.json())
-      .then(d => setLessonProgress(d.progress ?? {}))
-      .catch(() => {});
-  }, [authChecked, lastLesson /* refresh after a lesson completes */]);
+    if (authChecked) loadLessons();
+  }, [authChecked, loadLessons]);
 
   function handleDone() {
-    // Mark practice step done for this lesson
+    // Mark practice step done for this lesson, then refresh the lesson table
+    // so its status + ordering reflect the completion.
     if (selectedLesson) {
       fetch('/api/lessons/progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lesson: selectedLesson, step: 'practice' }),
-      }).catch(() => {});
-      // Update local progress
-      setLessonProgress(prev => ({
-        ...prev,
-        [selectedLesson]: { ...(prev[selectedLesson] ?? { practice: false, dictation: false, tricky: false, mistake_pick: false }), practice: true },
-      }));
+      }).then(() => loadLessons()).catch(() => {});
     }
     setPracticing(false);
     setSelectedLesson('');
@@ -255,7 +243,7 @@ export default function PracticePage() {
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5">
         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Select a Lesson</p>
 
-        {lessons.length === 0 ? (
+        {lessonRows.length === 0 ? (
           <div className="text-center py-8 space-y-2">
             <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-3">
               <svg className="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -272,63 +260,13 @@ export default function PracticePage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Search */}
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search lessons…"
-              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 bg-slate-50/50 placeholder:text-slate-300"
+            <LessonTable
+              rows={lessonRows}
+              onSelect={selectLesson}
+              selectedLesson={selectedLesson}
+              lastLesson={lastLesson}
+              disabled={loadingWords}
             />
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-              {lessons
-                .filter(l => !search || friendlyLessonLabel(l).toLowerCase().includes(search.toLowerCase()) || l.toLowerCase().includes(search.toLowerCase()))
-                .map((lesson) => {
-                const isSelected = selectedLesson === lesson;
-                const isLast = !isSelected && lastLesson === lesson;
-                const p = paletteFor(lesson);
-                const { palette: pp, isDone } = paletteWithProgress(lesson, lessonProgress[lesson] ?? { practice: false, dictation: false, tricky: false, mistake_pick: false });
-                return (
-                  <button
-                    key={lesson}
-                    onClick={() => selectLesson(lesson)}
-                    disabled={loadingWords}
-                    className={`
-                      relative group flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-2xl border text-sm font-semibold transition-all duration-200 disabled:opacity-50
-                      ${isSelected
-                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-200'
-                        : isDone
-                        ? `${pp.bg} ${pp.border} text-slate-400 line-through ${pp.hoverBorder} ${pp.text}`
-                        : isLast
-                        ? 'bg-indigo-50 border-indigo-300 text-indigo-700 hover:border-indigo-400 hover:-translate-y-0.5 hover:shadow-sm'
-                        : `${pp.bg} ${pp.border} text-slate-700 ${pp.hoverBorder} ${pp.text} hover:-translate-y-0.5 hover:shadow-sm`
-                      }
-                    `}
-                  >
-                    <svg
-                      className={`w-4 h-4 transition-colors ${
-                        isSelected ? 'text-indigo-200'
-                        : isDone ? `${pp.icon} opacity-50`
-                        : isLast ? 'text-indigo-400'
-                        : `${pp.icon} ${pp.iconHover}`
-                      }`}
-                      fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                    </svg>
-                    <span className="text-xs leading-tight text-center">{friendlyLessonLabel(lesson)}</span>
-                    {isLast && (
-                      <span className="absolute -top-1.5 -right-1.5 flex items-center gap-0.5 bg-amber-400 text-white text-[9px] font-bold pl-1 pr-1.5 py-0.5 rounded-full leading-none shadow-sm shadow-amber-200">
-                        <svg className="w-2 h-2" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                        </svg>
-                        Last
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
 
             {loadingWords && (
               <div className="flex items-center gap-2 text-sm text-slate-400 px-1 pt-1">

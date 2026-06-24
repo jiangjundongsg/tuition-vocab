@@ -1,0 +1,153 @@
+'use client';
+
+import { useState } from 'react';
+import { friendlyLessonLabel, lessonStatus, LessonProgress, LessonStatus } from '@/lib/lessonPalette';
+
+export interface LessonRow {
+  lessonNumber: string;
+  uploadedAt: string | null;
+  lastAttendedAt: string | null;
+  progress: LessonProgress;
+}
+
+interface Props {
+  rows: LessonRow[];
+  onSelect: (lessonNumber: string) => void;
+  selectedLesson?: string | null;
+  /** Highlights the row the student most recently practised. */
+  lastLesson?: string | null;
+  disabled?: boolean;
+  /** Show the search box (default true). */
+  searchable?: boolean;
+  /** Optional trailing column header (e.g. "Tricky"). */
+  extraHeader?: string;
+  /** Renders the trailing column cell for a row. */
+  renderExtra?: (row: LessonRow) => React.ReactNode;
+}
+
+const STATUS_META: Record<LessonStatus, { label: string; cls: string }> = {
+  not_started: { label: 'Not started', cls: 'bg-slate-100 text-slate-500' },
+  in_progress: { label: 'In progress', cls: 'bg-amber-100 text-amber-700' },
+  done: { label: 'Done', cls: 'bg-emerald-100 text-emerald-700' },
+};
+
+function formatDate(iso: string | null): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+export default function LessonTable({
+  rows,
+  onSelect,
+  selectedLesson,
+  lastLesson,
+  disabled = false,
+  searchable = true,
+  extraHeader,
+  renderExtra,
+}: Props) {
+  const [search, setSearch] = useState('');
+
+  const filtered = rows.filter(
+    (r) =>
+      !search ||
+      friendlyLessonLabel(r.lessonNumber).toLowerCase().includes(search.toLowerCase()) ||
+      r.lessonNumber.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const colCount = extraHeader ? 4 : 3;
+
+  return (
+    <div className="space-y-3">
+      {searchable && (
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search lessons…"
+          className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 bg-slate-50/50 placeholder:text-slate-300"
+        />
+      )}
+
+      <div className="overflow-x-auto rounded-xl border border-slate-100">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-[11px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50/70">
+              <th className="py-2.5 px-4">Lesson</th>
+              <th className="py-2.5 px-4">Uploaded</th>
+              <th className="py-2.5 px-4">Status</th>
+              {extraHeader && <th className="py-2.5 px-4 text-right">{extraHeader}</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={colCount} className="py-6 px-4 text-center text-sm text-slate-400">
+                  No lessons match your search.
+                </td>
+              </tr>
+            ) : (
+              filtered.map((row) => {
+                const isSelected = selectedLesson === row.lessonNumber;
+                const isLast = !isSelected && lastLesson === row.lessonNumber;
+                const status = STATUS_META[lessonStatus(row.progress)];
+                return (
+                  <tr
+                    key={row.lessonNumber}
+                    role="button"
+                    tabIndex={disabled ? -1 : 0}
+                    onClick={() => !disabled && onSelect(row.lessonNumber)}
+                    onKeyDown={(e) => {
+                      if (disabled) return;
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onSelect(row.lessonNumber);
+                      }
+                    }}
+                    className={`border-t border-slate-100 transition-colors ${
+                      disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                    } ${
+                      isSelected
+                        ? 'bg-indigo-50'
+                        : isLast
+                        ? 'bg-indigo-50/40 hover:bg-indigo-50'
+                        : 'hover:bg-slate-50'
+                    }`}
+                  >
+                    <td className="py-3 px-4 font-semibold text-slate-800">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                        <span>{friendlyLessonLabel(row.lessonNumber)}</span>
+                        {isLast && (
+                          <span className="inline-flex items-center gap-0.5 bg-amber-400 text-white text-[9px] font-bold pl-1 pr-1.5 py-0.5 rounded-full leading-none">
+                            <svg className="w-2 h-2" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                            Last
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-slate-500 whitespace-nowrap">{formatDate(row.uploadedAt)}</td>
+                    <td className="py-3 px-4">
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${status.cls}`}>
+                        {status.label}
+                      </span>
+                    </td>
+                    {extraHeader && (
+                      <td className="py-3 px-4 text-right text-slate-600 font-semibold">{renderExtra?.(row)}</td>
+                    )}
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
