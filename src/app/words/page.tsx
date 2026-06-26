@@ -11,9 +11,15 @@ import PDFUploader from '@/components/PDFUploader';
 interface Word {
   id: number;
   word: string;
+  user_id: number;
   difficulty: string;
   lesson_number: string | null;
   zipf_score: number | null;
+}
+
+interface StudentOption {
+  id: number;
+  displayName: string;
 }
 
 const DIFFICULTY_OPTIONS = ['high', 'medium', 'low', 'unknown'];
@@ -44,12 +50,18 @@ export default function WordsPage() {
   const [wordSearch, setWordSearch] = useState('');
   const [page, setPage] = useState(1);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [students, setStudents] = useState<StudentOption[]>([]);
+  const [filterStudentId, setFilterStudentId] = useState<number | null>(null);
   const PER_PAGE = 50;
 
-  const fetchWords = useCallback(async () => {
+  // Resolve student IDs to display names
+  const studentNameMap = new Map(students.map((s) => [s.id, s.displayName]));
+
+  const fetchWords = useCallback(async (studentId?: number | null) => {
     setLoading(true);
     try {
-      const res = await fetch('/api/words');
+      const url = studentId ? `/api/words?userId=${studentId}` : '/api/words';
+      const res = await fetch(url);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setWords(data.words as Word[]);
@@ -75,6 +87,24 @@ export default function WordsPage() {
       })
       .catch(() => router.replace('/login?message=teacher-only'));
   }, [router, fetchWords]);
+
+  // Fetch student list for filter dropdown
+  useEffect(() => {
+    fetch('/api/teacher/users')
+      .then((r) => r.json())
+      .then((d) => {
+        const all = (d.users ?? []) as Array<{ id: number; displayName: string; role: string }>;
+        setStudents(all.filter((u) => u.role === 'student').map((u) => ({ id: u.id, displayName: u.displayName || `Student ${u.id}` })));
+      })
+      .catch(() => {});
+  }, []);
+
+  // Refetch when student filter changes
+  function handleStudentFilter(studentId: number | null) {
+    setFilterStudentId(studentId);
+    setPage(1);
+    fetchWords(studentId);
+  }
 
   function startEdit(word: Word) {
     setEditingId(word.id);
@@ -278,6 +308,18 @@ export default function WordsPage() {
         <>
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-3 mb-3">
+            {/* Student filter */}
+            <select
+              value={filterStudentId ?? ''}
+              onChange={(e) => handleStudentFilter(e.target.value ? Number(e.target.value) : null)}
+              className="border border-slate-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-indigo-400 bg-white"
+            >
+              <option value="">All students</option>
+              {students.map((s) => (
+                <option key={s.id} value={s.id}>{s.displayName}</option>
+              ))}
+            </select>
+
             <input
               type="text"
               value={wordSearch}
@@ -340,6 +382,9 @@ export default function WordsPage() {
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50">
                     <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Word</th>
+                    {!filterStudentId && (
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Student</th>
+                    )}
                     <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Lesson</th>
                     <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Difficulty</th>
                     <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Zipf</th>
@@ -352,6 +397,11 @@ export default function WordsPage() {
                       {editingId === word.id ? (
                         <>
                           <td className="px-5 py-2.5 font-semibold text-slate-800">{word.word}</td>
+                          {!filterStudentId && (
+                            <td className="px-4 py-2.5 text-center text-xs text-slate-500">
+                              {studentNameMap.get(word.user_id) || `#${word.user_id}`}
+                            </td>
+                          )}
                           <td className="px-4 py-2.5 text-center">
                             <input
                               type="text"
@@ -396,6 +446,11 @@ export default function WordsPage() {
                       ) : (
                         <>
                           <td className="px-5 py-2.5 font-semibold text-slate-800">{word.word}</td>
+                          {!filterStudentId && (
+                            <td className="px-4 py-2.5 text-center text-xs text-slate-500">
+                              {studentNameMap.get(word.user_id) || `#${word.user_id}`}
+                            </td>
+                          )}
                           <td className="px-4 py-2.5 text-center text-slate-400 text-xs">
                             {word.lesson_number ?? '—'}
                           </td>
