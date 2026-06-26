@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${dmSans.variable} ${dmSerif.variable}`}>
       <body className="min-h-screen font-sans text-slate-800 antialiased">
         <ChildHeader />
-        <main className="max-w-5xl mx-auto px-6 py-10">
+        <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
           <ErrorBoundary>
             {children}
           </ErrorBoundary>

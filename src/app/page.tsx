@@ -16,7 +16,7 @@ const teacherFeatures = [
 const howItWorks = [
   { n: 1, title: 'Teacher uploads words', desc: 'CSV, photo, or PDF — assign to one or more students.' },
   { n: 2, title: 'AI generates questions', desc: 'Each word gets a passage, MCQs, and fill-in-the-blank.' },
-  { n: 3, title: 'Student practices', desc: 'Practice → Dictation → Mistake Pick — four steps per lesson.' },
+  { n: 3, title: 'Student practices', desc: 'Practice → Dictation → Tricky Words → Mistake Pick.' },
   { n: 4, title: 'Review & master', desc: 'Wrong answers go to Tricky Words; re-tested until mastered.' },
 ];
 
@@ -52,21 +52,21 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="space-y-20">
+    <div className="space-y-12 sm:space-y-20">
       {/* Hero */}
-      <section className="relative -mx-4 sm:-mx-6 px-6 sm:px-14 pt-20 pb-16 rounded-3xl overflow-hidden bg-gradient-to-br from-indigo-50 via-violet-50/60 to-sky-50">
+      <section className="relative -mx-4 sm:-mx-6 px-4 sm:px-14 pt-12 sm:pt-20 pb-10 sm:pb-16 rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-br from-indigo-50 via-violet-50/60 to-sky-50">
         <div className="absolute top-0 right-0 w-80 h-80 bg-violet-200 rounded-full opacity-20 blur-3xl -translate-y-1/2 translate-x-1/4" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-sky-200 rounded-full opacity-20 blur-3xl translate-y-1/2 -translate-x-1/4" />
         <div className="relative max-w-2xl mx-auto text-center space-y-6">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 border border-slate-200/60 text-xs font-semibold text-slate-500">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> AI-powered vocabulary practice
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
             Master English vocabulary<br />
             <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">one word at a time</span>
           </h1>
-          <p className="text-lg text-slate-500 max-w-lg mx-auto leading-relaxed">
-            AI generates personalised passages, questions, and dictation exercises for every word. Practice → Dictation → Mistake Pick — four steps to mastery.
+          <p className="text-base sm:text-lg text-slate-500 max-w-lg mx-auto leading-relaxed">
+            AI generates personalised passages, questions, and dictation exercises for every word. Practice → Dictation → Tricky Words → Mistake Pick — four steps to mastery.
           </p>
           {!isLoggedIn ? (
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
@@ -82,27 +82,27 @@ export default async function HomePage() {
       {/* Public: For Teachers + For Learners */}
       {!isLoggedIn && (
         <section className="grid sm:grid-cols-2 gap-6">
-          <div className="bg-white rounded-2xl border border-slate-100 p-8 shadow-sm">
+          <div className="bg-white rounded-2xl border border-slate-100 p-6 sm:p-8 shadow-sm">
             <div className="w-10 h-10 rounded-xl bg-indigo-50 ring-1 ring-indigo-100 flex items-center justify-center mb-4">
               <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>
             </div>
             <h2 className="text-lg font-bold text-slate-900 mb-2">For Teachers</h2>
             <ul className="space-y-2 text-sm text-slate-500 mb-5">
-              <li className="flex items-start gap-2"><span className="text-indigo-400 mt-0.5">✓</span>Upload word lists as CSV, photo, or PDF</li>
-              <li className="flex items-start gap-2"><span className="text-indigo-400 mt-0.5">✓</span>Create student accounts and track progress</li>
-              <li className="flex items-start gap-2"><span className="text-indigo-400 mt-0.5">✓</span>Configure question types per student</li>
+              <li className="flex items-start gap-2"><span className="text-indigo-400 mt-0.5 shrink-0">✓</span>Upload word lists as CSV, photo, or PDF</li>
+              <li className="flex items-start gap-2"><span className="text-indigo-400 mt-0.5 shrink-0">✓</span>Create student accounts and track progress</li>
+              <li className="flex items-start gap-2"><span className="text-indigo-400 mt-0.5 shrink-0">✓</span>Configure question types per student</li>
             </ul>
             <Link href="/register" className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-800">Sign up as Teacher →</Link>
           </div>
-          <div className="bg-white rounded-2xl border border-slate-100 p-8 shadow-sm">
+          <div className="bg-white rounded-2xl border border-slate-100 p-6 sm:p-8 shadow-sm">
             <div className="w-10 h-10 rounded-xl bg-emerald-50 ring-1 ring-emerald-100 flex items-center justify-center mb-4">
               <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
             </div>
             <h2 className="text-lg font-bold text-slate-900 mb-2">For Learners</h2>
             <ul className="space-y-2 text-sm text-slate-500 mb-5">
-              <li className="flex items-start gap-2"><span className="text-emerald-400 mt-0.5">✓</span>AI reads with you, tests you, fixes your mistakes</li>
-              <li className="flex items-start gap-2"><span className="text-emerald-400 mt-0.5">✓</span>MCQs, dictation, and fill-in-the-blank exercises</li>
-              <li className="flex items-start gap-2"><span className="text-emerald-400 mt-0.5">✓</span>Tricky words saved and re-tested until mastered</li>
+              <li className="flex items-start gap-2"><span className="text-emerald-400 mt-0.5 shrink-0">✓</span>AI reads with you, tests you, fixes your mistakes</li>
+              <li className="flex items-start gap-2"><span className="text-emerald-400 mt-0.5 shrink-0">✓</span>MCQs, dictation, and fill-in-the-blank exercises</li>
+              <li className="flex items-start gap-2"><span className="text-emerald-400 mt-0.5 shrink-0">✓</span>Tricky words saved and re-tested until mastered</li>
             </ul>
             <Link href="/register" className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-600 hover:text-emerald-800">Sign up as Student →</Link>
           </div>
@@ -156,9 +156,9 @@ export default async function HomePage() {
       {/* Bottom CTA */}
       {!isLoggedIn && (
         <section className="text-center pb-8">
-          <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl p-10 sm:p-14 text-white shadow-xl shadow-indigo-200/40">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-3">Ready to start learning?</h2>
-            <p className="text-indigo-100 text-sm sm:text-base max-w-md mx-auto mb-6">
+          <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl sm:rounded-3xl p-8 sm:p-14 text-white shadow-xl shadow-indigo-200/40">
+            <h2 className="text-xl sm:text-3xl font-bold mb-3">Ready to start learning?</h2>
+            <p className="text-indigo-100 text-xs sm:text-base max-w-md mx-auto mb-6">
               Create a free account. Students need their teacher&apos;s ID. Teachers use <code className="bg-white/20 px-1.5 py-0.5 rounded text-white text-xs font-mono">VOCAB_TEACHER</code>.
             </p>
             <Link href="/register" className="inline-flex items-center gap-2 px-8 py-3 bg-white text-indigo-700 font-semibold rounded-xl text-sm hover:bg-indigo-50 transition-colors shadow-lg">Create Account →</Link>
