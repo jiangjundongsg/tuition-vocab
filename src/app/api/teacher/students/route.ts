@@ -35,9 +35,13 @@ export async function POST(req: NextRequest) {
 
       const hash = await bcrypt.hash(password, 10);
       const age = typeof s.age === 'number' && s.age > 0 ? s.age : null;
+      // Age-based defaults: ≤7 simpler, >7 standard
+      const junior = age != null && age <= 7;
       await sql`
-        INSERT INTO users (username, password_hash, display_name, role, status, teacher_id, age)
-        VALUES (${username}, ${hash}, ${String(s.displayName ?? '').trim() || null}, 'student', 'approved', ${user.id}, ${age})
+        INSERT INTO users (username, password_hash, display_name, role, status, teacher_id, age,
+          num_comprehension, num_blanks, blank_zipf_max, passage_word_count)
+        VALUES (${username}, ${hash}, ${String(s.displayName ?? '').trim() || null}, 'student', 'approved', ${user.id}, ${age},
+          ${junior ? 1 : 2}, ${junior ? 3 : 5}, ${junior ? 3.5 : 4.2}, ${junior ? 80 : 150})
       `;
       created++;
     }

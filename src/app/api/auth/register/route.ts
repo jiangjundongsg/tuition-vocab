@@ -35,9 +35,13 @@ async function createStudent(
   if (taken.length > 0) return null;
 
   const hash = await bcrypt.hash(password, 10);
+  // Age-based defaults: ≤7 simpler, >7 standard
+  const junior = age != null && age <= 7;
   const rows = await sql`
-    INSERT INTO users (email, username, password_hash, display_name, role, status, teacher_id, age)
-    VALUES (${email}, ${username}, ${hash}, ${displayName}, 'student', 'approved', ${teacherId}, ${age})
+    INSERT INTO users (email, username, password_hash, display_name, role, status, teacher_id, age,
+      num_comprehension, num_blanks, blank_zipf_max, passage_word_count)
+    VALUES (${email}, ${username}, ${hash}, ${displayName}, 'student', 'approved', ${teacherId}, ${age},
+      ${junior ? 1 : 2}, ${junior ? 3 : 5}, ${junior ? 3.5 : 4.2}, ${junior ? 80 : 150})
     RETURNING id
   `;
   return Number(rows[0].id);
@@ -139,9 +143,13 @@ export async function POST(req: NextRequest) {
     }
 
     const hash = await bcrypt.hash(password, 10);
+    // Age-based defaults: ≤7 simpler, >7 standard
+    const junior = age != null && age <= 7;
     const rows = await sql`
-      INSERT INTO users (email, username, password_hash, display_name, role, status, teacher_id, age)
-      VALUES (${emailLower}, ${username}, ${hash}, ${displayName}, 'student', 'pending', ${teacherId}, ${age})
+      INSERT INTO users (email, username, password_hash, display_name, role, status, teacher_id, age,
+        num_comprehension, num_blanks, blank_zipf_max, passage_word_count)
+      VALUES (${emailLower}, ${username}, ${hash}, ${displayName}, 'student', 'pending', ${teacherId}, ${age},
+        ${junior ? 1 : 2}, ${junior ? 3 : 5}, ${junior ? 3.5 : 4.2}, ${junior ? 80 : 150})
       RETURNING id, email, username, display_name, role, status
     `;
     const student = rows[0];
