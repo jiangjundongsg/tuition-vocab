@@ -19,7 +19,7 @@ const dmSerif = DM_Serif_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Vocab Star — English Vocabulary Practice',
+  title: 'Vocab Star — Master English Vocabulary in Context',
   description: 'Vocabulary practice for primary school students',
 };
 

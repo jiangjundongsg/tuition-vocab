@@ -55,11 +55,11 @@ export default async function HomePage() {
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> AI-powered vocabulary practice
           </div>
           <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
-            Master English vocabulary<br />
-            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">one word at a time</span>
+            Master English Vocabulary<br />
+            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">in Context</span>
           </h1>
           <p className="text-base sm:text-lg text-slate-500 max-w-lg mx-auto leading-relaxed">
-            AI generates personalised passages, questions, and dictation exercises for every word. Practice → Dictation → Tricky Words → Mistake Pick — four steps to mastery.
+            AI reads with you, tests you, and fixes your mistakes — one passage at a time.
           </p>
           {!isLoggedIn ? (
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
