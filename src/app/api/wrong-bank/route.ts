@@ -55,17 +55,31 @@ export async function GET(req: NextRequest) {
       `;
     }
 
-    const items = rows.map((row) => ({
-      id: Number(row.id),
-      wordSetId: Number(row.word_set_id),
-      wordId: Number(row.word_id),
-      word: row.word as string,
-      lessonNumber: row.lesson_number as string | null,
-      questionKey: row.question_key as string,
-      typeLabel: decodeQuestionKey(row.question_key as string),
-      wrongCount: Number(row.wrong_count),
-      lastWrongAt: row.last_wrong_at,
-    }));
+    // Map enabled question types from user config
+    const enabledKeys = new Set<string>();
+    if (user.enableMcqMeaning) enabledKeys.add('meaning');
+    if (user.enableMcqSynonym) enabledKeys.add('synonym');
+    if (user.enableMcqAntonym) enabledKeys.add('antonym');
+    if (user.enableComprehension) {
+      for (let i = 0; i < (user.numComprehension || 2); i++) enabledKeys.add(`comp_${i}`);
+    }
+    if (user.enableFillBlank) enabledKeys.add('fill_blank');
+    // dictation is always enabled
+    enabledKeys.add('dictation');
+
+    const items = rows
+      .filter((row) => enabledKeys.has(row.question_key as string))
+      .map((row) => ({
+        id: Number(row.id),
+        wordSetId: Number(row.word_set_id),
+        wordId: Number(row.word_id),
+        word: row.word as string,
+        lessonNumber: row.lesson_number as string | null,
+        questionKey: row.question_key as string,
+        typeLabel: decodeQuestionKey(row.question_key as string),
+        wrongCount: Number(row.wrong_count),
+        lastWrongAt: row.last_wrong_at,
+      }));
 
     return NextResponse.json({ items });
   } catch (err) {
