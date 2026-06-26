@@ -25,12 +25,6 @@ interface Props {
   renderExtra?: (row: LessonRow) => React.ReactNode;
 }
 
-const STATUS_META: Record<LessonStatus, { label: string; cls: string }> = {
-  not_started: { label: 'Not started', cls: 'bg-slate-100 text-slate-500' },
-  in_progress: { label: 'In progress', cls: 'bg-amber-100 text-amber-700' },
-  done: { label: 'Done', cls: 'bg-emerald-100 text-emerald-700' },
-};
-
 function formatDate(iso: string | null): string {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -146,7 +140,6 @@ export default function LessonTable({
               sorted.map((row) => {
                 const isSelected = selectedLesson === row.lessonNumber;
                 const isLast = !isSelected && lastLesson === row.lessonNumber;
-                const status = STATUS_META[lessonStatus(row.progress)];
                 return (
                   <tr
                     key={row.lessonNumber}
@@ -188,9 +181,25 @@ export default function LessonTable({
                     </td>
                     <td className="py-3 px-4 text-slate-500 whitespace-nowrap">{formatDate(row.uploadedAt)}</td>
                     <td className="py-3 px-4">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${status.cls}`}>
-                        {status.label}
-                      </span>
+                      <div className="flex items-center gap-1.5 justify-center">
+                        {['practice', 'dictation', 'tricky', 'mistake_pick'].map((step) => {
+                          const done = row.progress[step as keyof LessonProgress];
+                          const label = { practice: 'P', dictation: 'D', tricky: 'T', mistake_pick: 'M' }[step];
+                          return (
+                            <span
+                              key={step}
+                              title={`${step}: ${done ? 'done' : 'pending'}`}
+                              className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${
+                                done
+                                  ? 'bg-emerald-100 text-emerald-700'
+                                  : 'bg-slate-100 text-slate-400'
+                              }`}
+                            >
+                              {label}
+                            </span>
+                          );
+                        })}
+                      </div>
                     </td>
                     {extraHeader && (
                       <td className="py-3 px-4 text-right text-slate-600 font-semibold">{renderExtra?.(row)}</td>
