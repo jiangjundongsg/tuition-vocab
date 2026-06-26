@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     }
 
     const rows = await sql`
-      SELECT id, email, username, password_hash, display_name
+      SELECT id, email, username, password_hash, display_name, role
       FROM users
       WHERE lower(email) = ${identifier} OR lower(username) = ${identifier}
       LIMIT 1
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     await setUserCookie(Number(user.id));
 
     return NextResponse.json({
-      user: { id: user.id, email: user.email, username: user.username, displayName: user.display_name },
+      user: { id: user.id, email: user.email, username: user.username, displayName: user.display_name, role: user.role },
     });
   } catch (err) {
     console.error('Login error:', err);

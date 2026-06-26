@@ -109,7 +109,8 @@ export default function RegisterPage() {
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Something went wrong'); return; }
 
-      router.push('/');
+      const dest = data.user?.role === 'teacher' || data.user?.role === 'admin' ? '/words' : '/';
+      router.push(dest);
       router.refresh();
     } catch {
       setError('Could not connect. Please try again.');

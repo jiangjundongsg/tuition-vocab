@@ -33,7 +33,9 @@ function LoginForm() {
         return;
       }
 
-      router.push('/');
+      // Teachers go to management tools; students go home
+      const dest = data.user?.role === 'teacher' || data.user?.role === 'admin' ? '/words' : '/';
+      router.push(dest);
       router.refresh();
     } catch {
       setError('Could not connect. Please try again.');

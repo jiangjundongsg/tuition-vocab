@@ -343,6 +343,43 @@ export default function TeacherUserManager() {
         </div>
       )}
 
+      {/* Add student — prominent button */}
+      {(meRole === 'teacher' || meRole === 'admin') && (
+        <div>
+          {showAddForm ? (
+            <form onSubmit={addStudent} className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">New Student</p>
+              <div className="grid grid-cols-2 gap-2">
+                <input value={newStudent.username} onChange={(e) => setNewStudent((s) => ({ ...s, username: e.target.value }))}
+                  placeholder="Username" autoCapitalize="none" className={inputClass} />
+                <input value={newStudent.displayName} onChange={(e) => setNewStudent((s) => ({ ...s, displayName: e.target.value }))}
+                  placeholder="Name (optional)" className={inputClass} />
+                <input value={newStudent.password} onChange={(e) => setNewStudent((s) => ({ ...s, password: e.target.value }))}
+                  placeholder="Password (min 6)" className={inputClass} />
+                <input type="number" min={5} max={18} value={newStudent.age} onChange={(e) => setNewStudent((s) => ({ ...s, age: e.target.value }))}
+                  placeholder="Age (optional)" className={inputClass} />
+              </div>
+              <div className="flex gap-2">
+                <button type="submit" disabled={addingStudent}
+                  className="text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-5 py-2 rounded-lg transition-colors disabled:opacity-50">
+                  {addingStudent ? 'Adding…' : 'Add student'}
+                </button>
+                <button type="button" onClick={() => { setShowAddForm(false); setError(''); }}
+                  className="text-sm font-semibold text-slate-500 hover:text-slate-700 px-3 py-2 transition-colors">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
+            <button onClick={() => setShowAddForm(true)}
+              className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-50 hover:bg-indigo-100 border-2 border-dashed border-indigo-200 hover:border-indigo-300 rounded-xl text-sm font-semibold text-indigo-600 transition-colors">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+              Add a student
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Pending join requests */}
       {pending.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
@@ -369,41 +406,6 @@ export default function TeacherUserManager() {
               </div>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Add student */}
-      {(meRole === 'teacher' || meRole === 'admin') && (
-        <div>
-          {showAddForm ? (
-            <form onSubmit={addStudent} className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                <input value={newStudent.username} onChange={(e) => setNewStudent((s) => ({ ...s, username: e.target.value }))}
-                  placeholder="Username" autoCapitalize="none" className={inputClass} />
-                <input value={newStudent.displayName} onChange={(e) => setNewStudent((s) => ({ ...s, displayName: e.target.value }))}
-                  placeholder="Name (optional)" className={inputClass} />
-                <input value={newStudent.password} onChange={(e) => setNewStudent((s) => ({ ...s, password: e.target.value }))}
-                  placeholder="Password (min 6)" className={inputClass} />
-                <input type="number" min={5} max={18} value={newStudent.age} onChange={(e) => setNewStudent((s) => ({ ...s, age: e.target.value }))}
-                  placeholder="Age (optional)" className={inputClass} />
-              </div>
-              <div className="flex gap-2">
-                <button type="submit" disabled={addingStudent}
-                  className="text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition-colors disabled:opacity-50">
-                  {addingStudent ? 'Adding…' : 'Add student'}
-                </button>
-                <button type="button" onClick={() => { setShowAddForm(false); setError(''); }}
-                  className="text-xs font-semibold text-slate-500 hover:text-slate-700 px-3 py-2 transition-colors">
-                  Cancel
-                </button>
-              </div>
-            </form>
-          ) : (
-            <button onClick={() => setShowAddForm(true)}
-              className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
-              + Add a student
-            </button>
-          )}
         </div>
       )}
 
