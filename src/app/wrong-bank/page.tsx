@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import WrongBankList from '@/components/WrongBankList';
 import RepracticeSession, { SessionData } from '@/components/RepracticeSession';
 import LessonTable, { LessonRow } from '@/components/LessonTable';
@@ -251,7 +252,12 @@ export default function WrongBankPage() {
             extraHeader="Tricky"
             renderExtra={(row) => trickyCounts[row.lessonNumber] ?? 0}
           />
-          <p className="text-xs text-slate-400 px-1">Click a lesson to re-practise its tricky questions.</p>
+          <p className="text-xs text-slate-400 px-1">
+            Click a lesson to re-practise its tricky questions, or{' '}
+            <Link href="/mistake-pick" className="text-purple-600 hover:underline font-semibold">
+              go to Mistake Pick →
+            </Link>
+          </p>
         </div>
       )}
     </div>

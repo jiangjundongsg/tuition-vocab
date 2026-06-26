@@ -88,7 +88,7 @@ export default function MistakePickSession({
       const nextIdx = currentIndex + 1;
       setCurrentIndex(nextIdx);
       setInputValue(answers[nextIdx] ?? questions[nextIdx]?.sentence ?? '');
-    } else { setDone(true); }
+    } else { setDone(true); onDone?.(); }
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
