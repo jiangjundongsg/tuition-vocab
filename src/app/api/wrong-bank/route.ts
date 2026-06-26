@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
         SELECT wb.id, wb.word_set_id, wb.question_key, wb.wrong_count, wb.last_wrong_at,
                ws.word_id, w.word, w.lesson_number
         FROM wrong_bank wb
-        JOIN word_sets ws ON wb.word_set_id = ws.id
+        JOIN word_sets ws ON wb.word_set_id = ws.id AND ws.questions_json IS NOT NULL
         JOIN words w ON ws.word_id = w.id
         WHERE wb.user_id = ${user.id}
           AND wb.word_set_id IS NOT NULL
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
         SELECT wb.id, wb.word_set_id, wb.question_key, wb.wrong_count, wb.last_wrong_at,
                ws.word_id, w.word, w.lesson_number
         FROM wrong_bank wb
-        JOIN word_sets ws ON wb.word_set_id = ws.id
+        JOIN word_sets ws ON wb.word_set_id = ws.id AND ws.questions_json IS NOT NULL
         JOIN words w ON ws.word_id = w.id
         WHERE wb.user_id = ${user.id}
           AND wb.word_set_id IS NOT NULL
