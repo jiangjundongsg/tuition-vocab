@@ -2,137 +2,49 @@ import Link from 'next/link';
 import { getCurrentUser } from '@/lib/auth';
 
 const studentFeatures = [
-  {
-    href: '/practice',
-    icon: (
-      <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-      </svg>
-    ),
-    title: 'Word by Word',
-    desc: 'Read a passage, answer MCQ and comprehension questions, then fill in the blanks.',
-    iconBg: 'bg-indigo-50 ring-1 ring-indigo-100',
-    hover: 'hover:border-indigo-200/80',
-    glow: 'group-hover:from-indigo-50/60',
-  },
-  {
-    href: '/wrong-bank',
-    icon: (
-      <svg className="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-      </svg>
-    ),
-    title: 'Tricky Words',
-    desc: 'Wrong answers are saved automatically and re-tested until you master them.',
-    iconBg: 'bg-rose-50 ring-1 ring-rose-100',
-    hover: 'hover:border-rose-200/80',
-    glow: 'group-hover:from-rose-50/60',
-  },
-  {
-    href: '/dictation',
-    icon: (
-      <svg className="w-5 h-5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-      </svg>
-    ),
-    title: 'Dictation',
-    desc: 'Listen to each word spoken aloud and type it correctly to complete the lesson.',
-    iconBg: 'bg-sky-50 ring-1 ring-sky-100',
-    hover: 'hover:border-sky-200/80',
-    glow: 'group-hover:from-sky-50/60',
-  },
-  {
-    href: '/mistake-pick',
-    icon: (
-      <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-      </svg>
-    ),
-    title: 'Mistake Pick',
-    desc: 'Find and correct grammar mistakes in sentences — like the gaokao error-correction section.',
-    iconBg: 'bg-purple-50 ring-1 ring-purple-100',
-    hover: 'hover:border-purple-200/80',
-    glow: 'group-hover:from-purple-50/60',
-  },
+  { href: '/practice', title: 'Practice', desc: 'AI passages, MCQs, fill-in-the-blank — one word at a time.', color: 'indigo' },
+  { href: '/dictation', title: 'Dictation', desc: 'Listen and type each word spoken aloud.', color: 'sky' },
+  { href: '/mistake-pick', title: 'Mistake Pick', desc: 'Find and fix grammar mistakes in sentences.', color: 'purple' },
+  { href: '/wrong-bank', title: 'Tricky Words', desc: 'Wrong answers saved and re-tested until mastered.', color: 'rose' },
 ];
 
 const teacherFeatures = [
-  {
-    href: '/words',
-    icon: (
-      <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-      </svg>
-    ),
-    title: 'Upload Words',
-    desc: 'Upload a CSV, photo, or PDF word list and assign it to one or more students.',
-    iconBg: 'bg-indigo-50 ring-1 ring-indigo-100',
-    hover: 'hover:border-indigo-200/80',
-    glow: 'group-hover:from-indigo-50/60',
-  },
-  {
-    href: '/words',
-    icon: (
-      <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-    title: 'Manage Users',
-    desc: 'Edit student profiles, configure question types, and manage accounts.',
-    iconBg: 'bg-emerald-50 ring-1 ring-emerald-100',
-    hover: 'hover:border-emerald-200/80',
-    glow: 'group-hover:from-emerald-50/60',
-  },
-  {
-    href: '/words',
-    icon: (
-      <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7zm0 5h16" />
-      </svg>
-    ),
-    title: 'SQL Portal',
-    desc: 'Run SELECT, INSERT, UPDATE, DELETE queries directly on the database.',
-    iconBg: 'bg-amber-50 ring-1 ring-amber-100',
-    hover: 'hover:border-amber-200/80',
-    glow: 'group-hover:from-amber-50/60',
-  },
+  { href: '/words', title: 'Upload Words', desc: 'CSV, photo, or PDF — upload lists, assign to students.', color: 'indigo' },
+  { href: '/words', title: 'Manage Students', desc: 'Create accounts, configure questions, track progress.', color: 'emerald' },
 ];
 
-const steps = [
-  { n: 1, text: 'Teacher uploads a CSV word list — format: "1A,curious" for Lesson 1A, word "curious"', dot: 'bg-indigo-500' },
-  { n: 2, text: 'Each word is automatically scored High, Medium, Low, or Unknown difficulty based on word frequency data', dot: 'bg-violet-500' },
-  { n: 3, text: 'Student logs in, selects a lesson, and practices one word at a time', dot: 'bg-sky-500' },
-  { n: 4, text: 'For each word: read a passage, then answer 4 questions — MCQ meaning, 2 comprehension, and fill-in-blank', dot: 'bg-teal-500' },
-  { n: 5, text: 'After all words, complete a dictation exercise. Wrong answers are re-tested inline before the session ends', dot: 'bg-emerald-500' },
-  { n: 6, text: 'Practice Mistake Pick: find and correct grammar mistakes in sentences — like the gaokao error-correction section', dot: 'bg-purple-500' },
-  { n: 7, text: 'Review all mistakes in the Tricky Words bank and re-practice until mastered', dot: 'bg-rose-500' },
+const howItWorks = [
+  { n: 1, title: 'Teacher uploads words', desc: 'CSV, photo, or PDF — assign to one or more students.' },
+  { n: 2, title: 'AI generates questions', desc: 'Each word gets a passage, MCQs, and fill-in-the-blank.' },
+  { n: 3, title: 'Student practices', desc: 'Practice → Dictation → Mistake Pick — four steps per lesson.' },
+  { n: 4, title: 'Review & master', desc: 'Wrong answers go to Tricky Words; re-tested until mastered.' },
 ];
+
+const colors: Record<string, { bg: string; text: string; ring: string; hover: string }> = {
+  indigo:  { bg:'bg-indigo-50', text:'text-indigo-600', ring:'ring-indigo-100', hover:'hover:border-indigo-200' },
+  sky:     { bg:'bg-sky-50',    text:'text-sky-600',    ring:'ring-sky-100',    hover:'hover:border-sky-200' },
+  purple:  { bg:'bg-purple-50', text:'text-purple-600', ring:'ring-purple-100', hover:'hover:border-purple-200' },
+  rose:    { bg:'bg-rose-50',   text:'text-rose-600',   ring:'ring-rose-100',   hover:'hover:border-rose-200' },
+  emerald: { bg:'bg-emerald-50',text:'text-emerald-600',ring:'ring-emerald-100',hover:'hover:border-emerald-200' },
+};
 
 export default async function HomePage() {
   const user = await getCurrentUser();
+  const isLoggedIn = !!user;
   const isTeacher = user?.role === 'teacher' || user?.role === 'admin';
-  const features = isTeacher ? teacherFeatures : studentFeatures;
+  const isPending = user?.role === 'student' && user?.status !== 'approved';
 
-  // A student awaiting (or denied) teacher approval can't practice yet.
-  if (user?.role === 'student' && user.status !== 'approved') {
+  if (isPending) {
     const rejected = user.status === 'rejected';
     return (
       <div className="min-h-[60vh] flex items-center justify-center py-12">
         <div className="w-full max-w-md text-center bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/60 p-10">
-          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5 ${rejected ? 'bg-red-50' : 'bg-amber-50'}`}>
-            <span className="text-3xl">{rejected ? '🚫' : '⏳'}</span>
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5 ${rejected?'bg-red-50':'bg-amber-50'}`}>
+            <span className="text-3xl">{rejected?'🚫':'⏳'}</span>
           </div>
-          <h1 className="text-2xl font-semibold text-slate-900 mb-2">
-            {rejected ? 'Request not approved' : 'Waiting for approval'}
-          </h1>
+          <h1 className="text-2xl font-semibold text-slate-900 mb-2">{rejected?'Request not approved':'Waiting for approval'}</h1>
           <p className="text-slate-500 text-sm leading-relaxed">
-            {rejected
-              ? 'Your teacher did not approve this account. Please check the Teacher ID you used, or ask your teacher to add you.'
-              : `Your account is set up! Your teacher (ID ${user.teacherId ?? '—'}) just needs to approve you before you can start practising. Check back soon.`}
-          </p>
-          <p className="mt-6 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400">
-            <span className={`w-1.5 h-1.5 rounded-full ${rejected ? 'bg-red-400' : 'bg-amber-400 animate-pulse'}`} />
-            {user.displayName ?? user.username}
+            {rejected?'Your teacher did not approve this account.':'Your account is set up! Your teacher just needs to approve you. Check back soon.'}
           </p>
         </div>
       </div>
@@ -141,113 +53,118 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-20">
-
       {/* Hero */}
-      <div className="relative -mx-4 sm:-mx-6 px-8 sm:px-14 pt-16 pb-14 rounded-3xl overflow-hidden bg-gradient-to-br from-orange-50 via-violet-50/70 to-sky-50">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-violet-200 rounded-full opacity-20 blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-sky-200 rounded-full opacity-20 blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
-        <div className="absolute top-1/3 right-1/3 w-56 h-56 bg-amber-100 rounded-full opacity-30 blur-2xl pointer-events-none" />
-
-        {/* Decorative sparkles — subtle, fade into background */}
-        {!isTeacher && (
-          <>
-            <svg className="absolute top-8 right-12 w-5 h-5 text-amber-300/70 pointer-events-none" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-            </svg>
-            <svg className="absolute bottom-12 right-32 w-3 h-3 text-violet-300/70 pointer-events-none" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-            </svg>
-            <svg className="absolute top-1/2 right-6 w-4 h-4 text-sky-300/60 pointer-events-none" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-            </svg>
-          </>
-        )}
-
-        <div className="relative space-y-6">
-          <div className="inline-flex items-center gap-2 bg-white/70 backdrop-blur-sm border border-indigo-100 rounded-full px-3.5 py-1.5 text-xs font-semibold text-indigo-600 shadow-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-            {isTeacher ? 'Teacher Dashboard' : 'English Vocabulary Practice'}
+      <section className="relative -mx-4 sm:-mx-6 px-6 sm:px-14 pt-20 pb-16 rounded-3xl overflow-hidden bg-gradient-to-br from-indigo-50 via-violet-50/60 to-sky-50">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-violet-200 rounded-full opacity-20 blur-3xl -translate-y-1/2 translate-x-1/4" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-sky-200 rounded-full opacity-20 blur-3xl translate-y-1/2 -translate-x-1/4" />
+        <div className="relative max-w-2xl mx-auto text-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 border border-slate-200/60 text-xs font-semibold text-slate-500">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> AI-powered vocabulary practice
           </div>
-
-          <h1 className="max-w-2xl text-5xl sm:text-6xl text-slate-900 leading-[1.06]">
-            <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-500 bg-clip-text text-transparent">
-              {isTeacher ? 'Manage your' : 'Build your'}
-            </span>
-            <br />
-            {isTeacher ? 'students' : 'vocabulary'}
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
+            Master English vocabulary<br />
+            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">one word at a time</span>
           </h1>
-
-          <p className="text-lg text-slate-500 leading-relaxed font-light">
-            {isTeacher
-              ? 'Upload word lists, configure question types per student, and monitor progress through the SQL portal.'
-              : 'Practice with reading passages, AI-generated questions, fill-in-the-blank exercises, and dictation — all designed for primary school students.'}
+          <p className="text-lg text-slate-500 max-w-lg mx-auto leading-relaxed">
+            AI generates personalised passages, questions, and dictation exercises for every word. Practice → Dictation → Mistake Pick — four steps to mastery.
           </p>
-        </div>
-      </div>
-
-      {/* Feature grid */}
-      <div className="space-y-5">
-        <div className="flex items-center gap-4">
-          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-100 to-amber-100" />
-          <p className="flex items-center gap-1.5 text-xs font-bold text-slate-400 uppercase tracking-widest shrink-0">
-            <svg className="w-2.5 h-2.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-            </svg>
-            What&apos;s inside
-          </p>
-          <div className="h-px flex-1 bg-gradient-to-l from-transparent via-amber-100 to-amber-100" />
-        </div>
-
-        <div className="grid sm:grid-cols-3 gap-4">
-          {features.map(({ href, icon, title, desc, iconBg, hover, glow }) => (
-            <Link
-              key={title}
-              href={href}
-              className={`group relative bg-white rounded-2xl p-6 border border-slate-100 ${hover} hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 overflow-hidden`}
-            >
-              <div className={`absolute inset-0 bg-gradient-to-br ${glow} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-              <div className="relative">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${iconBg}`}>
-                  {icon}
-                </div>
-                <h3 className="font-semibold text-slate-900 mb-1.5 text-sm">{title}</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">{desc}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* How it works — students and logged-out only */}
-      {!isTeacher && (
-        <div className="space-y-6 pb-4">
-          <div className="flex items-center gap-4">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-100 to-amber-100" />
-            <p className="flex items-center gap-1.5 text-xs font-bold text-slate-400 uppercase tracking-widest shrink-0">
-              <svg className="w-2.5 h-2.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-              </svg>
-              How it works
-            </p>
-            <div className="h-px flex-1 bg-gradient-to-l from-transparent via-amber-100 to-amber-100" />
-          </div>
-
-          <div className="relative pl-10">
-            <div className="absolute left-3 top-3 bottom-3 w-px bg-gradient-to-b from-indigo-200 via-violet-200 via-sky-200 to-emerald-200" />
-            <div className="space-y-7">
-              {steps.map(({ n, text, dot }) => (
-                <div key={n} className="relative flex items-start gap-0">
-                  <div className={`absolute -left-10 w-6 h-6 rounded-full ${dot} flex items-center justify-center text-[10px] font-bold text-white shadow-sm ring-2 ring-white`}>
-                    {n}
-                  </div>
-                  <p className="text-sm text-slate-600 leading-relaxed">{text}</p>
-                </div>
-              ))}
+          {!isLoggedIn ? (
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <Link href="/register" className="w-full sm:w-auto px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition-colors shadow-lg shadow-indigo-200">Get Started Free</Link>
+              <Link href="/login" className="w-full sm:w-auto px-8 py-3 bg-white border border-slate-200 text-slate-700 hover:text-slate-900 font-semibold rounded-xl text-sm transition-colors shadow-sm">Log in</Link>
             </div>
-          </div>
+          ) : (
+            <p className="text-sm text-slate-400 pt-2">Welcome back, <strong className="text-slate-700">{user.displayName ?? user.username ?? user.email}</strong></p>
+          )}
         </div>
+      </section>
+
+      {/* Public: For Teachers + For Learners */}
+      {!isLoggedIn && (
+        <section className="grid sm:grid-cols-2 gap-6">
+          <div className="bg-white rounded-2xl border border-slate-100 p-8 shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 ring-1 ring-indigo-100 flex items-center justify-center mb-4">
+              <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>
+            </div>
+            <h2 className="text-lg font-bold text-slate-900 mb-2">For Teachers</h2>
+            <ul className="space-y-2 text-sm text-slate-500 mb-5">
+              <li className="flex items-start gap-2"><span className="text-indigo-400 mt-0.5">✓</span>Upload word lists as CSV, photo, or PDF</li>
+              <li className="flex items-start gap-2"><span className="text-indigo-400 mt-0.5">✓</span>Create student accounts and track progress</li>
+              <li className="flex items-start gap-2"><span className="text-indigo-400 mt-0.5">✓</span>Configure question types per student</li>
+            </ul>
+            <Link href="/register" className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-800">Sign up as Teacher →</Link>
+          </div>
+          <div className="bg-white rounded-2xl border border-slate-100 p-8 shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 ring-1 ring-emerald-100 flex items-center justify-center mb-4">
+              <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+            </div>
+            <h2 className="text-lg font-bold text-slate-900 mb-2">For Learners</h2>
+            <ul className="space-y-2 text-sm text-slate-500 mb-5">
+              <li className="flex items-start gap-2"><span className="text-emerald-400 mt-0.5">✓</span>AI reads with you, tests you, fixes your mistakes</li>
+              <li className="flex items-start gap-2"><span className="text-emerald-400 mt-0.5">✓</span>MCQs, dictation, and fill-in-the-blank exercises</li>
+              <li className="flex items-start gap-2"><span className="text-emerald-400 mt-0.5">✓</span>Tricky words saved and re-tested until mastered</li>
+            </ul>
+            <Link href="/register" className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-600 hover:text-emerald-800">Sign up as Student →</Link>
+          </div>
+        </section>
       )}
 
+      {/* Features (logged-in only) */}
+      {isLoggedIn && (
+        <section>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-100 to-amber-100" />
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest shrink-0">{isTeacher ? 'Teacher Tools' : 'Practice'}</p>
+            <div className="h-px flex-1 bg-gradient-to-l from-transparent via-amber-100 to-amber-100" />
+          </div>
+          <div className={`grid gap-4 ${isTeacher ? 'sm:grid-cols-2' : 'sm:grid-cols-4'}`}>
+            {(isTeacher ? teacherFeatures : studentFeatures).map(({ href, title, desc, color }) => {
+              const cl = colors[color];
+              return (
+                <Link key={title} href={href} className={`group relative bg-white rounded-2xl p-6 border border-slate-100 ${cl.hover} hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 overflow-hidden`}>
+                  <span className={`inline-flex items-center justify-center w-9 h-9 rounded-xl mb-4 font-bold text-sm ${cl.bg} ${cl.text} ${cl.ring}`}>{title[0]}</span>
+                  <h3 className="font-semibold text-slate-900 mb-1.5 text-sm">{title}</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed">{desc}</p>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* How it works */}
+      <section className="space-y-6 pb-4">
+        <div className="flex items-center gap-4">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-100 to-amber-100" />
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest shrink-0">How it works</p>
+          <div className="h-px flex-1 bg-gradient-to-l from-transparent via-amber-100 to-amber-100" />
+        </div>
+        <div className="relative pl-10">
+          <div className="absolute left-3 top-3 bottom-3 w-px bg-gradient-to-b from-indigo-200 via-violet-200 via-sky-200 to-emerald-200" />
+          <div className="space-y-8">
+            {howItWorks.map(({ n, title, desc }) => (
+              <div key={n} className="relative">
+                <div className="absolute -left-10 w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-[10px] font-bold text-white shadow-sm ring-2 ring-white">{n}</div>
+                <p className="text-sm font-semibold text-slate-800">{title}</p>
+                <p className="text-sm text-slate-500 leading-relaxed mt-0.5">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Bottom CTA */}
+      {!isLoggedIn && (
+        <section className="text-center pb-8">
+          <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl p-10 sm:p-14 text-white shadow-xl shadow-indigo-200/40">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3">Ready to start learning?</h2>
+            <p className="text-indigo-100 text-sm sm:text-base max-w-md mx-auto mb-6">
+              Create a free account. Students need their teacher&apos;s ID. Teachers use <code className="bg-white/20 px-1.5 py-0.5 rounded text-white text-xs font-mono">VOCAB_TEACHER</code>.
+            </p>
+            <Link href="/register" className="inline-flex items-center gap-2 px-8 py-3 bg-white text-indigo-700 font-semibold rounded-xl text-sm hover:bg-indigo-50 transition-colors shadow-lg">Create Account →</Link>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
