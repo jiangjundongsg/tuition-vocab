@@ -13,13 +13,6 @@ const teacherFeatures = [
   { href: '/words', title: 'Manage Students', desc: 'Create accounts, configure questions, track progress.', color: 'emerald' },
 ];
 
-const howItWorks = [
-  { n: 1, title: 'Teacher uploads words', desc: 'CSV, photo, or PDF — assign to one or more students.' },
-  { n: 2, title: 'AI generates questions', desc: 'Each word gets a passage, MCQs, and fill-in-the-blank.' },
-  { n: 3, title: 'Student practices', desc: 'Practice → Dictation → Tricky Words → Mistake Pick.' },
-  { n: 4, title: 'Review & master', desc: 'Wrong answers go to Tricky Words; re-tested until mastered.' },
-];
-
 const colors: Record<string, { bg: string; text: string; ring: string; hover: string }> = {
   indigo:  { bg:'bg-indigo-50', text:'text-indigo-600', ring:'ring-indigo-100', hover:'hover:border-indigo-200' },
   sky:     { bg:'bg-sky-50',    text:'text-sky-600',    ring:'ring-sky-100',    hover:'hover:border-sky-200' },
@@ -132,34 +125,13 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* How it works */}
-      <section className="space-y-6 pb-4">
-        <div className="flex items-center gap-4">
-          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-100 to-amber-100" />
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest shrink-0">How it works</p>
-          <div className="h-px flex-1 bg-gradient-to-l from-transparent via-amber-100 to-amber-100" />
-        </div>
-        <div className="relative pl-10">
-          <div className="absolute left-3 top-3 bottom-3 w-px bg-gradient-to-b from-indigo-200 via-violet-200 via-sky-200 to-emerald-200" />
-          <div className="space-y-8">
-            {howItWorks.map(({ n, title, desc }) => (
-              <div key={n} className="relative">
-                <div className="absolute -left-10 w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-[10px] font-bold text-white shadow-sm ring-2 ring-white">{n}</div>
-                <p className="text-sm font-semibold text-slate-800">{title}</p>
-                <p className="text-sm text-slate-500 leading-relaxed mt-0.5">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Bottom CTA */}
+      {/* Bottom CTA — public only */}
       {!isLoggedIn && (
         <section className="text-center pb-8">
           <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl sm:rounded-3xl p-8 sm:p-14 text-white shadow-xl shadow-indigo-200/40">
             <h2 className="text-xl sm:text-3xl font-bold mb-3">Ready to start learning?</h2>
             <p className="text-indigo-100 text-xs sm:text-base max-w-md mx-auto mb-6">
-              Create a free account. Students need their teacher&apos;s ID. Teachers use <code className="bg-white/20 px-1.5 py-0.5 rounded text-white text-xs font-mono">VOCAB_TEACHER</code>.
+              Create an account and start practising today.
             </p>
             <Link href="/register" className="inline-flex items-center gap-2 px-8 py-3 bg-white text-indigo-700 font-semibold rounded-xl text-sm hover:bg-indigo-50 transition-colors shadow-lg">Create Account →</Link>
           </div>

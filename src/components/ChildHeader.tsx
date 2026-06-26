@@ -22,7 +22,6 @@ const studentNav = [
 ];
 
 const teacherNav = [
-  { href: '/',       label: 'Home' },
   { href: '/words',  label: 'Teacher Tools' },
 ];
 
