@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
       const hash = await bcrypt.hash(password, 10);
       const age = typeof s.age === 'number' && s.age > 0 ? s.age : null;
-      // Age-based defaults: ≤7 uses all question types with fewer questions, >7 standard
+      // Age-based defaults
       const junior = age != null && age <= 7;
       await sql`
         INSERT INTO users (username, password_hash, display_name, role, status, teacher_id, age,
@@ -43,8 +43,8 @@ export async function POST(req: NextRequest) {
           enable_mcq_meaning, enable_mcq_synonym, enable_mcq_antonym,
           enable_comprehension, enable_fill_blank, enable_sentence_writing)
         VALUES (${username}, ${hash}, ${String(s.displayName ?? '').trim() || null}, 'student', 'approved', ${user.id}, ${age},
-          ${junior ? 1 : 2}, ${junior ? 1 : 5}, 4.2, ${junior ? 60 : 150},
-          true, ${junior}, ${junior}, true, true, false)
+          ${junior ? 1 : 1}, ${junior ? 1 : 2}, ${junior ? 4.2 : 3.5}, ${junior ? 60 : 150},
+          true, true, true, true, ${junior}, ${!junior})
       `;
       created++;
     }
