@@ -115,9 +115,9 @@ export default function MistakePickSession({
                 Pick Another Lesson
               </button>
             )}
-            <button onClick={() => router.push(`/wrong-bank?lesson=${encodeURIComponent(lessonNumber)}`)}
+            <button onClick={() => { onDone?.(); router.push('/'); }}
               className="w-full sm:w-auto border-2 border-white/50 text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-white/10 transition-colors">
-              Go to Tricky Words →
+              Go to Home →
             </button>
           </div>
         </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import SessionMCQ from './SessionMCQ';
 import FillBlankExercise from './FillBlankExercise';
 import DictationItem from './DictationItem';
@@ -35,9 +36,13 @@ interface Props {
   initialSession?: SessionData | null;
   onSave?: (data: SessionData) => void;
   onClear?: () => void;
+  /** Optional URL + label for a "next step" button on the done screen. */
+  nextUrl?: string;
+  nextLabel?: string;
 }
 
-export default function RepracticeSession({ items, lessonLabel, onDone, initialSession, onSave, onClear }: Props) {
+export default function RepracticeSession({ items, lessonLabel, onDone, initialSession, onSave, onClear, nextUrl, nextLabel }: Props) {
+  const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(initialSession?.currentWordIndex ?? 0);
   const [wordSets, setWordSets] = useState<Record<number, WordSetData | 'loading' | 'error'>>({});
   const [submitted, setSubmitted] = useState<Record<number, boolean>>(
@@ -140,12 +145,22 @@ export default function RepracticeSession({ items, lessonLabel, onDone, initialS
           <p className="text-indigo-100 text-sm mb-6">
             Corrected <strong>{correctCount}</strong> of <strong>{items.length}</strong> tricky questions for Lesson {lessonLabel}
           </p>
-          <button
-            onClick={onDone}
-            className="bg-white text-indigo-700 font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-indigo-50 transition-colors"
-          >
-            Back to Tricky Words
-          </button>
+          <div className="flex flex-col gap-3 items-center">
+            <button
+              onClick={onDone}
+              className="bg-white text-indigo-700 font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-indigo-50 transition-colors"
+            >
+              Back to Tricky Words
+            </button>
+            {nextUrl && (
+              <button
+                onClick={() => router.push(nextUrl)}
+                className="border-2 border-white/50 text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-white/10 transition-colors"
+              >
+                {nextLabel || 'Next Step →'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );

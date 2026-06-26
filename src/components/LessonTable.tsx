@@ -38,6 +38,8 @@ function formatDate(iso: string | null): string {
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+type SortKey = 'lesson' | 'uploaded' | 'status' | 'extra';
+
 export default function LessonTable({
   rows,
   onSelect,
@@ -49,6 +51,8 @@ export default function LessonTable({
   renderExtra,
 }: Props) {
   const [search, setSearch] = useState('');
+  const [sortKey, setSortKey] = useState<SortKey>('uploaded');
+  const [sortAsc, setSortAsc] = useState(false);
 
   const filtered = rows.filter(
     (r) =>
@@ -56,6 +60,56 @@ export default function LessonTable({
       friendlyLessonLabel(r.lessonNumber).toLowerCase().includes(search.toLowerCase()) ||
       r.lessonNumber.toLowerCase().includes(search.toLowerCase()),
   );
+
+  // Sort filtered rows
+  const sorted = [...filtered].sort((a, b) => {
+    let cmp = 0;
+    switch (sortKey) {
+      case 'lesson':
+        cmp = a.lessonNumber.localeCompare(b.lessonNumber);
+        break;
+      case 'uploaded':
+        cmp = (a.uploadedAt ?? '').localeCompare(b.uploadedAt ?? '');
+        break;
+      case 'status': {
+        const sa = lessonStatus(a.progress);
+        const sb = lessonStatus(b.progress);
+        // done > in_progress > not_started
+        const order: Record<LessonStatus, number> = { done: 2, in_progress: 1, not_started: 0 };
+        cmp = (order[sa] ?? 0) - (order[sb] ?? 0);
+        break;
+      }
+      case 'extra': {
+        const ea = renderExtra?.(a);
+        const eb = renderExtra?.(b);
+        cmp = String(ea ?? '').localeCompare(String(eb ?? ''));
+        break;
+      }
+    }
+    return sortAsc ? cmp : -cmp;
+  });
+
+  function handleSort(key: SortKey) {
+    if (sortKey === key) setSortAsc((v) => !v);
+    else { setSortKey(key); setSortAsc(false); }
+  }
+
+  function SortTh({ colKey, label, align }: { colKey: SortKey; label: string; align?: string }) {
+    const active = sortKey === colKey;
+    return (
+      <th
+        className={`py-2.5 px-4 cursor-pointer select-none hover:text-slate-600 transition-colors ${align ?? 'text-left'}`}
+        onClick={() => handleSort(colKey)}
+      >
+        <span className="inline-flex items-center gap-1">
+          {label}
+          <span className="text-[9px] leading-none">
+            {active ? (sortAsc ? '▲' : '▼') : <span className="opacity-30">▼</span>}
+          </span>
+        </span>
+      </th>
+    );
+  }
 
   const colCount = extraHeader ? 4 : 3;
 
@@ -75,21 +129,21 @@ export default function LessonTable({
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-[11px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50/70">
-              <th className="py-2.5 px-4">Lesson</th>
-              <th className="py-2.5 px-4">Uploaded</th>
-              <th className="py-2.5 px-4">Status</th>
-              {extraHeader && <th className="py-2.5 px-4 text-right">{extraHeader}</th>}
+              <SortTh colKey="lesson" label="Lesson" />
+              <SortTh colKey="uploaded" label="Uploaded" />
+              <SortTh colKey="status" label="Status" />
+              {extraHeader && <SortTh colKey="extra" label={extraHeader} align="text-right" />}
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 ? (
+            {sorted.length === 0 ? (
               <tr>
                 <td colSpan={colCount} className="py-6 px-4 text-center text-sm text-slate-400">
                   No lessons match your search.
                 </td>
               </tr>
             ) : (
-              filtered.map((row) => {
+              sorted.map((row) => {
                 const isSelected = selectedLesson === row.lessonNumber;
                 const isLast = !isSelected && lastLesson === row.lessonNumber;
                 const status = STATUS_META[lessonStatus(row.progress)];

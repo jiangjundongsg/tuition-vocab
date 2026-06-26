@@ -6,6 +6,7 @@ import StudentSelector from './StudentSelector';
 interface UploadResult {
   inserted: number;
   skipped: number;
+  warning?: string;
 }
 
 export default function WordUploader() {
@@ -121,7 +122,7 @@ export default function WordUploader() {
       )}
 
       {result && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-1">
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-2">
           <p className="font-semibold text-emerald-800 text-sm">
             {result.inserted} word{result.inserted !== 1 ? 's' : ''} uploaded successfully
             {result.skipped > 0 && (
@@ -131,6 +132,11 @@ export default function WordUploader() {
           <p className="text-xs text-emerald-600">
             Words assigned to {targetUserIds.length} student{targetUserIds.length !== 1 ? 's' : ''}
           </p>
+          {result.warning && (
+            <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2">
+              ⚠️ {result.warning}
+            </p>
+          )}
         </div>
       )}
     </div>

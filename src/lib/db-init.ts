@@ -120,7 +120,7 @@ export async function initDb() {
 
   // UNIQUE(user_id, word) on words - drop old unique constraint first
   await sql`
-    DO $$
+    DO $
     BEGIN
       IF NOT EXISTS (
         SELECT 1 FROM pg_indexes WHERE indexname = 'idx_words_user_word'
@@ -131,12 +131,12 @@ export async function initDb() {
         END;
         CREATE UNIQUE INDEX idx_words_user_word ON words(user_id, word) WHERE user_id IS NOT NULL;
       END IF;
-    END $$;
-  `.catch(() => {});
+    END $;
+  `.catch((e) => { console.error('Failed to create idx_words_user_word:', e); });
 
   // UNIQUE(user_id, word_id) on word_sets
   await sql`
-    DO $$
+    DO $
     BEGIN
       IF NOT EXISTS (
         SELECT 1 FROM pg_indexes WHERE indexname = 'idx_word_sets_user_word'
@@ -147,8 +147,8 @@ export async function initDb() {
         END;
         CREATE UNIQUE INDEX idx_word_sets_user_word ON word_sets(user_id, word_id) WHERE user_id IS NOT NULL;
       END IF;
-    END $$;
-  `.catch(() => {});
+    END $;
+  `.catch((e) => { console.error('Failed to create idx_word_sets_user_word:', e); });
 
   // UNIQUE(user_id, word_set_id, question_key) on wrong_bank
   await sql`

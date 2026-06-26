@@ -275,10 +275,10 @@ export default function DictationSession({ words, lessonNumber, onDone, initialS
           </button>
         )}
         <button
-          onClick={() => router.push(`/mistake-pick?lesson=${encodeURIComponent(lessonNumber)}`)}
+          onClick={() => router.push(`/wrong-bank?lesson=${encodeURIComponent(lessonNumber)}`)}
           className="border-2 border-white/50 text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-white/10 transition-colors"
         >
-          Go to Mistake Pick →
+          Go to Tricky Words →
         </button>
         </div>
       </div>

@@ -220,6 +220,8 @@ export default function WrongBankPage() {
           initialSession={savedSession}
           onSave={handleSave}
           onClear={handleClear}
+          nextUrl={`/mistake-pick?lesson=${encodeURIComponent(practicingLesson)}`}
+          nextLabel="Go to Mistake Pick →"
         />
       </div>
     );

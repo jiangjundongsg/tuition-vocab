@@ -71,13 +71,17 @@ export async function POST(req: NextRequest) {
                   lesson_number = COALESCE(EXCLUDED.lesson_number, words.lesson_number)
           `;
           totalInserted++;
-        } catch {
+        } catch (e) {
+          console.error(`Upload insert error for word "${word}" userId=${targetId}:`, e);
           totalSkipped++;
         }
       }
     }
 
-    return NextResponse.json({ inserted: totalInserted, skipped: totalSkipped });
+    const warning = totalInserted === 0 && totalSkipped > 0
+      ? 'All words were skipped — check server logs for insert errors (possible missing unique index on words).'
+      : undefined;
+    return NextResponse.json({ inserted: totalInserted, skipped: totalSkipped, warning });
   } catch (err) {
     console.error('Upload error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
