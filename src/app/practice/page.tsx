@@ -266,6 +266,7 @@ export default function PracticePage() {
               selectedLesson={selectedLesson}
               lastLesson={lastLesson}
               disabled={loadingWords}
+              activeStep="practice"
             />
 
             {loadingWords && (

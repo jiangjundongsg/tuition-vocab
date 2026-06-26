@@ -215,6 +215,7 @@ export default function MistakePickPage() {
             onSelect={selectLesson}
             selectedLesson={selectedLesson}
             disabled={loading}
+            activeStep="mistake_pick"
           />
           {loading && (
             <div className="flex items-center gap-2 text-sm text-slate-400 px-1 pt-1">

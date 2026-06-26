@@ -23,6 +23,8 @@ interface Props {
   extraHeader?: string;
   /** Renders the trailing column cell for a row. */
   renderExtra?: (row: LessonRow) => React.ReactNode;
+  /** If set, shows only this step's status in the column (e.g. 'practice', 'dictation') */
+  activeStep?: 'practice' | 'dictation' | 'tricky' | 'mistake_pick';
 }
 
 function formatDate(iso: string | null): string {
@@ -43,6 +45,7 @@ export default function LessonTable({
   searchable = true,
   extraHeader,
   renderExtra,
+  activeStep,
 }: Props) {
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('uploaded');
@@ -181,25 +184,16 @@ export default function LessonTable({
                     </td>
                     <td className="py-3 px-4 text-slate-500 whitespace-nowrap">{formatDate(row.uploadedAt)}</td>
                     <td className="py-3 px-4">
-                      <div className="flex items-center gap-1.5 justify-center">
-                        {['practice', 'dictation', 'tricky', 'mistake_pick'].map((step) => {
-                          const done = row.progress[step as keyof LessonProgress];
-                          const label = { practice: 'P', dictation: 'D', tricky: 'T', mistake_pick: 'M' }[step];
-                          return (
-                            <span
-                              key={step}
-                              title={`${step}: ${done ? 'done' : 'pending'}`}
-                              className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${
-                                done
-                                  ? 'bg-emerald-100 text-emerald-700'
-                                  : 'bg-slate-100 text-slate-400'
-                              }`}
-                            >
-                              {label}
-                            </span>
-                          );
-                        })}
-                      </div>
+                      {activeStep ? (
+                        (() => {
+                          const done = row.progress[activeStep];
+                          return done
+                            ? <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Completed</span>
+                            : <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500">Not started</span>;
+                        })()
+                      ) : (
+                        <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500">—</span>
+                      )}
                     </td>
                     {extraHeader && (
                       <td className="py-3 px-4 text-right text-slate-600 font-semibold">{renderExtra?.(row)}</td>

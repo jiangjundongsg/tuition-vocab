@@ -260,6 +260,7 @@ export default function DictationPage() {
               selectedLesson={selectedLesson}
               lastLesson={lastLesson}
               disabled={loadingWords}
+              activeStep="dictation"
             />
 
             {loadingWords && (

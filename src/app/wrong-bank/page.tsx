@@ -251,6 +251,7 @@ export default function WrongBankPage() {
             onSelect={startPracticingLesson}
             extraHeader="Tricky"
             renderExtra={(row) => trickyCounts[row.lessonNumber] ?? 0}
+            activeStep="tricky"
           />
           <p className="text-xs text-slate-400 px-1">
             Click a lesson to re-practise its tricky questions, or{' '}
