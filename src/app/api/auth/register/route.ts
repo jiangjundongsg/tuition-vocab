@@ -62,6 +62,7 @@ export async function POST(req: NextRequest) {
       age?: number;
       teacherCode?: string;
       teacherId?: number;
+      teacherUsername?: string;
       students?: NewStudent[];
     };
 
@@ -118,15 +119,18 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Student self-registration (pending teacher approval) ──────────────────
-    const teacherId = Number(body.teacherId);
-    if (!teacherId || isNaN(teacherId)) {
-      return NextResponse.json({ error: "Your teacher's ID is required to sign up as a student" }, { status: 400 });
+    const teacherUsername = norm(body.teacherUsername);
+    const teacherIdNum = Number(body.teacherId);
+    let teacherId: number | null = null;
+    if (teacherUsername) {
+      const t = await sql`SELECT id FROM users WHERE lower(username) = ${teacherUsername.toLowerCase()} AND role IN ('teacher', 'admin') LIMIT 1`;
+      if (t.length > 0) teacherId = Number(t[0].id);
+    } else if (teacherIdNum && !isNaN(teacherIdNum)) {
+      const t = await sql`SELECT 1 FROM users WHERE id = ${teacherIdNum} AND role IN ('teacher', 'admin') LIMIT 1`;
+      if (t.length > 0) teacherId = teacherIdNum;
     }
-    const teacherRows = await sql`
-      SELECT 1 FROM users WHERE id = ${teacherId} AND role IN ('teacher', 'admin') LIMIT 1
-    `;
-    if (teacherRows.length === 0) {
-      return NextResponse.json({ error: 'No teacher found with that ID. Please check with your teacher.' }, { status: 400 });
+    if (!teacherId) {
+      return NextResponse.json({ error: 'Teacher username not found. Please check with your teacher.' }, { status: 400 });
     }
 
     const username = norm(body.username);

@@ -31,6 +31,7 @@ export default function RegisterPage() {
   // Student
   const [username, setUsername] = useState('');
   const [teacherId, setTeacherId] = useState('');
+  const [teacherUsername, setTeacherUsername] = useState('');
   const [studentEmail, setStudentEmail] = useState('');
 
   // Teacher
@@ -98,7 +99,8 @@ export default function RegisterPage() {
               password,
               displayName: displayName.trim() || undefined,
               age: age ? parseInt(age) : undefined,
-              teacherId: parseInt(teacherId),
+              teacherId: parseInt(teacherId) || 0,
+              teacherUsername: teacherUsername.trim() || undefined,
             };
 
       const res = await fetch('/api/auth/register', {
@@ -177,10 +179,10 @@ export default function RegisterPage() {
                     min={5} max={18} placeholder="e.g. 10" className={inputClass} />
                 </div>
                 <div>
-                  <label className={labelClass}>Teacher ID</label>
-                  <input type="number" value={teacherId} onChange={(e) => setTeacherId(e.target.value)}
-                    required placeholder="e.g. 42" className={inputClass} />
-                  <p className="text-xs text-slate-400 mt-1.5">Ask your teacher for their ID. They&apos;ll approve your account.</p>
+                  <label className={labelClass}>Teacher Username</label>
+                  <input type="text" value={teacherUsername} onChange={(e) => setTeacherUsername(e.target.value)}
+                    required placeholder="e.g. jundong" autoCapitalize="none" className={inputClass} />
+                  <p className="text-xs text-slate-400 mt-1.5">Ask your teacher for their username. They&apos;ll approve your account.</p>
                 </div>
                 <div>
                   <label className={labelClass}>Email <span className="normal-case font-normal text-slate-400">(optional)</span></label>

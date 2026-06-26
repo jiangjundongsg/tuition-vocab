@@ -107,6 +107,7 @@ export default function TeacherUserManager() {
   // Current teacher (for the shareable Teacher ID) + approval/add-student state
   const [meId, setMeId] = useState<number | null>(null);
   const [meRole, setMeRole] = useState<string>('teacher');
+  const [meUsername, setMeUsername] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [approvingId, setApprovingId] = useState<number | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -123,7 +124,7 @@ export default function TeacherUserManager() {
   useEffect(() => {
     fetch('/api/auth/me')
       .then((r) => r.json())
-      .then((d) => { if (d.user) { setMeId(d.user.id); setMeRole(d.user.role); } })
+      .then((d) => { if (d.user) { setMeId(d.user.id); setMeRole(d.user.role); setMeUsername(d.user.username); } })
       .catch(() => {});
     reloadUsers().finally(() => setLoading(false));
   }, []);
@@ -326,19 +327,19 @@ export default function TeacherUserManager() {
     <div className="space-y-4">
       {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{error}</div>}
 
-      {/* Teacher ID — share so students can join */}
+      {/* Teacher username — share so students can join */}
       {meRole === 'teacher' && meId != null && (
         <div className="bg-gradient-to-br from-indigo-50 to-violet-50 border border-indigo-100 rounded-2xl p-5 flex items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1">Your Teacher ID</p>
-            <p className="text-3xl font-bold text-indigo-700 tabular-nums leading-none">{meId}</p>
-            <p className="text-xs text-slate-500 mt-1.5">Share this with students so they can join your class.</p>
+            <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1">Your Teacher Username</p>
+            <p className="text-3xl font-bold text-indigo-700 leading-none">{meUsername || `#${meId}`}</p>
+            <p className="text-xs text-slate-500 mt-1.5">Share this username — students use it to join your class.</p>
           </div>
           <button
-            onClick={() => { navigator.clipboard?.writeText(String(meId)); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+            onClick={() => { navigator.clipboard?.writeText(meUsername || String(meId)); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
             className="shrink-0 text-xs font-semibold text-indigo-600 bg-white border border-indigo-200 rounded-lg px-3 py-2 hover:bg-indigo-50 transition-colors"
           >
-            {copied ? 'Copied!' : 'Copy ID'}
+            {copied ? 'Copied!' : 'Copy'}
           </button>
         </div>
       )}
