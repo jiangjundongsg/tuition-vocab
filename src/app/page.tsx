@@ -83,7 +83,7 @@ export default async function HomePage() {
             <ul className="space-y-2 text-sm text-slate-500 mb-5">
               <li className="flex items-start gap-2"><span className="text-indigo-400 mt-0.5 shrink-0">✓</span>Upload word lists as CSV, photo, or PDF</li>
               <li className="flex items-start gap-2"><span className="text-indigo-400 mt-0.5 shrink-0">✓</span>Create student accounts and track progress</li>
-              <li className="flex items-start gap-2"><span className="text-indigo-400 mt-0.5 shrink-0">✓</span>Configure question types per student</li>
+              <li className="flex items-start gap-2"><span className="text-indigo-400 mt-0.5 shrink-0">✓</span>Set question types, number, and difficulty per student</li>
             </ul>
             <Link href="/register" className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-800">Sign up as Teacher →</Link>
           </div>
