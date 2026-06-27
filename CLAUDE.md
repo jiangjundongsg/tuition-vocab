@@ -37,10 +37,10 @@ E: Unable to correct problems, you have held broken packages.
 - **teacher** — management only; owns a set of students and sees/edits **only their own** students
 - **admin** — super-user; sees/edits **everyone** (the only role with the SQL portal)
 - Each student row has `teacher_id` (the approving teacher) and `status` (`pending` | `approved` | `rejected`)
-- **Registration** (`/register`, role selector):
-  - Teacher: email + `TEACHER_CODE` (default `VOCAB_TEACHER`); may batch-create students inline (each `username` + password) — those are `approved` immediately under `teacher_id`
-  - Student: `username` + password + the **teacher's numeric user ID** → created `status='pending'`; can log in but sees a pending screen (nav hides practice) until the teacher approves
-- Teachers add more students later (Teacher Tools → Students → "Add a student") and approve/reject pending requests there; the page shows the teacher's shareable **Teacher ID**
+- **Registration** (`/register`, role selector) — no access codes; the **teacher's username is their shareable ID**:
+  - Teacher: `username` (shared with students) + email (password recovery only) + password; may batch-create students inline (each `username` + password) — those are `approved` immediately under `teacher_id`
+  - Student: `username` + password + the **teacher's username** → created `status='pending'`; can log in but sees a pending screen (nav hides practice) until the teacher approves. Students have no email (recovery is via the teacher)
+- Teachers add more students later (Teacher Tools → Students → "Add a student") and approve/reject pending requests there; the page shows the teacher's shareable **username**
 - Every teacher API route is ownership-guarded server-side (see `canManageStudent` / `studentIdsOf` in `auth.ts`) — never trust a client-supplied `userId`
 
 ## Word Scoping (CRITICAL)
@@ -110,7 +110,7 @@ Key architectural flows:
 - `WordUploader` — CSV upload with multi-student selector
 - `PhotoUploader` — photo upload with multi-student selector
 - `PDFUploader` — PDF upload with multi-student selector
-- `TeacherUserManager` — shows the teacher's shareable Teacher ID, pending join requests (approve/reject), "Add a student" form, and the scoped student list; edit profile + question-type checkboxes
+- `TeacherUserManager` — shows the teacher's shareable username, pending join requests (approve/reject), "Add a student" form, and the scoped student list; edit profile + question-type checkboxes
 - `TeacherSQLPortal` — raw SQL portal (DDL blocked); **admin-only** tab
 - `SpeakableText` — Web Speech API TTS wrapper
 - `ChildHeader` — role-aware nav (teacher: Teacher Tools only; student: Practice, Dictation, Tricky Words, Mistake Pick; pending student: Home only)
@@ -162,8 +162,8 @@ auth_tokens (id, user_id INTEGER REFERENCES users(id), token_hash TEXT UNIQUE,
 
 ## API Routes
 ```
-POST /api/auth/register          teacher: { role:'teacher', email, password, teacherCode, students?:[{username,password,displayName?,age?}] }
-                                 student: { role:'student', username, password, teacherId, displayName?, age?, email? } → status='pending'
+POST /api/auth/register          teacher: { role:'teacher', username, email, password, displayName?, age?, students?:[{username,password,displayName?,age?}] }
+                                 student: { role:'student', username, password, teacherUsername, displayName?, age? } → status='pending'
 POST /api/auth/login             body: { identifier (email OR username), password }  (legacy { email } still accepted)
 GET  /api/auth/me                returns current user (incl. role, status, teacherId, username)
 POST /api/auth/logout
@@ -202,7 +202,6 @@ POST /api/teacher/sql            ADMIN ONLY; raw SQL (DDL blocked)
 - `DEEPSEEK_API_KEY` — from platform.deepseek.com; required for AI features (passage + question generation, photo word extraction)
 - `DEEPSEEK_MODEL` — optional; defaults to `deepseek-chat`. Set to e.g. `deepseek-v4-pro` for newer models
 - `DATABASE_URL` — Neon PostgreSQL connection string (no `channel_binding=require`)
-- `TEACHER_CODE` — optional; default `VOCAB_TEACHER`
 - `RESEND_API_KEY` — from resend.com; required to actually send password-reset emails. If unset, reset requests succeed but the email is only logged (graceful degradation)
 - `EMAIL_FROM` — optional; sender for reset emails. Defaults to `Vocab Star <onboarding@resend.dev>` (Resend test sender). Set to an address on a Resend-verified domain for production delivery to arbitrary inboxes
 - `APP_URL` — optional; canonical base URL used to build reset links in emails (e.g. `https://tuition-vocab.vercel.app`). Falls back to `VERCEL_URL`, then `localhost:3000`. Never derived from the request Host header (anti host-header-injection)

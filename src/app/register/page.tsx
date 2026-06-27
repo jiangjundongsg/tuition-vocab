@@ -28,15 +28,14 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [age, setAge] = useState('');
 
-  // Student
+  // Username — the account being created (both roles)
   const [username, setUsername] = useState('');
-  const [teacherId, setTeacherId] = useState('');
+
+  // Student
   const [teacherUsername, setTeacherUsername] = useState('');
-  const [studentEmail, setStudentEmail] = useState('');
 
   // Teacher
   const [email, setEmail] = useState('');
-  const [teacherCode, setTeacherCode] = useState('');
   const [students, setStudents] = useState<StudentRow[]>([]);
 
   const [error, setError] = useState('');
@@ -59,10 +58,9 @@ export default function RegisterPage() {
     if (password !== confirmPassword) { setError('Passwords do not match'); return; }
     if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
 
-    if (role === 'student' && !username.trim()) { setError('Please choose a username'); return; }
-    if (role === 'student' && !teacherId.trim()) { setError("Please enter your teacher's ID"); return; }
+    if (!username.trim()) { setError('Please choose a username'); return; }
+    if (role === 'student' && !teacherUsername.trim()) { setError("Please enter your teacher's username"); return; }
     if (role === 'teacher' && !email.trim()) { setError('Email is required for a teacher account'); return; }
-    if (role === 'teacher' && !teacherCode.trim()) { setError('Teacher code is required'); return; }
 
     // Validate any filled-in student rows (teacher mode)
     const cleanStudents = students
@@ -86,21 +84,19 @@ export default function RegisterPage() {
         role === 'teacher'
           ? {
               role: 'teacher',
+              username: username.trim(),
               email: email.trim(),
               password,
               displayName: displayName.trim() || undefined,
-              teacherCode: teacherCode.trim(),
               students: cleanStudents,
             }
           : {
               role: 'student',
               username: username.trim(),
-              email: studentEmail.trim() || undefined,
               password,
               displayName: displayName.trim() || undefined,
               age: age ? parseInt(age) : undefined,
-              teacherId: parseInt(teacherId) || 0,
-              teacherUsername: teacherUsername.trim() || undefined,
+              teacherUsername: teacherUsername.trim(),
             };
 
       const res = await fetch('/api/auth/register', {
@@ -166,13 +162,17 @@ export default function RegisterPage() {
                 placeholder="e.g. Alex" className={inputClass} />
             </div>
 
+            <div>
+              <label className={labelClass}>Username</label>
+              <input type="text" value={username} onChange={(e) => setUsername(e.target.value)}
+                required placeholder="Pick a username to log in" className={inputClass} autoCapitalize="none" />
+              {role === 'teacher' && (
+                <p className="text-xs text-slate-400 mt-1.5">Students use this username to join your class.</p>
+              )}
+            </div>
+
             {role === 'student' ? (
               <>
-                <div>
-                  <label className={labelClass}>Username</label>
-                  <input type="text" value={username} onChange={(e) => setUsername(e.target.value)}
-                    required placeholder="Pick a username to log in" className={inputClass} autoCapitalize="none" />
-                </div>
                 <div>
                   <label className={labelClass}>Age <span className="normal-case font-normal text-slate-400">(optional)</span></label>
                   <input type="number" value={age} onChange={(e) => setAge(e.target.value)}
@@ -184,17 +184,13 @@ export default function RegisterPage() {
                     required placeholder="e.g. jundong" autoCapitalize="none" className={inputClass} />
                   <p className="text-xs text-slate-400 mt-1.5">Ask your teacher for their username. They&apos;ll approve your account.</p>
                 </div>
-                <div>
-                  <label className={labelClass}>Email <span className="normal-case font-normal text-slate-400">(optional)</span></label>
-                  <input type="email" value={studentEmail} onChange={(e) => setStudentEmail(e.target.value)}
-                    placeholder="for password recovery" className={inputClass} />
-                </div>
               </>
             ) : (
               <div>
                 <label className={labelClass}>Email</label>
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                   required placeholder="your@email.com" className={inputClass} />
+                <p className="text-xs text-slate-400 mt-1.5">Used only for password recovery.</p>
               </div>
             )}
 
@@ -212,13 +208,6 @@ export default function RegisterPage() {
 
             {role === 'teacher' && (
               <>
-                <div>
-                  <label className={labelClass}>Teacher code</label>
-                  <input type="text" value={teacherCode} onChange={(e) => setTeacherCode(e.target.value)}
-                    required placeholder="Enter your teacher access code" className={inputClass} />
-                  <p className="text-xs text-slate-400 mt-1.5">Ask your school admin for the teacher code.</p>
-                </div>
-
                 {/* Add students inline */}
                 <div className="border-t border-slate-100 pt-3.5">
                   <div className="flex items-center justify-between mb-2">

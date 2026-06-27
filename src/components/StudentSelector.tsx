@@ -50,7 +50,7 @@ export default function StudentSelector({ selectedIds, onChange }: Props) {
   }
 
   if (students.length === 0) {
-    return <p className="text-xs text-slate-400">No students yet. Add students under the Students tab, or share your Teacher ID so they can join.</p>;
+    return <p className="text-xs text-slate-400">No students yet. Add students under the Students tab, or share your teacher username so they can join.</p>;
   }
 
   return (

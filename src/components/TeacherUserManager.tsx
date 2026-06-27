@@ -412,7 +412,7 @@ export default function TeacherUserManager() {
 
       {roster.length === 0 ? (
         <div className="text-center py-10 bg-white rounded-2xl border border-slate-100">
-          <p className="text-sm text-slate-500">No students yet. Add one above, or share your Teacher ID so students can join.</p>
+          <p className="text-sm text-slate-500">No students yet. Add one above, or share your teacher username so students can join.</p>
         </div>
       ) : (
       <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
