@@ -165,7 +165,7 @@ export default function RegisterPage() {
             <div>
               <label className={labelClass}>Username</label>
               <input type="text" value={username} onChange={(e) => setUsername(e.target.value)}
-                required placeholder="Pick a username to log in" className={inputClass} autoCapitalize="none" />
+                required placeholder="Pick a username to log in" className={inputClass} autoCapitalize="none" autoComplete="username" name="username" />
               {role === 'teacher' && (
                 <p className="text-xs text-slate-400 mt-1.5">Students use this username to join your class.</p>
               )}
@@ -197,13 +197,13 @@ export default function RegisterPage() {
             <div>
               <label className={labelClass}>Password</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                required placeholder="At least 6 characters" className={inputClass} />
+                required placeholder="At least 6 characters" className={inputClass} autoComplete="new-password" name="password" />
             </div>
 
             <div>
               <label className={labelClass}>Confirm password</label>
               <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-                required placeholder="Type your password again" className={inputClass} />
+                required placeholder="Type your password again" className={inputClass} autoComplete="new-password" name="confirmPassword" />
             </div>
 
             {role === 'teacher' && (

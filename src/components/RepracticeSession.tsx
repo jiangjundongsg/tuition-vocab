@@ -137,6 +137,7 @@ export default function RepracticeSession({ items, lessonLabel, onDone, initialS
   // ── Done screen ───────────────────────────────────────────────────────────
   if (done) {
     const correctCount = Object.values(correct).filter(Boolean).length;
+    const nextHref = nextUrl ?? `/mistake-pick?lesson=${encodeURIComponent(lessonLabel)}`;
     return (
       <div className="space-y-4">
         <div className="bg-indigo-600 rounded-2xl p-8 text-center text-white shadow-sm">
@@ -152,14 +153,13 @@ export default function RepracticeSession({ items, lessonLabel, onDone, initialS
             >
               Back to Tricky Words
             </button>
-            {nextUrl && (
-              <button
-                onClick={() => router.push(nextUrl)}
-                className="border-2 border-white/50 text-white font-semibold px-6 py-2.5 rounded-lg text-sm hover:bg-white/10 transition-colors"
-              >
-                {nextLabel || 'Next Step →'}
-              </button>
-            )}
+            <button
+              onClick={() => router.push(nextHref)}
+              className="inline-flex items-center gap-2 rounded-full border border-white/50 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20 transition-colors"
+            >
+              <span>📝</span>
+              {nextLabel || `Mistake Pick for Lesson ${lessonLabel}`}
+            </button>
           </div>
         </div>
       </div>
