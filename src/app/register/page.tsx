@@ -20,7 +20,7 @@ const labelClass =
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [role, setRole] = useState<Role>('student');
+  const [role, setRole] = useState<Role>('teacher');
 
   // Shared
   const [displayName, setDisplayName] = useState('');
